@@ -88,21 +88,21 @@ def test_actionable_plan_requires_ordered_unique_steps() -> None:
         )
 
 
-def test_selected_member_requires_profile_snapshot(request, member) -> None:
+def test_selected_member_requires_profile_snapshot(sovereign_request, member) -> None:
     with pytest.raises(ValidationError, match="missing profile snapshots"):
         DeliberationRecord(
-            request=request,
+            request=sovereign_request,
             member_snapshots=(member,),
             selected_member_ids=("accountant", "gazgul"),
         )
 
 
 def test_evidence_request_is_valid_when_complete() -> None:
-    request = EvidenceRequest(
+    evidence_request = EvidenceRequest(
         requester_member_id="accountant",
         disputed_claim="Demand will justify the investment.",
         decision_impact="The launch case depends on expected demand.",
         requested_information="Evidence of committed users.",
         preferred_source="user or market research",
     )
-    assert request.requested_information == "Evidence of committed users."
+    assert evidence_request.requested_information == "Evidence of committed users."
