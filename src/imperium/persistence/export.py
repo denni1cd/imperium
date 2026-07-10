@@ -8,10 +8,14 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 
 from imperium.domain.models import DeliberationRecord
+from imperium.engine.record_validation import validate_deliberation_record
 
 
 def export_record(record: DeliberationRecord, destination: str | Path) -> Path:
-    """Atomically write a complete deliberation record as formatted JSON."""
+    """Atomically write a complete, internally consistent deliberation record."""
+
+    validate_deliberation_record(record)
+
     path = Path(destination)
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = record.model_dump_json(indent=2)
@@ -39,7 +43,11 @@ def export_record(record: DeliberationRecord, destination: str | Path) -> Path:
 
 def load_record(source: str | Path) -> DeliberationRecord:
     """Load and validate an exported deliberation record."""
+
     path = Path(source)
     with path.open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
-    return DeliberationRecord.model_validate(payload)
+
+    record = DeliberationRecord.model_validate(payload)
+    validate_deliberation_record(record)
+    return record
