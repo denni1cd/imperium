@@ -8,6 +8,18 @@
 
 The system must control what each member sees and when. Imperium is a deliberation process, not an unrestricted shared agent chat.
 
+## Authority Hierarchy
+
+When priorities conflict, the council must respect the following order:
+
+1. user prohibitions and hard constraints;
+2. user-stated objectives and preferences;
+3. verified facts and evidence;
+4. explicit assumptions and acknowledged uncertainty;
+5. council-member values and doctrines.
+
+Members may challenge whether a stated objective will achieve the user's broader intent. They may not silently replace the user's priorities with their own.
+
 ## Proposed Lifecycle
 
 ### 1. Preserve the Sovereign Request
@@ -19,6 +31,8 @@ Store the original request, explicit goals, constraints, prohibitions, supplied 
 Choose the smallest set of members capable of providing relevant and meaningfully different perspectives. The user may directly select or exclude members.
 
 The selection process must not pre-frame the problem for the chosen members.
+
+For the first validation experiments, use a fixed, user-approved roster so council selection does not become an uncontrolled variable.
 
 ### 3. Independent Interpretation
 
@@ -49,25 +63,102 @@ Multiple valid frames should remain visible rather than being prematurely collap
 
 Assign targeted challenges to interpretations or assumptions that could materially change the decision. The challenged member must defend, refine, concede, withdraw, or request evidence.
 
-### 6. Develop Independent Strategies
+### 6. Resolve Evidence Needs
 
-After frame challenges are visible, each member develops its own proposed strategy. Proposals must identify expected benefits, assumptions, tradeoffs, risks, sacrifices, and reconsideration conditions.
+Every request for evidence must identify:
 
-### 7. Debate Proposals
+- the disputed claim or uncertainty;
+- why it matters to the decision;
+- what information would resolve or narrow it;
+- whether the source should be the user, external research, or existing context.
+
+The request must produce one of four outcomes:
+
+1. evidence is gathered and added to the shared factual record;
+2. the user is asked for decision-critical information;
+3. the council proceeds under explicit uncertainty with conditional recommendations;
+4. deliberation pauses because responsible planning is not possible without the missing information.
+
+Evidence gathered after independent interpretation must not retroactively rewrite those initial submissions. It informs later strategy and revision stages.
+
+### 7. Develop Independent Strategies
+
+After frame challenges and evidence resolution are visible, each member develops its own proposed strategy. Proposals must identify expected benefits, assumptions, tradeoffs, risks, sacrifices, and reconsideration conditions.
+
+### 8. Debate Proposals
 
 Extract decisive claims and assign targeted challenges. Members should attack material assumptions, consequences, and tradeoffs rather than personalities or wording.
 
-### 8. Revise Positions
+New decision-critical evidence requests follow the same resolution rules as Stage 6.
 
-Each member submits a final position that records changes, concessions, unresolved disagreements, and remaining confidence.
+### 9. Revise Positions
 
-### 9. Seneschal Adjudication
+Each member submits a final position that records:
+
+- what changed;
+- why it changed;
+- the evidence or reasoning that caused the change;
+- concessions and unresolved disagreements;
+- the expected effect on the resulting strategy;
+- remaining confidence.
+
+A member may retain its original position when challenges do not justify a change.
+
+### 10. Seneschal Adjudication
 
 The Seneschal evaluates the complete record and selects or constructs the strongest strategy. The adjudication must preserve meaningful minority objections and explain why major alternatives lost.
 
-### 10. Produce an Actionable Plan
+The Seneschal must distinguish between:
 
-The final output must translate the strategic judgment into concrete next steps, ownership or responsibility where relevant, dependencies, decision triggers, and conditions for revision.
+- an advocate's recommendation;
+- the council's final strategic judgment;
+- actions that require user authorization.
+
+### 11. Produce an Actionable Plan
+
+The final output must include, where relevant:
+
+- the decision and intended objective;
+- the immediate next action;
+- ordered steps;
+- responsible owner or party;
+- prerequisites and dependencies;
+- checkpoints or milestones;
+- principal risks and mitigations;
+- assumptions that must remain true;
+- decision triggers;
+- stop, exit, or reconsideration conditions.
+
+A strategically insightful explanation without concrete next steps is not a complete Imperium result.
+
+## Recommendation and Action Boundary
+
+- Council members advocate.
+- The Seneschal adjudicates.
+- The final plan recommends actions.
+- The user authorizes consequential actions.
+- Any future executor may perform only actions within explicitly granted authority.
+
+No council member gains operational authority merely because it argued forcefully for a course of action.
+
+## Required Deliberation Record
+
+Each session must preserve at least:
+
+- the original request and explicit constraints;
+- the selected council and selection basis;
+- independent interpretations;
+- the frame register;
+- challenges and responses;
+- evidence requests, sources, and outcomes;
+- initial strategies;
+- revisions, concessions, and reasons for change;
+- unresolved minority objections;
+- the Seneschal's adjudication;
+- the final actionable plan;
+- available cost and debate-effect metrics.
+
+The record must make it possible to determine whether debate materially improved the decision rather than merely adding dialogue.
 
 ## Information Boundaries
 
@@ -79,13 +170,13 @@ The final output must translate the strategic judgment into concrete next steps,
 
 ## Stopping Principle
 
-Debate should stop when additional discussion no longer introduces a material frame, changes a claim, causes a concession or revision, improves the plan, or changes the adjudication.
+Debate should stop when additional discussion no longer introduces a material frame, changes a claim, produces justified revision, improves the plan, resolves a decision-critical uncertainty, or changes the adjudication.
 
 ## Open Questions
 
-- How is the first roster selected without allowing the Seneschal to color the problem?
 - Which stages can be omitted for simple decisions?
 - How many challenges should be assigned in the minimum viable protocol?
 - Who extracts and normalizes claims?
 - What objective signal ends a debate round?
-- When should the user be asked for missing information rather than the council reasoning under uncertainty?
+- What threshold makes missing information important enough to ask the user rather than proceed conditionally?
+- Which actions should always require explicit confirmation if execution capabilities are added later?
