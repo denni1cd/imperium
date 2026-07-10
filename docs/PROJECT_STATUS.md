@@ -6,6 +6,8 @@ Imperium is in the **design and validation stage**.
 
 The current objective is to define a minimum viable deliberation protocol capable of testing whether structured disagreement produces better actionable plans than simpler alternatives.
 
+The gated path to a first usable implementation is defined in [`STRATEGIC_PROJECT_PLAN.md`](STRATEGIC_PROJECT_PLAN.md).
+
 ## Confirmed Decisions
 
 - Imperium is primarily a strategic planning and decision system.
@@ -51,6 +53,7 @@ The current objective is to define a minimum viable deliberation protocol capabl
 - [x] Required deliberation record
 - [x] Equivalent-budget and independent-panel experimental baselines
 - [x] Profile-fidelity evaluation requirement
+- [x] Gated strategic roadmap to first usable implementation
 
 ### Still required before implementation
 
@@ -67,7 +70,7 @@ The current objective is to define a minimum viable deliberation protocol capabl
 
 ## Implementation Gate
 
-Substantial implementation should not begin until the unresolved checklist items are clear enough to test as a coherent protocol.
+Substantial implementation should not begin until the unresolved checklist items are clear enough to test as a coherent protocol. Supporting code may proceed only where it enforces accepted constraints without deciding open design questions by accident.
 
 ## Open Questions
 
