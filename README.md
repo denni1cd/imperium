@@ -26,6 +26,7 @@ The project must establish:
 - [`MANIFESTO.md`](MANIFESTO.md) — governing project rules
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) — durable accepted decisions
 - [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — current stage, readiness, and open work
+- [`docs/STRATEGIC_PROJECT_PLAN.md`](docs/STRATEGIC_PROJECT_PLAN.md) — gated roadmap to a first usable implementation
 - [`docs/VALUE_VOCABULARY.md`](docs/VALUE_VOCABULARY.md) — shared strategic value design
 - [`docs/COUNCIL_MEMBER_PROFILE.md`](docs/COUNCIL_MEMBER_PROFILE.md) — persistent member profile format
 - [`docs/DELIBERATION_LIFECYCLE.md`](docs/DELIBERATION_LIFECYCLE.md) — controlled council process
