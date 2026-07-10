@@ -27,7 +27,7 @@ def member(value_vector: ValueVector) -> MemberProfile:
 
 
 @pytest.fixture
-def request() -> SovereignRequest:
+def sovereign_request() -> SovereignRequest:
     return SovereignRequest(
         original_text="Decide whether to launch a new strategic project.",
         goals=("Produce an actionable recommendation.",),
