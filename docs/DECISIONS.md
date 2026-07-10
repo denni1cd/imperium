@@ -18,6 +18,13 @@ This document records accepted project decisions that should persist across conv
 - Every member's weights sum to `1.0` across a shared strategic vocabulary.
 - Values must affect interpretation, attention, tradeoffs, opposition, sacrifice, and recommendation—not merely tone.
 
+### 2026-07-10 — Thematic naming
+
+- Council members may use Warhammer 40,000-inspired names for identity and presentation.
+- Thematic names do not define a member's strategic perspective and may not substitute for a distinct value matrix, doctrine, or reasoning pattern.
+- Roboute Guilliman is the current candidate presentation identity for the Seneschal.
+- The rest of the roster and all substantive profiles remain unapproved until the value vocabulary and profile design are completed.
+
 ### 2026-07-10 — Independent interpretation
 
 - Each selected member interprets the original user request independently before seeing another member's interpretation.
