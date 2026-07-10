@@ -4,9 +4,9 @@ from imperium.domain.models import DeliberationRecord
 from imperium.persistence.export import export_record, load_record
 
 
-def test_record_round_trip(tmp_path, request, member) -> None:
+def test_record_round_trip(tmp_path, sovereign_request, member) -> None:
     record = DeliberationRecord(
-        request=request,
+        request=sovereign_request,
         member_snapshots=(member,),
         selected_member_ids=(member.member_id,),
     )
