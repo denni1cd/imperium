@@ -10,6 +10,14 @@ The first council should be the smallest set of members capable of producing mea
 
 Each member must earn inclusion through a distinct decision perspective, not thematic appeal.
 
+## First-Experiment Rule
+
+The first validation experiments will use a fixed, user-approved roster.
+
+Dynamic Seneschal selection will be tested later. This prevents roster selection from pre-framing the problem or becoming an uncontrolled explanation for experimental results.
+
+The fixed roster does not mean every future deliberation should use every registered member.
+
 ## Candidate Offices
 
 ### Seneschal
@@ -19,6 +27,8 @@ Each member must earn inclusion through a distinct decision perspective, not the
 The Seneschal should protect independent interpretation, identify unresolved disputes, assign targeted challenges, prevent premature consensus, and convert the final judgment into an actionable plan.
 
 The Seneschal must not pre-frame the problem for the council.
+
+The Seneschal adjudicates recommendations but does not authorize consequential actions on the user's behalf.
 
 ### Accountant
 
@@ -38,11 +48,26 @@ Expected vigilance includes missed opportunities, paralysis, timid half-measures
 
 Expected vigilance includes bottlenecks, dependence on one actor, missed compounding effects, and opportunities to create systems rather than isolated actions.
 
+The Overmind must not default to multi-agent or complex solutions when a simpler source of leverage is stronger.
+
 ### Castellan
 
 **Candidate perspective:** reliability, safety, resilience, reversibility, and defense against downside.
 
 Expected vigilance includes fragile assumptions, irreversible commitments, insufficient safeguards, and strategies that fail under adverse conditions.
+
+## Coverage Hypothesis
+
+The candidate roster currently covers four broad strategic pressures:
+
+- resource discipline;
+- decisive opportunity capture;
+- leverage and scale;
+- resilience and downside protection.
+
+It may not adequately represent stakeholder consequences, legitimacy, personal sustainability, or long-term human burden. The first test set must include decisions where these concerns matter so the omission can be observed rather than solved prematurely by adding another member.
+
+A new office should be added only when repeated evidence shows that the existing roster systematically misses a strategically important dimension.
 
 ## Selection Criteria
 
@@ -52,18 +77,21 @@ A member belongs in the initial council only if:
 - its concerns are not already represented adequately by another member;
 - its perspective improves the final plan often enough to justify its participation;
 - its values can be expressed coherently through the shared vocabulary;
-- it remains capable of evidence-based revision.
+- it remains capable of evidence-based revision;
+- it preserves user authority even when its values favor another outcome;
+- its reasoning is distinguishable without relying on name, tone, or roleplay.
 
 ## Roster Principle
 
-The registry may contain several members, but each deliberation should convene only the smallest relevant subset. The full initial council should not automatically participate in every decision.
+The registry may contain several members, but each future deliberation should convene only the smallest relevant subset. The full initial council should not automatically participate in every decision.
 
 ## Open Questions
 
-- Is a five-office registry small enough for the first experiment?
+- Is a five-office fixed roster small enough for the first experiment?
 - Should the Seneschal possess a balanced value vector or a distinct procedural profile?
 - Are Accountant and Castellan sufficiently different once the value vocabulary is defined?
 - Does Gazgul provide useful strategic pressure without becoming a generic risk-seeker?
 - Does Overmind represent leverage broadly enough without defaulting to multi-agent or overly complex solutions?
-- Which additional perspective, if any, is missing from the candidate roster?
-- How should relevance be determined before members have independently interpreted the request?
+- Does the candidate roster systematically overlook human sustainability, stakeholder impact, or legitimacy?
+- Which additional perspective, if any, is justified by experimental evidence?
+- After validation, how should relevance be determined before members have independently interpreted the request?
