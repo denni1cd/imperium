@@ -6,6 +6,8 @@ Imperium is a strategic deliberation system designed to produce better, actionab
 
 [`MANIFESTO.md`](MANIFESTO.md) is the project's source of truth. Proposed features, workflows, and architecture must be evaluated against it.
 
+[`docs/DECISIONS.md`](docs/DECISIONS.md) records accepted project decisions and how the manifesto is currently being applied. It does not override the manifesto.
+
 ## Current Stage
 
 Imperium is in **design and validation**. The immediate goal is to define and test the minimum viable deliberation protocol before substantial implementation begins.
@@ -17,12 +19,13 @@ The project must establish:
 3. the exact deliberation lifecycle;
 4. a definition and measurement of consequential debate;
 5. a small initial council;
-6. an experiment comparing a single adviser, independent advisers, and the full Imperium process.
+6. an experiment comparing direct advice, equivalent-budget self-critique, independent advisers, and the full Imperium process.
 
 ## Repository Map
 
 - [`MANIFESTO.md`](MANIFESTO.md) — governing project rules
-- [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — accepted decisions, current stage, and open work
+- [`docs/DECISIONS.md`](docs/DECISIONS.md) — durable accepted decisions
+- [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — current stage, readiness, and open work
 - [`docs/VALUE_VOCABULARY.md`](docs/VALUE_VOCABULARY.md) — shared strategic value design
 - [`docs/COUNCIL_MEMBER_PROFILE.md`](docs/COUNCIL_MEMBER_PROFILE.md) — persistent member profile format
 - [`docs/DELIBERATION_LIFECYCLE.md`](docs/DELIBERATION_LIFECYCLE.md) — controlled council process
