@@ -8,7 +8,7 @@ from imperium.domain.enums import DeliberationStage
 
 
 class InvalidTransition(ValueError):
-    """Raised when code attempts to skip or reverse a required stage."""
+    """Raised when code attempts to skip, reverse, or falsify a required stage."""
 
 
 _NEXT_STAGE: dict[DeliberationStage, DeliberationStage] = {
@@ -32,6 +32,23 @@ class LifecycleState:
 
     stage: DeliberationStage = DeliberationStage.CREATED
     history: tuple[DeliberationStage, ...] = (DeliberationStage.CREATED,)
+
+    def __post_init__(self) -> None:
+        if not self.history:
+            raise InvalidTransition("lifecycle history cannot be empty")
+        if self.history[0] is not DeliberationStage.CREATED:
+            raise InvalidTransition("lifecycle history must begin at created")
+        if self.history[-1] is not self.stage:
+            raise InvalidTransition("lifecycle history must end at the current stage")
+
+        for current, following in zip(self.history, self.history[1:], strict=False):
+            expected = _NEXT_STAGE.get(current)
+            if following is not expected:
+                expected_name = expected.value if expected is not None else "no later stage"
+                raise InvalidTransition(
+                    f"invalid lifecycle history transition from {current.value} to "
+                    f"{following.value}; expected {expected_name}"
+                )
 
     @property
     def is_complete(self) -> bool:
