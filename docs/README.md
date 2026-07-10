@@ -2,15 +2,18 @@
 
 These documents define the minimum viable deliberation protocol before substantial implementation begins.
 
+## Governance and Status
+
+- [`DECISIONS.md`](DECISIONS.md) — durable accepted decisions and authority boundaries
+- [`PROJECT_STATUS.md`](PROJECT_STATUS.md) — confirmed decisions, readiness checklist, current work, and unresolved questions
+
 ## Design Sequence
 
 1. [`VALUE_VOCABULARY.md`](VALUE_VOCABULARY.md) — define the shared strategic priorities.
 2. [`COUNCIL_MEMBER_PROFILE.md`](COUNCIL_MEMBER_PROFILE.md) — define how those priorities create persistent members.
-3. [`DELIBERATION_LIFECYCLE.md`](DELIBERATION_LIFECYCLE.md) — define the controlled sequence and information boundaries.
-4. [`CONSEQUENTIAL_DEBATE.md`](CONSEQUENTIAL_DEBATE.md) — define what meaningful disagreement must change.
-5. [`INITIAL_COUNCIL.md`](INITIAL_COUNCIL.md) — select the smallest useful first council.
-6. [`EXPERIMENT_PLAN.md`](EXPERIMENT_PLAN.md) — test whether the council improves actionable plans.
+3. [`DELIBERATION_LIFECYCLE.md`](DELIBERATION_LIFECYCLE.md) — define the controlled sequence, authority boundaries, evidence handling, and session record.
+4. [`CONSEQUENTIAL_DEBATE.md`](CONSEQUENTIAL_DEBATE.md) — define what meaningful disagreement must change and how beneficial change is distinguished from movement.
+5. [`INITIAL_COUNCIL.md`](INITIAL_COUNCIL.md) — select the smallest useful fixed council for initial validation.
+6. [`EXPERIMENT_PLAN.md`](EXPERIMENT_PLAN.md) — test whether the council improves actionable plans beyond direct advice, equivalent-budget self-critique, and independent perspectives.
 
-[`PROJECT_STATUS.md`](PROJECT_STATUS.md) records confirmed decisions, current work, and unresolved questions.
-
-These documents are design records, not implementation commitments. Items explicitly marked open or candidate remain unresolved until accepted.
+These documents are design records, not implementation commitments. Items explicitly marked open or candidate remain unresolved until accepted and recorded in `DECISIONS.md`.
