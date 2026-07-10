@@ -33,6 +33,29 @@ The project must establish:
 - [`docs/INITIAL_COUNCIL.md`](docs/INITIAL_COUNCIL.md) — candidate first council
 - [`docs/EXPERIMENT_PLAN.md`](docs/EXPERIMENT_PLAN.md) — validation against simpler approaches
 
+## Supporting Code
+
+The current Python foundation implements only accepted, provider-neutral constraints:
+
+- validated deliberation artifacts and normalized value vectors;
+- an explicit lifecycle state machine;
+- stage-specific information boundaries;
+- fake and replay providers for zero-cost testing;
+- inspectable JSON session exports;
+- tests for constitutional invariants.
+
+It does not finalize the open value vocabulary, member roster, prompts, challenge assignment, stopping rules, or live model provider.
+
+### Local Development
+
+```bash
+python -m venv .venv
+python -m pip install -e ".[dev]"
+pytest
+```
+
+Source code lives under `src/imperium/`; tests live under `tests/`.
+
 ## Implementation Gate
 
-Implementation should begin only when the minimum viable deliberation protocol is sufficiently clear to test. Imperium is not currently being designed as a coding swarm, roleplaying system, or autonomous execution framework.
+Implementation should proceed only where the minimum deliberation protocol is clear enough to encode without deciding unresolved design questions by accident. Imperium is not being designed as a coding swarm, roleplaying system, or autonomous execution framework.
