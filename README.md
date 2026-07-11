@@ -10,15 +10,15 @@ Imperium is a strategic deliberation system designed to produce better, actionab
 
 ## Current Stage
 
-Imperium is in **design and validation**. Stage 1—the shared strategic value vocabulary—is approved and encoded. The immediate design focus is the member profile contract and fixed initial council.
+Imperium is in **design and validation**. Stages 1 and 2 are approved and encoded: the shared strategic value vocabulary, member profile contract, and fixed initial council. The immediate design focus is Stage 3—the exact deliberation protocol.
 
 The project must establish:
 
 1. an approved shared strategic value vocabulary;
-2. a persistent council member profile format;
+2. a persistent council member profile format and fixed initial roster;
 3. the exact deliberation lifecycle;
 4. a definition and measurement of consequential debate;
-5. a small initial council;
+5. operational challenge and stopping rules;
 6. an experiment comparing direct advice, equivalent-budget self-critique, independent advisers, and the full Imperium process.
 
 ## Repository Map
@@ -27,12 +27,13 @@ The project must establish:
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) — durable accepted decisions
 - [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — current stage, readiness, and open work
 - [`docs/STRATEGIC_PROJECT_PLAN.md`](docs/STRATEGIC_PROJECT_PLAN.md) — gated roadmap to a first usable implementation
-- [`docs/VALUE_VOCABULARY.md`](docs/VALUE_VOCABULARY.md) — approved shared strategic values and operating rules
+- [`docs/VALUE_VOCABULARY.md`](docs/VALUE_VOCABULARY.md) — approved strategic values and operating rules
 - [`config/values.yaml`](config/values.yaml) — versioned machine-readable value vocabulary
-- [`docs/COUNCIL_MEMBER_PROFILE.md`](docs/COUNCIL_MEMBER_PROFILE.md) — persistent member profile format
+- [`docs/COUNCIL_MEMBER_PROFILE.md`](docs/COUNCIL_MEMBER_PROFILE.md) — approved member profile contract
+- [`docs/INITIAL_COUNCIL.md`](docs/INITIAL_COUNCIL.md) — approved fixed first-experiment roster
+- [`config/council.yaml`](config/council.yaml) — versioned machine-readable member profiles and roster
 - [`docs/DELIBERATION_LIFECYCLE.md`](docs/DELIBERATION_LIFECYCLE.md) — controlled council process
 - [`docs/CONSEQUENTIAL_DEBATE.md`](docs/CONSEQUENTIAL_DEBATE.md) — standards and measurements for meaningful debate
-- [`docs/INITIAL_COUNCIL.md`](docs/INITIAL_COUNCIL.md) — candidate first council
 - [`docs/EXPERIMENT_PLAN.md`](docs/EXPERIMENT_PLAN.md) — validation against simpler approaches
 
 ## Supporting Code
@@ -41,14 +42,17 @@ The current Python foundation implements accepted, provider-neutral constraints:
 
 - validated deliberation artifacts and normalized value vectors;
 - versioned loading and validation of the approved strategic value vocabulary;
-- exact vector-key validation against all nine approved dimensions;
+- versioned loading and validation of the fixed council and profile contract;
+- exact vocabulary compatibility for every member vector;
+- explicit separation between advocates and the non-advocating Seneschal;
+- differentiation claims, counterweights, and known coverage risks;
 - an explicit lifecycle state machine;
 - stage-specific information boundaries;
 - fake and replay providers for zero-cost testing;
 - inspectable JSON session exports;
-- tests for constitutional and vocabulary invariants.
+- tests for constitutional, vocabulary, profile, and roster invariants.
 
-It does not yet finalize member matrices, council prompts, challenge assignment, stopping rules, or a live model provider.
+It does not yet finalize stage prompts, claim and frame normalization, challenge assignment, stopping rules, or a live model provider.
 
 ### Local Development
 
@@ -62,4 +66,4 @@ Source code lives under `src/imperium/`; tests live under `tests/`.
 
 ## Implementation Gate
 
-Implementation should proceed only where the minimum deliberation protocol is clear enough to encode without deciding unresolved design questions by accident. Imperium is not being designed as a coding swarm, roleplaying system, or autonomous execution framework.
+Full offline orchestration should begin only after the Stage 3 lifecycle contracts are explicit enough to simulate deterministically. Imperium is not being designed as a coding swarm, roleplaying system, or autonomous execution framework.
