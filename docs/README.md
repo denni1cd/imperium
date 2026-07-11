@@ -6,6 +6,7 @@ These documents define the minimum viable deliberation protocol before substanti
 
 - [`DECISIONS.md`](DECISIONS.md) — durable accepted decisions and authority boundaries
 - [`PROJECT_STATUS.md`](PROJECT_STATUS.md) — confirmed decisions, readiness checklist, current work, and unresolved questions
+- [`STRATEGIC_PROJECT_PLAN.md`](STRATEGIC_PROJECT_PLAN.md) — gated roadmap from design through validation to a first usable implementation
 
 ## Design Sequence
 
