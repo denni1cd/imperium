@@ -7,7 +7,7 @@ from typing import Literal, Self
 from pydantic import field_validator, model_validator
 
 from imperium.domain.enums import CouncilRole
-from imperium.domain.models import MemberProfile, NonEmptyStr, ValueVector
+from imperium.domain.models import MemberProfile, NonEmptyStr, StrictModel, ValueVector
 from imperium.domain.vocabulary import ValueVocabulary
 
 
@@ -74,7 +74,7 @@ class CouncilMemberProfile(MemberProfile):
         return max(self.values.weights, key=self.values.weights.__getitem__)
 
 
-class MemberDifferentiation(CouncilMemberProfile.__bases__[0]):
+class MemberDifferentiation(StrictModel):
     """Inspectable claim explaining why one profile earns a council seat."""
 
     member_id: NonEmptyStr
@@ -92,7 +92,7 @@ class MemberDifferentiation(CouncilMemberProfile.__bases__[0]):
         return self
 
 
-class CouncilConfiguration(CouncilMemberProfile.__bases__[0]):
+class CouncilConfiguration(StrictModel):
     """Approved fixed roster used for the first controlled experiments."""
 
     version: NonEmptyStr
