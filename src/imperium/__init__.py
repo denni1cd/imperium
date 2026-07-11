@@ -1,6 +1,11 @@
 """Imperium strategic deliberation engine."""
 
-from imperium.configuration import load_value_vocabulary
+from imperium.configuration import load_council_configuration, load_value_vocabulary
+from imperium.domain.council import (
+    CouncilConfiguration,
+    CouncilMemberProfile,
+    MemberDifferentiation,
+)
 from imperium.domain.models import (
     ActionablePlan,
     DeliberationRecord,
@@ -16,13 +21,17 @@ from imperium.domain.vocabulary import (
 
 __all__ = [
     "ActionablePlan",
+    "CouncilConfiguration",
+    "CouncilMemberProfile",
     "DeliberationRecord",
+    "MemberDifferentiation",
     "MemberProfile",
     "SovereignRequest",
     "StrategicValueDefinition",
     "ValueDistinction",
     "ValueVector",
     "ValueVocabulary",
+    "load_council_configuration",
     "load_value_vocabulary",
 ]
 
