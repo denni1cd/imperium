@@ -15,7 +15,9 @@ The gated path to a first usable implementation is defined in [`STRATEGIC_PROJEC
 - `MANIFESTO.md` is the governing project document.
 - `DECISIONS.md` preserves durable accepted decisions without overriding the manifesto.
 - Council members use persistent strategic value matrices scored from `0.0` to `1.0`, with all values summing to `1.0`.
-- Values must materially affect reasoning, tradeoffs, objections, and recommendations.
+- The approved version `1.0` vocabulary is Ambition, Urgency, Economy, Simplicity, Resilience, Optionality, Leverage, Adaptability, and Human Sustainability.
+- Every member vector must contain all nine approved value identifiers exactly once; zero weights are allowed.
+- Values must materially affect reasoning, tradeoffs, objections, and recommendations while remaining subordinate to user intent, evidence, and constraints.
 - Members independently interpret the original request before seeing other interpretations.
 - The Seneschal coordinates and adjudicates but does not pre-frame the problem.
 - Debate must challenge specific interpretations, assumptions, claims, risks, tradeoffs, or strategies.
@@ -32,12 +34,11 @@ The gated path to a first usable implementation is defined in [`STRATEGIC_PROJEC
 
 ## Current Design Work
 
-1. Define the shared value vocabulary.
-2. Finalize the council member profile format.
+1. Finalize the council member profile format.
+2. Define and approve the fixed initial council using the shared vocabulary.
 3. Convert the lifecycle outline into exact data contracts and prompts.
 4. Define challenge assignment and executable stopping rules.
-5. Select and configure the fixed initial council.
-6. Finalize the experiment rubric, cases, repetitions, and success thresholds.
+5. Finalize the experiment rubric, cases, repetitions, and success thresholds.
 
 ## Protocol Readiness Checklist
 
@@ -54,10 +55,10 @@ The gated path to a first usable implementation is defined in [`STRATEGIC_PROJEC
 - [x] Equivalent-budget and independent-panel experimental baselines
 - [x] Profile-fidelity evaluation requirement
 - [x] Gated strategic roadmap to first usable implementation
+- [x] Approved shared value vocabulary, definitions, differentiation cases, and configuration validation
 
 ### Still required before implementation
 
-- [ ] Approved shared value vocabulary and definitions
 - [ ] Approved minimum council member profile contract
 - [ ] Initial member value matrices and doctrines
 - [ ] Exact stage inputs and outputs
@@ -74,13 +75,11 @@ Substantial implementation should not begin until the unresolved checklist items
 
 ## Open Questions
 
-- Which values belong in the shared vocabulary?
-- How many values provide useful differentiation without creating noise?
-- How should numeric values be translated into model instructions?
+- How should numeric value weights be translated into prompt instructions and observable behavior?
 - Which profile fields are essential beyond the value matrix?
+- What value vectors and doctrines create the smallest genuinely distinct first council?
 - How are challenges assigned so they are targeted rather than performative?
 - What exact event proves that debate improved or clarified the decision state?
 - What stopping rules prevent both premature closure and wasteful repetition?
-- Which initial council members provide the smallest useful set of strategic perspectives?
 - How will humans compare the quality and actionability of experiment outputs?
 - What minimum repeatable advantage over the baselines justifies the council's additional complexity?
