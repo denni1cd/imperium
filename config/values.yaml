@@ -15,6 +15,7 @@ values:
       - resilience
       - simplicity
       - human_sustainability
+      - optionality
     prohibited_interpretations:
       - Ambition does not permit overriding user constraints or pursuing scale without a relevant objective.
       - Ambition is not theatrical boldness or indiscriminate risk seeking.
@@ -32,6 +33,7 @@ values:
       - adaptability
       - resilience
       - optionality
+      - human_sustainability
     prohibited_interpretations:
       - Urgency does not justify skipping required evidence, safeguards, or authorization.
       - Urgency is not constant haste; it applies only when timing changes strategic value.
@@ -67,6 +69,7 @@ values:
       - leverage
       - adaptability
       - resilience
+      - ambition
     prohibited_interpretations:
       - Simplicity does not mean ignoring necessary nuance or removing controls that protect the objective.
       - Simplicity is not minimal effort; a simple solution may still require substantial disciplined work.
