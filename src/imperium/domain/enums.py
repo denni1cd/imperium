@@ -57,3 +57,10 @@ class AuthorityLevel(StrEnum):
     VERIFIED_FACT = "verified_fact"
     EXPLICIT_ASSUMPTION = "explicit_assumption"
     MEMBER_VALUE = "member_value"
+
+
+class CouncilRole(StrEnum):
+    """Procedural role of a configured council profile."""
+
+    ADVOCATE = "advocate"
+    SENESCHAL = "seneschal"
