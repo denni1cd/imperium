@@ -10,11 +10,11 @@ Imperium is a strategic deliberation system designed to produce better, actionab
 
 ## Current Stage
 
-Imperium is in **design and validation**. The immediate goal is to define and test the minimum viable deliberation protocol before substantial implementation begins.
+Imperium is in **design and validation**. Stage 1—the shared strategic value vocabulary—is approved and encoded. The immediate design focus is the member profile contract and fixed initial council.
 
 The project must establish:
 
-1. a shared strategic value vocabulary;
+1. an approved shared strategic value vocabulary;
 2. a persistent council member profile format;
 3. the exact deliberation lifecycle;
 4. a definition and measurement of consequential debate;
@@ -27,7 +27,8 @@ The project must establish:
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) — durable accepted decisions
 - [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — current stage, readiness, and open work
 - [`docs/STRATEGIC_PROJECT_PLAN.md`](docs/STRATEGIC_PROJECT_PLAN.md) — gated roadmap to a first usable implementation
-- [`docs/VALUE_VOCABULARY.md`](docs/VALUE_VOCABULARY.md) — shared strategic value design
+- [`docs/VALUE_VOCABULARY.md`](docs/VALUE_VOCABULARY.md) — approved shared strategic values and operating rules
+- [`config/values.yaml`](config/values.yaml) — versioned machine-readable value vocabulary
 - [`docs/COUNCIL_MEMBER_PROFILE.md`](docs/COUNCIL_MEMBER_PROFILE.md) — persistent member profile format
 - [`docs/DELIBERATION_LIFECYCLE.md`](docs/DELIBERATION_LIFECYCLE.md) — controlled council process
 - [`docs/CONSEQUENTIAL_DEBATE.md`](docs/CONSEQUENTIAL_DEBATE.md) — standards and measurements for meaningful debate
@@ -36,16 +37,18 @@ The project must establish:
 
 ## Supporting Code
 
-The current Python foundation implements only accepted, provider-neutral constraints:
+The current Python foundation implements accepted, provider-neutral constraints:
 
 - validated deliberation artifacts and normalized value vectors;
+- versioned loading and validation of the approved strategic value vocabulary;
+- exact vector-key validation against all nine approved dimensions;
 - an explicit lifecycle state machine;
 - stage-specific information boundaries;
 - fake and replay providers for zero-cost testing;
 - inspectable JSON session exports;
-- tests for constitutional invariants.
+- tests for constitutional and vocabulary invariants.
 
-It does not finalize the open value vocabulary, member roster, prompts, challenge assignment, stopping rules, or live model provider.
+It does not yet finalize member matrices, council prompts, challenge assignment, stopping rules, or a live model provider.
 
 ### Local Development
 

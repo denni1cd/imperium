@@ -8,6 +8,11 @@ from imperium.domain.enums import (
     SessionStatus,
 )
 from imperium.domain.models import *  # noqa: F403
+from imperium.domain.vocabulary import (
+    StrategicValueDefinition,
+    ValueDistinction,
+    ValueVocabulary,
+)
 
 __all__ = [
     "AuthorityLevel",
@@ -15,4 +20,7 @@ __all__ = [
     "DeliberationStage",
     "EvidenceOutcome",
     "SessionStatus",
+    "StrategicValueDefinition",
+    "ValueDistinction",
+    "ValueVocabulary",
 ]

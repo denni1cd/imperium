@@ -86,3 +86,24 @@ Imperium must be compared against:
 - the full Imperium deliberation process.
 
 The first experiments should hold model capability, prompts, profiles, context, tools, and output requirements constant wherever practical.
+
+### 2026-07-11 — Shared strategic value vocabulary
+
+Version `1.0` of the shared strategic value vocabulary is approved with nine dimensions:
+
+1. Ambition;
+2. Urgency;
+3. Economy;
+4. Simplicity;
+5. Resilience;
+6. Optionality;
+7. Leverage;
+8. Adaptability;
+9. Human Sustainability.
+
+- Every council member must use all nine identifiers exactly once in a normalized vector totaling `1.0`.
+- Zero weights are permitted.
+- Values represent relative strategic attention and remain subordinate to user intent, evidence, constraints, and authorization.
+- Risk tolerance, innovation, consensus, evidence quality, legality, and user alignment are not separate weighted values.
+- The authoritative machine-readable vocabulary is `config/values.yaml`; its intended meaning is documented in `docs/VALUE_VOCABULARY.md`.
+- Future vocabulary changes require explicit user approval, a version increment, differentiation testing, and migration consideration for saved profiles and deliberations.

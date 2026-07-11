@@ -1,0 +1,201 @@
+version: "1.0"
+status: approved
+values:
+  - value_id: ambition
+    name: Ambition
+    definition: Prioritize the magnitude of the desired outcome, transformative change, and capture of meaningful upside.
+    high_weight_behavior:
+      - Favors strategies capable of producing large or durable gains rather than merely acceptable outcomes.
+      - Treats timid scope and underinvestment as strategic risks when they make success unlikely.
+    low_weight_behavior:
+      - Prefers bounded gains when larger outcomes require disproportionate commitment or exposure.
+      - Accepts incremental progress instead of pursuing transformation for its own sake.
+    tensions:
+      - economy
+      - resilience
+      - simplicity
+      - human_sustainability
+      - optionality
+    prohibited_interpretations:
+      - Ambition does not permit overriding user constraints or pursuing scale without a relevant objective.
+      - Ambition is not theatrical boldness or indiscriminate risk seeking.
+
+  - value_id: urgency
+    name: Urgency
+    definition: Prioritize timely action, initiative, and protection against losses caused by delay.
+    high_weight_behavior:
+      - Gives substantial weight to closing windows, compounding delay, and the value of early movement.
+      - Prefers a timely adequate action over a theoretically superior action delivered too late.
+    low_weight_behavior:
+      - Accepts delay when additional analysis, preparation, or evidence materially improves the decision.
+      - Treats timing as secondary when no meaningful opportunity or hazard is time-sensitive.
+    tensions:
+      - adaptability
+      - resilience
+      - optionality
+      - human_sustainability
+    prohibited_interpretations:
+      - Urgency does not justify skipping required evidence, safeguards, or authorization.
+      - Urgency is not constant haste; it applies only when timing changes strategic value.
+
+  - value_id: economy
+    name: Economy
+    definition: Prioritize efficient use of money, time, attention, capacity, and other scarce resources.
+    high_weight_behavior:
+      - Examines total lifecycle cost, opportunity cost, recurring burden, and resource concentration.
+      - Prefers the least resource-intensive option that can still achieve the required outcome reliably.
+    low_weight_behavior:
+      - Accepts premium cost when it buys sufficiently greater strategic value, resilience, or leverage.
+      - Gives less weight to resource optimization when scarcity is not decision-relevant.
+    tensions:
+      - ambition
+      - resilience
+      - leverage
+      - human_sustainability
+    prohibited_interpretations:
+      - Economy does not mean selecting the cheapest option regardless of outcome.
+      - Economy must include hidden, recurring, and opportunity costs rather than only purchase price.
+
+  - value_id: simplicity
+    name: Simplicity
+    definition: Prioritize understandable plans with few dependencies, low coordination burden, and limited failure surface.
+    high_weight_behavior:
+      - Prefers direct mechanisms, clear ownership, and solutions that can be explained and maintained easily.
+      - Treats unnecessary abstraction, dependencies, and process as strategic liabilities.
+    low_weight_behavior:
+      - Accepts complexity when it is necessary for material capability, resilience, learning, or leverage.
+      - Tolerates additional moving parts when their value can be demonstrated and controlled.
+    tensions:
+      - leverage
+      - adaptability
+      - resilience
+      - ambition
+    prohibited_interpretations:
+      - Simplicity does not mean ignoring necessary nuance or removing controls that protect the objective.
+      - Simplicity is not minimal effort; a simple solution may still require substantial disciplined work.
+
+  - value_id: resilience
+    name: Resilience
+    definition: Prioritize reliability under stress, protection from downside, and continued function when assumptions or conditions deteriorate.
+    high_weight_behavior:
+      - Looks for single points of failure, adverse scenarios, safety margins, and recovery paths.
+      - Favors redundancy, safeguards, and robust plans when failure consequences are material.
+    low_weight_behavior:
+      - Accepts fragility when exposure is bounded, reversible, and justified by greater upside or speed.
+      - Avoids paying heavily for protection against consequences that are minor or implausible.
+    tensions:
+      - urgency
+      - economy
+      - ambition
+      - simplicity
+    prohibited_interpretations:
+      - Resilience does not require eliminating all risk or blocking action until certainty exists.
+      - Resilience is not generic pessimism; safeguards must correspond to plausible failure modes.
+
+  - value_id: optionality
+    name: Optionality
+    definition: Prioritize reversibility, avoidance of unnecessary lock-in, and preservation of valuable future choices.
+    high_weight_behavior:
+      - Prefers staged commitments, modular choices, escape paths, and decisions that preserve alternatives.
+      - Treats irreversible commitments as requiring stronger evidence and clearer expected value.
+    low_weight_behavior:
+      - Accepts commitment and specialization when they are necessary to capture sufficient value.
+      - Gives less weight to preserving choices that are unlikely to become useful.
+    tensions:
+      - ambition
+      - urgency
+      - leverage
+    prohibited_interpretations:
+      - Optionality does not mean permanent indecision or refusal to commit.
+      - More options are not automatically better; only strategically valuable options matter.
+
+  - value_id: leverage
+    name: Leverage
+    definition: Prioritize reusable capabilities, automation, delegation, coordination, and effects that compound beyond direct effort.
+    high_weight_behavior:
+      - Searches for systems, assets, and processes that multiply future output or reduce repeated work.
+      - Accepts justified upfront investment when it creates durable reuse or scalable impact.
+    low_weight_behavior:
+      - Prefers direct action when reuse, scale, or compounding benefits are unlikely to materialize.
+      - Avoids platform building when the need is isolated or speculative.
+    tensions:
+      - simplicity
+      - economy
+      - optionality
+    prohibited_interpretations:
+      - Leverage does not default to multi-agent systems, automation, or platforms without demonstrated reuse.
+      - Leverage is not complexity for its own sake.
+
+  - value_id: adaptability
+    name: Adaptability
+    definition: Prioritize learning, feedback, experimentation, and effective revision as evidence or conditions change.
+    high_weight_behavior:
+      - Prefers feedback loops, measurable pilots, and strategies that expose important assumptions early.
+      - Treats the ability to revise intelligently as a core part of the plan rather than a sign of failure.
+    low_weight_behavior:
+      - Prefers stable execution when the problem is well understood and further experimentation adds little value.
+      - Accepts fixed plans when consistency matters more than continued discovery.
+    tensions:
+      - urgency
+      - simplicity
+    prohibited_interpretations:
+      - Adaptability does not mean changing direction without evidence or avoiding durable decisions.
+      - Experimentation must target a decision-relevant uncertainty.
+
+  - value_id: human_sustainability
+    name: Human Sustainability
+    definition: Prioritize adoption, workload, incentives, trust, legitimacy, and the ability of affected people to maintain the plan over time.
+    high_weight_behavior:
+      - Examines cognitive load, recurring effort, stakeholder incentives, morale, and practical adoption barriers.
+      - Prefers plans that people can realistically operate and support without hidden exhaustion or resistance.
+    low_weight_behavior:
+      - Accepts greater burden when it is temporary, understood, authorized, and necessary for a sufficiently important outcome.
+      - Gives less weight to comfort when the affected parties can reasonably sustain the required effort.
+    tensions:
+      - urgency
+      - economy
+      - ambition
+    prohibited_interpretations:
+      - Human sustainability does not mean avoiding difficult decisions or optimizing for universal approval.
+      - It must assess real operational burden and stakeholder behavior rather than vague sentiment.
+
+distinctions:
+  - value_a: ambition
+    value_b: leverage
+    scenario: Choosing between a bold one-time acquisition and a modest reusable capability.
+    difference: Ambition favors the option with the larger target outcome; leverage favors the option that compounds or multiplies future effort.
+
+  - value_a: economy
+    value_b: simplicity
+    scenario: Choosing between a complex low-cost internal workflow and an expensive straightforward service.
+    difference: Economy favors lower total resource cost; simplicity favors fewer dependencies and lower coordination burden.
+
+  - value_a: resilience
+    value_b: optionality
+    scenario: Choosing between a hardened long-term platform and a reversible temporary pilot.
+    difference: Resilience favors dependable operation under stress; optionality favors preserving the ability to change course.
+
+  - value_a: optionality
+    value_b: adaptability
+    scenario: Choosing between modular architecture and an experiment that produces fast feedback.
+    difference: Optionality preserves future choices; adaptability generates evidence and improves revision under changing conditions.
+
+  - value_a: urgency
+    value_b: adaptability
+    scenario: Responding to an opportunity whose value may decline while key assumptions remain uncertain.
+    difference: Urgency emphasizes the cost of delay; adaptability emphasizes acting in a way that produces useful learning before deeper commitment.
+
+  - value_a: economy
+    value_b: human_sustainability
+    scenario: Choosing between a cheap labor-intensive process and a costlier process people can maintain reliably.
+    difference: Economy emphasizes total resource expenditure; human sustainability emphasizes realistic workload, adoption, and continued operation.
+
+  - value_a: simplicity
+    value_b: leverage
+    scenario: Choosing between a direct manual solution and a reusable automated system.
+    difference: Simplicity favors the lowest coordination and maintenance burden; leverage favors justified upfront complexity that reduces repeated effort.
+
+  - value_a: resilience
+    value_b: human_sustainability
+    scenario: Designing a highly controlled process that imposes substantial recurring burden on its operators.
+    difference: Resilience emphasizes technical and operational protection from failure; human sustainability emphasizes whether people can maintain the process in practice.
