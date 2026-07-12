@@ -34,7 +34,7 @@ from imperium.domain.protocol import (
     StageContract,
     StoppingPolicy,
 )
-from imperium.domain.protocol_trace import ProtocolTrace
+from imperium.domain.protocol_trace import ClaimRegisterSnapshot, ProtocolTrace
 from imperium.domain.vocabulary import (
     StrategicValueDefinition,
     ValueDistinction,
@@ -52,6 +52,7 @@ __all__ = [
     "ChallengePolicy",
     "ClaimKind",
     "ClaimRegister",
+    "ClaimRegisterSnapshot",
     "ContinuationDecision",
     "ContinuationReason",
     "CouncilConfiguration",
