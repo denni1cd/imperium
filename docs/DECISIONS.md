@@ -20,10 +20,10 @@ This document records accepted project decisions that should persist across conv
 
 ### 2026-07-10 — Thematic naming
 
-- Council members may use Warhammer 40,000-inspired names for identity and presentation.
-- Thematic names do not define a member's strategic perspective and may not substitute for a distinct value matrix, doctrine, or reasoning pattern.
+- Council members may use distinctive names for identity and presentation.
+- Names do not define a member's strategic perspective and may not substitute for a distinct value matrix, doctrine, or reasoning pattern.
 - Presentation metadata must be removable for blinded profile-fidelity tests.
-- The stable office IDs and strategic profiles remain authoritative when all thematic metadata is removed.
+- The stable office IDs and strategic profiles remain authoritative when all names are removed.
 
 ### 2026-07-10 — Independent interpretation
 
@@ -115,21 +115,28 @@ Version `1.0` of the council profile contract and fixed initial roster is approv
 
 The first experimental registry contains:
 
-- `seneschal` — procedural coordinator and adjudicator, presentation label **Roboute Guilliman**;
-- `steward` — resource discipline, presentation label **Munitorum**;
-- `vanguard` — decisive opportunity capture, presentation label **Macharius**;
-- `architect` — leverage and reusable capability, presentation label **Belisarius Cawl**;
-- `castellan` — resilience and downside protection, presentation label **Rogal Dorn**.
+- `seneschal` — procedural coordinator and adjudicator, council name **Seneschal**;
+- `steward` — resource discipline, council name **Accountant**;
+- `vanguard` — decisive opportunity capture, council name **Gazgul**;
+- `architect` — leverage and reusable capability, council name **Overmind**;
+- `castellan` — resilience and downside protection, council name **Castellan**.
 
 The fixed advocate set is `steward`, `vanguard`, `architect`, and `castellan`.
 
 - The Seneschal has an inspectable value vector but does not participate as an advocate or submit an independent strategy.
 - Every approved profile includes doctrine, jurisdiction, vigilance, accepted sacrifices, evidence requirements, revision triggers, operating constraints, and a differentiation claim.
 - Every advocate identifies at least one strategic counterweight.
-- Thematic labels are optional metadata and must be removed during blinded profile-fidelity tests.
+- Council names are optional presentation metadata and must be removed during blinded profile-fidelity tests.
 - No advocate has Human Sustainability as its dominant value. This remains an explicit coverage risk to test rather than a reason to add another member without evidence.
 - The authoritative configuration is `config/council.yaml`; the profile and roster rules are documented in `docs/COUNCIL_MEMBER_PROFILE.md` and `docs/INITIAL_COUNCIL.md`.
 - Future profile or roster changes require explicit user approval, version increments, updated differentiation claims, vocabulary validation, and migration consideration for saved deliberations and frozen experiments.
+
+### 2026-07-12 — Council name restoration
+
+- The original council identities are **Seneschal, Accountant, Gazgul, Overmind, and Castellan**.
+- Steward, Vanguard, and Architect remain internal functional offices and stable IDs rather than user-facing names.
+- The later labels Roboute Guilliman, Munitorum, Macharius, Belisarius Cawl, and Rogal Dorn were removed as naming drift.
+- This correction changes presentation metadata only. It does not alter member values, doctrines, counterweights, authority, or protocol behavior.
 
 ### 2026-07-12 — Minimum deliberation protocol
 
