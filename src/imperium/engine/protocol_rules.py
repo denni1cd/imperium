@@ -65,13 +65,19 @@ def validate_stage_outputs(
     contract: StageContract,
     produced_artifacts: Iterable[ArtifactKind],
     *,
-    supplied_input_artifacts: Iterable[ArtifactKind] = (),
+    supplied_input_artifacts: Iterable[ArtifactKind] | None = None,
 ) -> None:
     """Validate unconditional, subturn, and input-counted stage outputs."""
 
+    if contract.output_cardinality and supplied_input_artifacts is None:
+        raise InvalidProtocolArtifact(
+            f"stage {contract.stage_id!r} requires supplied input artifacts "
+            "for output-cardinality validation"
+        )
+
     produced = tuple(produced_artifacts)
     produced_counts = Counter(produced)
-    input_counts = Counter(supplied_input_artifacts)
+    input_counts = Counter(supplied_input_artifacts or ())
 
     required = set(contract.required_output_artifacts)
     conditional = {rule.output_artifact for rule in contract.output_cardinality}
