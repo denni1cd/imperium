@@ -1,96 +1,79 @@
 # Decision Log
 
-This document records accepted project decisions that should persist across conversations and design iterations.
+This document records accepted decisions that persist across design and implementation. `MANIFESTO.md` remains the governing source of truth; this log records its application and does not override it.
 
-`MANIFESTO.md` remains the governing source of truth. This log records how its rules are being applied; it does not override them.
-
-## Accepted Decisions
-
-### 2026-07-10 — Project purpose and success measure
+## 2026-07-10 — Project purpose
 
 - Imperium is a strategic planning and decision system.
-- Its primary measure of success is the production of actionable plans.
-- Process, token use, thematic presentation, and architectural complexity are subordinate to strategic value.
+- Its primary measure of success is actionable strategic plans.
+- Process, token use, presentation, and architecture are subordinate to strategic value.
+- Failure to outperform a capable single adviser is a legitimate reason to revise or stop the project.
 
-### 2026-07-10 — Council identity
+## 2026-07-10 — Council identity and values
 
-- Council members use persistent value matrices scored from `0.0` to `1.0`.
-- Every member's weights sum to `1.0` across a shared strategic vocabulary.
-- Values must affect interpretation, attention, tradeoffs, opposition, sacrifice, and recommendation—not merely tone.
+- Members use persistent value matrices over a shared strategic vocabulary.
+- Each weight is between `0.0` and `1.0`; each vector totals `1.0`.
+- Values affect interpretation, attention, tradeoffs, opposition, sacrifice, evidence demands, and recommendation—not merely tone.
+- Names and thematic presentation are removable metadata and never define strategic behavior.
 
-### 2026-07-10 — Thematic naming
+## 2026-07-10 — Independent interpretation and Seneschal boundary
 
-- Council members may use distinctive names for identity and presentation.
-- Names do not define a member's strategic perspective and may not substitute for a distinct value matrix, doctrine, or reasoning pattern.
-- Presentation metadata must be removable for blinded profile-fidelity tests.
-- The stable office IDs and strategic profiles remain authoritative when all names are removed.
+- Every selected advocate interprets the original request independently before seeing another interpretation.
+- The Seneschal preserves facts and constraints but does not pre-frame the problem or submit an independent strategy.
+- Advocates author their own proposals, challenges, responses, and revisions.
+- The Seneschal coordinates, stops, adjudicates, and produces the final plan without impersonating advocates.
 
-### 2026-07-10 — Independent interpretation
+## 2026-07-10 — Authority hierarchy
 
-- Each selected advocate interprets the original user request independently before seeing another advocate's interpretation.
-- The Seneschal may preserve facts and constraints but must not pre-frame the strategic problem for the council.
-- The Seneschal does not submit an independent strategy proposal.
-
-### 2026-07-10 — Deliberative authority
-
-The order of authority is:
+When priorities conflict:
 
 1. user prohibitions and hard constraints;
-2. user-stated objectives and preferences;
-3. verified facts and evidence;
-4. explicit assumptions and acknowledged uncertainty;
-5. council-member values and doctrines.
+2. user objectives and preferences;
+3. verified evidence and facts;
+4. explicit assumptions and uncertainty;
+5. member values and doctrines.
 
-Members may challenge whether a stated objective will achieve the user's broader intent, but they may not silently replace the user's priorities with their own.
+Members may challenge whether a means achieves the user's broader intent but may not silently replace the user's priorities.
 
-### 2026-07-10 — Consequential debate
+## 2026-07-10 — Consequential debate
 
-- Debate must address specific interpretations, assumptions, claims, risks, tradeoffs, or strategies.
-- Challenges must produce a meaningful consequence such as defense, refinement, concession, withdrawal, evidence gathering, or revision.
-- Movement alone is not success. Changes must be justified and must improve the plan or clarify the decision.
-- Consensus is not required, and meaningful minority objections must be preserved.
+- Challenges target specific interpretations, assumptions, claims, risks, tradeoffs, or strategies.
+- A useful challenge produces defense, refinement, concession, withdrawal, evidence routing, justified retention, or revision.
+- Movement, agreement, hostility, or compromise has no value by itself.
+- Consensus is optional; serious minority objections must survive.
+- The council seeks stronger or coherent hybrid strategies rather than merely voting among proposals.
 
-### 2026-07-10 — Evidence handling
+## 2026-07-10 — Evidence handling
 
-A request for evidence must lead to one of four outcomes:
+Every evidence request reaches one of four outcomes:
 
-1. evidence is gathered;
-2. the user is asked for decision-critical information;
-3. the council proceeds under explicit uncertainty with conditional recommendations;
-4. deliberation pauses because responsible planning is not possible without the missing information.
+1. gathered evidence;
+2. user clarification required;
+3. proceed conditionally with explicit uncertainty;
+4. deliberation paused.
 
-### 2026-07-10 — Recommendation and action boundary
+## 2026-07-10 — Recommendation and execution boundary
 
-- Council members advocate.
+- Advocates recommend and challenge.
 - The Seneschal adjudicates.
 - The final plan recommends actions.
 - The user authorizes consequential actions.
-- Any future executor may perform only actions within the authority explicitly granted to it.
+- Any future executor acts only within explicit authority.
 
-### 2026-07-10 — Inspectable deliberation
+## 2026-07-10 — Inspectable records
 
-Each council session must preserve enough structured state to show what was considered, what changed, why it changed, what objections survived, and how the final plan was produced.
+Each session preserves enough structured state to show what was considered, what changed, why it changed, what objections survived, and how the final plan was produced.
 
-### 2026-07-10 — Minimum council and implementation gate
+## 2026-07-10 — Minimum council and validation design
 
-- Convene only the smallest relevant set of members.
-- Use a fixed, user-approved roster for the first validation experiments to avoid confounding council selection with deliberation quality.
-- Substantial implementation must wait until the minimum viable deliberation protocol is clear enough to test.
+- Use the smallest relevant council.
+- Use a fixed user-approved roster for initial experiments.
+- Compare full Imperium against a direct adviser, an equivalent-budget self-critiquing adviser, and independent profiled advisers without debate.
+- Freeze model, prompts, profiles, context, tools, and output contracts wherever practical.
 
-### 2026-07-10 — Validation design
+## 2026-07-11 — Strategic value vocabulary 1.0
 
-Imperium must be compared against:
-
-- a direct single-adviser response;
-- a single adviser using a roughly equivalent inference budget with structured self-critique;
-- multiple independent advisers without debate;
-- the full Imperium deliberation process.
-
-The first experiments should hold model capability, prompts, profiles, context, tools, and output requirements constant wherever practical.
-
-### 2026-07-11 — Shared strategic value vocabulary
-
-Version `1.0` of the shared strategic value vocabulary is approved with nine dimensions:
+Approved values:
 
 1. Ambition;
 2. Urgency;
@@ -102,92 +85,73 @@ Version `1.0` of the shared strategic value vocabulary is approved with nine dim
 8. Adaptability;
 9. Human Sustainability.
 
-- Every council member must use all nine identifiers exactly once in a normalized vector totaling `1.0`.
-- Zero weights are permitted.
-- Values represent relative strategic attention and remain subordinate to user intent, evidence, constraints, and authorization.
-- Risk tolerance, innovation, consensus, evidence quality, legality, and user alignment are not separate weighted values.
-- The authoritative machine-readable vocabulary is `config/values.yaml`; its intended meaning is documented in `docs/VALUE_VOCABULARY.md`.
-- Future vocabulary changes require explicit user approval, a version increment, differentiation testing, and migration consideration for saved profiles and deliberations.
+Every member uses all nine identifiers exactly once. Values remain subordinate to user intent, evidence, constraints, and authorization. The authoritative configuration is `config/values.yaml`.
 
-### 2026-07-11 — Member profile contract and fixed initial council
+## 2026-07-11 — Council 1.0
 
-Version `1.0` of the council profile contract and fixed initial roster is approved.
+Approved registry:
 
-The first experimental registry contains:
+- `seneschal` — **Seneschal**, non-advocating coordinator and adjudicator;
+- `steward` — **Accountant**, resource discipline;
+- `vanguard` — **Gazgul**, decisive opportunity capture;
+- `architect` — **Overmind**, leverage and reusable capability;
+- `castellan` — **Castellan**, resilience and downside protection.
 
-- `seneschal` — procedural coordinator and adjudicator, council name **Seneschal**;
-- `steward` — resource discipline, council name **Accountant**;
-- `vanguard` — decisive opportunity capture, council name **Gazgul**;
-- `architect` — leverage and reusable capability, council name **Overmind**;
-- `castellan` — resilience and downside protection, council name **Castellan**.
+The fixed advocate set is `steward`, `vanguard`, `architect`, and `castellan`. Every profile includes doctrine, jurisdiction, vigilance, accepted sacrifices, evidence requirements, revision triggers, constraints, and counterweights. Human Sustainability remains a known coverage risk. The authoritative configuration is `config/council.yaml`.
 
-The fixed advocate set is `steward`, `vanguard`, `architect`, and `castellan`.
+## 2026-07-12 — Council name restoration
 
-- The Seneschal has an inspectable value vector but does not participate as an advocate or submit an independent strategy.
-- Every approved profile includes doctrine, jurisdiction, vigilance, accepted sacrifices, evidence requirements, revision triggers, operating constraints, and a differentiation claim.
-- Every advocate identifies at least one strategic counterweight.
-- Council names are optional presentation metadata and must be removed during blinded profile-fidelity tests.
-- No advocate has Human Sustainability as its dominant value. This remains an explicit coverage risk to test rather than a reason to add another member without evidence.
-- The authoritative configuration is `config/council.yaml`; the profile and roster rules are documented in `docs/COUNCIL_MEMBER_PROFILE.md` and `docs/INITIAL_COUNCIL.md`.
-- Future profile or roster changes require explicit user approval, version increments, updated differentiation claims, vocabulary validation, and migration consideration for saved deliberations and frozen experiments.
+- The approved user-facing names are Seneschal, Accountant, Gazgul, Overmind, and Castellan.
+- Steward, Vanguard, and Architect remain internal functional IDs.
+- The later labels Roboute Guilliman, Munitorum, Macharius, Belisarius Cawl, and Rogal Dorn were removed as presentation drift.
+- No profile behavior changed.
 
-### 2026-07-12 — Council name restoration
+## 2026-07-12 — Minimum protocol 1.0
 
-- The original council identities are **Seneschal, Accountant, Gazgul, Overmind, and Castellan**.
-- Steward, Vanguard, and Architect remain internal functional offices and stable IDs rather than user-facing names.
-- The later labels Roboute Guilliman, Munitorum, Macharius, Belisarius Cawl, and Rogal Dorn were removed as naming drift.
-- This correction changes presentation metadata only. It does not alter member values, doctrines, counterweights, authority, or protocol behavior.
+- Twelve controlled transitions lead from preserved request to actionable plan.
+- Independent interpretation is blind.
+- Claims are normalized while preserving source, conditions, confidence, dependencies, and minority formulations.
+- Challenge assignment is material, bounded, counterweighted, and anti-repetitive.
+- Evidence is resolved before strategy development and again before revisions.
+- One additional round per challenge phase is allowed only for a high or critical unresolved issue and a specific useful next action.
+- The abbreviated path is disabled for initial experiments.
 
-### 2026-07-12 — Minimum deliberation protocol
+## 2026-07-12 — Protocol 1.1 advocate-authored challenges
 
-Version `1.0` of the minimum deliberation protocol was approved.
+- Every nonempty assignment executes an advocate-owned challenger turn followed by an advocate-owned target response.
+- The challenger produces a typed `ChallengeArtifact`; the target produces a typed `ChallengeResponse`.
+- The Seneschal coordinates but does not author either artifact.
+- Empty plans create no synthetic advocate turns.
+- Authored challenges are preserved in `ProtocolTrace`.
 
-- The lifecycle contains twelve controlled transitions from preserved request through actionable plan.
-- Proposal debate has its own explicit evidence-resolution stage before advocate revision.
-- Every transition declares its prerequisite stage, resulting stage, owner, allowed input artifacts, required outputs, prompt contract, and evidence-request permission.
-- Independent interpretation is blind and may receive only the sovereign request and the advocate's own profile snapshot.
-- Claims are normalized into one decision-relevant proposition each while preserving source wording, conditions, confidence, dependencies, and minority formulations.
-- Claims are classified as facts, assumptions, interpretations, value judgments, forecasts, proposed actions, tradeoffs, or risks.
-- Challenge assignment prioritizes authority conflicts, materiality, controlling unsupported premises, severe downside, irreversibility, breadth of disagreement, and declared counterweights.
-- A challenge must target a normalized claim; generic or theatrical objections do not qualify.
-- Empty challenge plans are permitted only when they explain why no material challenge exists.
-- One additional debate round is allowed only for a high or critical unresolved issue with a specific next action.
-- The minimum protocol allows at most two rounds per challenge phase. Reaching the safety limit preserves unresolved issues and requires a pause or explicit conditional planning rather than silent truncation.
-- Repeated challenges require new evidence or a revised claim.
-- Evidence is routed to user clarification, external research, conditional planning, or pause according to decision impact and reversibility.
-- The abbreviated path is disabled for the initial controlled experiments.
-- The protocol trace preserves claim registers, challenge plans, continuation decisions, empty-plan reasons, and issues surviving the safety limit.
-- The authoritative configuration is `config/protocol.yaml`; stage prompt contracts are stored in `prompts/`; the lifecycle and debate rules are documented in `docs/DELIBERATION_LIFECYCLE.md` and `docs/CONSEQUENTIAL_DEBATE.md`.
-- Future protocol changes require explicit user approval, a version increment, regression tests, and migration consideration for saved sessions and frozen experiments.
+See `docs/PROTOCOL_1_1_CHALLENGE_TURNS.md`.
 
-### 2026-07-12 — Protocol 1.1 advocate-authored challenge turns
+## 2026-07-12 — Protocol 1.2 cardinality, halt, and canonical storage
 
-Version `1.1` corrects an execution gap in the approved challenge stages without changing the twelve top-level lifecycle transitions, challenge-selection policy, evidence routes, or stopping rules.
+- Plan and continuation artifacts are unconditional challenge-stage outputs.
+- Challenge and response artifacts are conditional per assignment.
+- Empty plans produce zero exchanges.
+- Evidence stages produce exactly one resolution per request, including zero requests and zero resolutions.
+- Duplicate, missing, and orphan evidence mappings are invalid.
+- User clarification sets `waiting_for_user`; pause sets `paused`; neither advances.
+- `ProtocolTrace.challenges` is the sole canonical authored-challenge store.
+- The legacy `DeliberationRecord.challenges` field remains empty.
 
-- The Seneschal selects and coordinates challenge assignments but may not author an advocate's challenge or response.
-- Every nonempty assignment executes an advocate-owned challenger subturn followed by an advocate-owned target-response subturn.
-- The challenger receives the permitted target claim and source artifact and produces a typed `ChallengeArtifact` using the assignment's identifiers.
-- The target receives that authored challenge and produces a typed `ChallengeResponse` attributed to the assigned target.
-- The Seneschal issues a continuation or stopping decision only after the assigned exchanges are complete.
-- Empty challenge plans remain permitted and do not create synthetic advocate turns.
-- Authored challenges are included in the protocol trace and must match their assignment's phase, round, members, artifact, and claim.
-- The same structure applies to frame and proposal challenge phases.
-- The amendment is documented in `docs/PROTOCOL_1_1_CHALLENGE_TURNS.md`.
+See `docs/PROTOCOL_1_2_CARDINALITY_AND_HALTS.md`.
 
-### 2026-07-12 — Protocol 1.2 cardinality, halt, and canonical record semantics
+## 2026-07-12 — Protocol 1.3 evidence and debate-round ordering
 
-Version `1.2` corrects remaining execution contradictions without changing the twelve lifecycle transitions, challenge-selection policy, evidence routes, or stopping thresholds.
+Protocol 1.3 removes `decision_critical_evidence` as a reason for another round inside the same challenge phase.
 
-- `ChallengePlan` and `ContinuationDecision` are unconditional challenge-stage outputs.
-- `ChallengeArtifact` and `ChallengeResponse` are conditional per-assignment outputs.
-- An empty challenge plan produces zero challenge and response artifacts; synthetic exchanges are invalid.
-- Every evidence stage resolves exactly one `EvidenceResolution` per `EvidenceRequest`, including the valid zero-request and zero-resolution case.
-- Duplicate, orphan, and unresolved evidence mappings are invalid.
-- User-clarification outcomes set the session to `waiting_for_user` and prevent lifecycle advancement.
-- Deliberation-pause outcomes set the session to `paused` and prevent lifecycle advancement.
-- Gathered evidence and conditional planning may continue only with explicit provenance, conditions, uncertainty, and reconsideration triggers.
-- `ProtocolTrace.challenges` is the sole canonical store for advocate-authored challenges.
-- The legacy `DeliberationRecord.challenges` field must remain empty and is rejected during record validation if populated.
-- `docs/DELIBERATION_LIFECYCLE.md` and `docs/CONSEQUENTIAL_DEBATE.md` are synchronized to protocol 1.2.
-- Saved protocol 1.0 or 1.1 sessions must remain associated with their original version unless explicitly migrated.
-- The authoritative machine-readable contract is `config/protocol.yaml`; the amendment is documented in `docs/PROTOCOL_1_2_CARDINALITY_AND_HALTS.md`.
+- Newly requested frame evidence is resolved only after frame challenge completes and informs strategy development.
+- Newly requested proposal evidence is resolved only after proposal challenge completes and informs advocate revision.
+- A same-phase second round must use a newly material frame, a materially revised or narrowed claim, or another specific adjudication-relevant follow-up based on information already permitted in that phase.
+- An evidence request ends the current challenge phase and routes to the following evidence-resolution transition.
+- No lifecycle transition, evidence outcome, materiality threshold, or two-round safety limit changed.
+- Protocol 1.0, 1.1, and 1.2 sessions remain version-bound unless explicitly migrated.
+
+The authoritative configuration is `config/protocol.yaml`. See `docs/PROTOCOL_1_3_EVIDENCE_ROUND_ORDERING.md`.
+
+## Change Control
+
+Changes to the manifesto require direct user approval. Changes to values, council profiles, roster, lifecycle, visibility, debate rules, evidence ordering, stopping, or canonical record ownership require explicit approval, versioning, regression tests, and migration consideration.
