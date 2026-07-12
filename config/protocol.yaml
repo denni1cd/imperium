@@ -1,0 +1,286 @@
+version: "1.0"
+status: approved
+vocabulary_version: "1.0"
+council_version: "1.0"
+
+normalization_rules:
+  - Preserve the source wording and source artifact identifier before creating a canonical claim.
+  - Represent one decision-relevant proposition per normalized claim; split compound statements when their parts could be challenged independently.
+  - Classify each claim as fact, assumption, interpretation, value judgment, forecast, proposed action, tradeoff, or risk.
+  - Assign materiality from the expected effect on the final recommendation, not from rhetorical emphasis.
+  - Keep factual, interpretive, and value disagreements distinct; do not merge them into apparent consensus.
+  - Merge claims only when they assert the same proposition under the same conditions; preserve materially different conditions or confidence levels.
+  - Record dependencies between claims so challenges can target the premise that actually controls the recommendation.
+  - Preserve original minority formulations as source variants even when a canonical claim is created.
+
+stage_contracts:
+  - stage_id: preserve_request
+    prerequisite_stage: created
+    resulting_stage: request_preserved
+    actor: engine
+    allowed_input_artifacts:
+      - sovereign_request
+    required_output_artifacts:
+      - sovereign_request
+    prompt_template: null
+    per_advocate: false
+    blind: false
+    permits_evidence_requests: false
+
+  - stage_id: select_fixed_council
+    prerequisite_stage: request_preserved
+    resulting_stage: council_selected
+    actor: engine
+    allowed_input_artifacts:
+      - sovereign_request
+      - council_snapshot
+    required_output_artifacts:
+      - council_snapshot
+    prompt_template: null
+    per_advocate: false
+    blind: false
+    permits_evidence_requests: false
+
+  - stage_id: independent_interpretation
+    prerequisite_stage: council_selected
+    resulting_stage: interpretations_complete
+    actor: advocate
+    allowed_input_artifacts:
+      - sovereign_request
+      - council_snapshot
+    required_output_artifacts:
+      - interpretation
+    prompt_template: prompts/interpretation.md
+    per_advocate: true
+    blind: true
+    permits_evidence_requests: false
+
+  - stage_id: compare_and_normalize_frames
+    prerequisite_stage: interpretations_complete
+    resulting_stage: frames_compared
+    actor: seneschal
+    allowed_input_artifacts:
+      - sovereign_request
+      - interpretation
+    required_output_artifacts:
+      - claim_register
+      - frame_register
+    prompt_template: prompts/compare_frames.md
+    per_advocate: false
+    blind: false
+    permits_evidence_requests: false
+
+  - stage_id: challenge_frames
+    prerequisite_stage: frames_compared
+    resulting_stage: frame_challenges_complete
+    actor: seneschal
+    allowed_input_artifacts:
+      - sovereign_request
+      - interpretation
+      - claim_register
+      - frame_register
+      - council_snapshot
+    required_output_artifacts:
+      - challenge_plan
+      - challenge_response
+      - continuation_decision
+    prompt_template: prompts/challenge_frames.md
+    per_advocate: false
+    blind: false
+    permits_evidence_requests: true
+
+  - stage_id: resolve_frame_evidence
+    prerequisite_stage: frame_challenges_complete
+    resulting_stage: evidence_resolved
+    actor: engine
+    allowed_input_artifacts:
+      - sovereign_request
+      - claim_register
+      - frame_register
+      - challenge_plan
+      - challenge_response
+      - evidence_request
+    required_output_artifacts:
+      - evidence_resolution
+    prompt_template: null
+    per_advocate: false
+    blind: false
+    permits_evidence_requests: false
+
+  - stage_id: develop_independent_strategies
+    prerequisite_stage: evidence_resolved
+    resulting_stage: strategies_complete
+    actor: advocate
+    allowed_input_artifacts:
+      - sovereign_request
+      - council_snapshot
+      - claim_register
+      - frame_register
+      - challenge_plan
+      - challenge_response
+      - evidence_resolution
+    required_output_artifacts:
+      - strategy_proposal
+    prompt_template: prompts/proposal.md
+    per_advocate: true
+    blind: false
+    permits_evidence_requests: false
+
+  - stage_id: challenge_proposals
+    prerequisite_stage: strategies_complete
+    resulting_stage: proposal_challenges_complete
+    actor: seneschal
+    allowed_input_artifacts:
+      - sovereign_request
+      - council_snapshot
+      - frame_register
+      - evidence_resolution
+      - strategy_proposal
+    required_output_artifacts:
+      - claim_register
+      - challenge_plan
+      - challenge_response
+      - continuation_decision
+    prompt_template: prompts/challenge_proposals.md
+    per_advocate: false
+    blind: false
+    permits_evidence_requests: true
+
+  - stage_id: resolve_proposal_evidence
+    prerequisite_stage: proposal_challenges_complete
+    resulting_stage: proposal_evidence_resolved
+    actor: engine
+    allowed_input_artifacts:
+      - sovereign_request
+      - claim_register
+      - strategy_proposal
+      - challenge_plan
+      - challenge_response
+      - evidence_request
+    required_output_artifacts:
+      - evidence_resolution
+    prompt_template: null
+    per_advocate: false
+    blind: false
+    permits_evidence_requests: false
+
+  - stage_id: revise_positions
+    prerequisite_stage: proposal_evidence_resolved
+    resulting_stage: revisions_complete
+    actor: advocate
+    allowed_input_artifacts:
+      - sovereign_request
+      - council_snapshot
+      - frame_register
+      - strategy_proposal
+      - claim_register
+      - challenge_plan
+      - challenge_response
+      - evidence_resolution
+      - continuation_decision
+    required_output_artifacts:
+      - revision
+    prompt_template: prompts/revision.md
+    per_advocate: true
+    blind: false
+    permits_evidence_requests: false
+
+  - stage_id: adjudicate
+    prerequisite_stage: revisions_complete
+    resulting_stage: adjudicated
+    actor: seneschal
+    allowed_input_artifacts:
+      - sovereign_request
+      - council_snapshot
+      - interpretation
+      - frame_register
+      - claim_register
+      - challenge_plan
+      - challenge_response
+      - evidence_resolution
+      - strategy_proposal
+      - revision
+      - continuation_decision
+    required_output_artifacts:
+      - adjudication
+    prompt_template: prompts/adjudication.md
+    per_advocate: false
+    blind: false
+    permits_evidence_requests: false
+
+  - stage_id: produce_actionable_plan
+    prerequisite_stage: adjudicated
+    resulting_stage: plan_complete
+    actor: seneschal
+    allowed_input_artifacts:
+      - sovereign_request
+      - adjudication
+      - revision
+      - evidence_resolution
+    required_output_artifacts:
+      - actionable_plan
+    prompt_template: prompts/actionable_plan.md
+    per_advocate: false
+    blind: false
+    permits_evidence_requests: false
+
+challenge_policy:
+  challenge_materiality_threshold: medium
+  continuation_materiality_threshold: high
+  maximum_assignments_per_round: 4
+  maximum_targets_per_advocate_per_round: 2
+  maximum_rounds_per_phase: 2
+  require_counterweight_when_available: true
+  require_new_evidence_or_revision_for_repeat: true
+  ranking_order:
+    - Conflict with a user hard constraint or stated objective.
+    - Critical or high expected effect on the final recommendation.
+    - Unsupported assumption, forecast, or factual claim controlling the strategy.
+    - Severe downside, irreversibility, or missing recovery path.
+    - Breadth of disagreement across otherwise independent advocates.
+    - Fit between the claim and a declared strategic counterweight.
+    - Stable tie-break by target artifact identifier, claim identifier, and configured advocate order.
+
+evidence_policy:
+  user_clarification_conditions:
+    - The missing information is a user-exclusive preference, constraint, supplied fact, or authorization decision.
+    - Different plausible answers would materially change the recommended strategy or immediate next action.
+  external_research_conditions:
+    - The uncertainty is factual, publicly resolvable, decision-critical, and not supplied authoritatively by the user.
+  conditional_planning_conditions:
+    - The uncertainty can be bounded with an explicit assumption and reconsideration trigger.
+    - Proceeding does not expose the user to severe or irreversible downside before the uncertainty can be revisited.
+  pause_conditions:
+    - Responsible planning is impossible without the missing information.
+    - Acting under the uncertainty could create severe, irreversible, or unauthorized consequences.
+
+stopping_policy:
+  continuation_reasons:
+    - new_material_frame
+    - unresolved_material_claim
+    - decision_critical_evidence
+    - adjudication_may_change
+  stop_reasons:
+    - no_material_open_issues
+    - repeated_without_new_input
+    - user_clarification_required
+    - deliberation_paused
+    - round_safety_limit
+    - phase_complete
+  require_specific_next_action: true
+  preserve_unresolved_high_materiality_issues: true
+  safety_limit_behavior: pause_or_proceed_conditionally
+
+abbreviated_path:
+  enabled_for_initial_experiments: false
+  required_criteria:
+    - The decision is reversible within bounded cost and time.
+    - Plausible downside is low or medium rather than severe or irreversible.
+    - No decision-critical user-exclusive information is missing.
+    - The user's goals and constraints do not materially conflict.
+    - Independent interpretations produce no high or critical contested frame.
+    - No consequential action would be executed without a separate authorization step.
+  permitted_skips:
+    - Frame challenges may be omitted when the challenge plan contains no material assignment and records why.
+    - Proposal challenges may be omitted when proposals do not differ on a material claim and the reason is recorded.
+    - The actionable-plan contract, authority hierarchy, inspectable record, and minority-objection preservation may never be skipped.
