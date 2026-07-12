@@ -154,7 +154,7 @@ def test_protocol_rejects_challenge_stage_without_advocate_subturns() -> None:
     )
     challenge_contract["challenge_turns"] = []
 
-    with pytest.raises(ValidationError, match="must define challenge subturns"):
+    with pytest.raises(ValidationError, match="must define advocate subturns"):
         ProtocolConfiguration.model_validate(raw)
 
 
