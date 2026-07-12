@@ -7,7 +7,10 @@ from collections.abc import Collection, Iterable
 
 from imperium.domain.council import CouncilConfiguration
 from imperium.domain.enums import ArtifactKind, Materiality, StopReason
+from imperium.domain.models import ChallengeResponse
 from imperium.domain.protocol import (
+    ChallengeArtifact,
+    ChallengeAssignment,
     ChallengePlan,
     ChallengePolicy,
     ClaimRegister,
@@ -173,6 +176,55 @@ def validate_challenge_plan(
                 "a repeated challenge requires new evidence or a revised claim: "
                 f"{identity!r}"
             )
+
+
+def validate_challenge_artifact(
+    challenge: ChallengeArtifact,
+    *,
+    assignment: ChallengeAssignment,
+) -> None:
+    """Require the assigned challenger to author exactly the routed challenge."""
+
+    expected = {
+        "challenge_id": assignment.challenge_id,
+        "phase": assignment.phase,
+        "round_number": assignment.round_number,
+        "challenger_member_id": assignment.challenger_member_id,
+        "target_member_id": assignment.target_member_id,
+        "target_artifact_id": assignment.target_artifact_id,
+        "target_claim_id": assignment.target_claim_id,
+    }
+    actual = {
+        "challenge_id": challenge.challenge_id,
+        "phase": challenge.phase,
+        "round_number": challenge.round_number,
+        "challenger_member_id": challenge.challenger_member_id,
+        "target_member_id": challenge.target_member_id,
+        "target_artifact_id": challenge.target_artifact_id,
+        "target_claim_id": challenge.target_claim_id,
+    }
+    mismatched = {
+        key: {"expected": expected[key], "actual": actual[key]}
+        for key in expected
+        if actual[key] != expected[key]
+    }
+    if mismatched:
+        raise InvalidProtocolArtifact(
+            f"authored challenge does not match its assignment: {mismatched}"
+        )
+
+
+def validate_challenge_response(
+    response: ChallengeResponse,
+    *,
+    assignment: ChallengeAssignment,
+) -> None:
+    """Require the assigned target to answer the routed challenge."""
+
+    if response.challenge_id != assignment.challenge_id:
+        raise InvalidProtocolArtifact("challenge response references the wrong challenge")
+    if response.member_id != assignment.target_member_id:
+        raise InvalidProtocolArtifact("challenge response was not produced by the assigned target")
 
 
 def validate_continuation_decision(
