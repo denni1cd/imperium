@@ -77,6 +77,7 @@ class ArtifactKind(StrEnum):
     CLAIM_REGISTER = "claim_register"
     FRAME_REGISTER = "frame_register"
     CHALLENGE_PLAN = "challenge_plan"
+    CHALLENGE = "challenge"
     CHALLENGE_RESPONSE = "challenge_response"
     EVIDENCE_REQUEST = "evidence_request"
     EVIDENCE_RESOLUTION = "evidence_resolution"
