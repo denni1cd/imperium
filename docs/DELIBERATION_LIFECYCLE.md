@@ -2,25 +2,29 @@
 
 ## Status
 
-**Approved — protocol version 1.2, 2026-07-12.**
+**Approved — protocol version 1.3, 2026-07-12.**
 
-The authoritative machine-readable contract is [`../config/protocol.yaml`](../config/protocol.yaml). Stage-specific model instructions are stored in [`../prompts/`](../prompts/). Protocol 1.1 introduced advocate-authored challenge turns; protocol 1.2 clarified conditional challenge outputs, evidence cardinality, and halt behavior.
+The authoritative machine-readable contract is [`../config/protocol.yaml`](../config/protocol.yaml). Stage prompts are stored in [`../prompts/`](../prompts/).
+
+- Protocol 1.1 introduced advocate-authored challenge turns.
+- Protocol 1.2 clarified conditional challenge outputs, evidence cardinality, halt behavior, and canonical challenge storage.
+- Protocol 1.3 clarified that newly requested evidence is resolved only after the current challenge phase and therefore cannot justify another round inside that same phase.
 
 ## Governing Principle
 
-Imperium controls what each member sees, which artifacts may cross each boundary, and what validated output is required before the lifecycle advances. It is a deliberation state machine, not an unrestricted shared-agent chat.
+Imperium controls what each member sees, which artifacts cross each boundary, and what validated output is required before the lifecycle advances. It is a deliberation state machine, not an unrestricted shared-agent chat.
 
 ## Authority Hierarchy
 
-When priorities conflict, the council must respect this order:
+When priorities conflict, the council respects this order:
 
 1. user prohibitions and hard constraints;
 2. user-stated objectives and preferences;
 3. verified facts and evidence;
 4. explicit assumptions and acknowledged uncertainty;
-5. council-member values and doctrines.
+5. member values and doctrines.
 
-Members may explicitly challenge whether a chosen means will achieve the user's broader intent. They may not silently replace the user's priorities.
+Members may challenge whether a proposed means will achieve the user's broader intent. They may not silently replace the user's priorities.
 
 ## Approved Lifecycle
 
@@ -29,18 +33,14 @@ Members may explicitly challenge whether a chosen means will achieve the user's 
 **Transition:** `created` → `request_preserved`  
 **Owner:** engine
 
-Store the original request, goals, constraints, prohibitions, supplied facts, and relevant context without strategic reinterpretation.
-
-The preserved request is the authoritative reference for later alignment checks.
+Preserve the original request, goals, constraints, prohibitions, supplied facts, and relevant context without strategic reinterpretation.
 
 ### 2. Select the Fixed Council
 
 **Transition:** `request_preserved` → `council_selected`  
 **Owner:** engine
 
-For initial validation, snapshot the approved council and select the four fixed advocates. The Seneschal is also snapshotted but is not an advocate.
-
-Dynamic selection remains deferred because it could pre-frame the problem or confound the first experiments.
+Snapshot the approved council. Select the four fixed advocates and the non-advocating Seneschal. Dynamic selection remains deferred.
 
 ### 3. Independent Interpretation
 
@@ -50,13 +50,13 @@ Dynamic selection remains deferred because it could pre-frame the problem or con
 
 Each advocate receives only:
 
-- the preserved sovereign request;
+- the preserved request;
 - its own approved profile snapshot;
-- supplied facts already contained in the request.
+- facts supplied in the request.
 
-It receives no other profile, interpretation, frame, proposal, synthesis, or Seneschal opinion.
+It receives no other profile, interpretation, proposal, synthesis, or Seneschal opinion.
 
-Each advocate produces one validated `Interpretation` identifying the core decision, desired outcome, opportunities, risks, assumptions, missing information, initial inclination, material value influence, and confidence.
+Each advocate produces one validated `Interpretation` with the core decision, desired outcome, opportunities, risks, assumptions, missing information, initial inclination, material value influence, and confidence.
 
 ### 4. Compare Frames and Normalize Claims
 
@@ -64,92 +64,53 @@ Each advocate produces one validated `Interpretation` identifying the core decis
 **Owner:** Seneschal  
 **Prompt:** `prompts/compare_frames.md`
 
-The Seneschal compares the completed blind interpretations without proposing a strategy.
-
-It produces:
+The Seneschal compares blind interpretations without proposing a strategy. It produces:
 
 - one frame-phase `ClaimRegister`;
-- one `FrameRegister` preserving shared, contested, and unique frames plus factual, interpretive, and value disagreements.
+- one `FrameRegister` preserving shared, contested, and unique frames and separating factual, interpretive, and value disagreement.
 
-#### Claim Normalization Method
-
-1. Preserve source wording, artifact ID, and member ID.
-2. Represent one decision-relevant proposition per claim.
-3. Split compound claims when components could be challenged independently.
-4. Classify each claim as fact, assumption, interpretation, value judgment, forecast, proposed action, tradeoff, or risk.
-5. Assign materiality according to expected effect on the recommendation.
-6. Merge only claims asserting the same proposition under the same conditions.
-7. Preserve materially different conditions, confidence, and minority formulations.
-8. Record claim dependencies so challenges target controlling premises.
-
-Normalization is for comparison and targeting. It must not erase genuine disagreement or convert majority support into truth.
+Normalization preserves source wording, artifact and member IDs, material conditions, dependencies, confidence, and minority formulations.
 
 ### 5. Challenge Frames
 
 **Transition:** `frames_compared` → `frame_challenges_complete`  
 **Coordinator:** Seneschal  
-**Challengers and respondents:** assigned advocates  
+**Participants:** assigned advocates  
 **Prompts:** `prompts/challenge_frames.md`, `prompts/author_challenge.md`, `prompts/respond_challenge.md`
 
-The challenge stage contains four controlled operations inside one top-level lifecycle transition:
+Each round contains:
 
-1. **Selection — Seneschal**
-   - produce a bounded `ChallengePlan` targeting normalized claims that could materially change the decision;
-   - identify challenger, target, source artifact, claim, materiality, reason, and expected consequence.
-2. **Authored challenge — assigned challenger**
-   - receive only its own profile, the assignment, and permitted target material;
-   - produce its own typed `ChallengeArtifact`.
-3. **Response — assigned target**
-   - receive its own profile, the assignment, and the authored challenge;
-   - defend, refine, concede, withdraw, or request evidence.
-4. **Continuation — Seneschal**
-   - evaluate completed exchanges;
-   - stop or authorize one additional bounded round under the approved rule.
+1. **Selection:** the Seneschal produces and validates a bounded `ChallengePlan`.
+2. **Authored challenge:** each assigned challenger produces its own `ChallengeArtifact`.
+3. **Target response:** each assigned target defends, refines, concedes, withdraws, or requests evidence.
+4. **Round decision:** the Seneschal stops or authorizes one additional bounded round after all assignments are complete.
 
-The Seneschal may select, route, and validate exchanges. It may not author either advocate's challenge or response.
+The Seneschal may select, route, and validate. It may not author either advocate's contribution.
 
-#### Conditional Challenge Outputs
-
-Every challenge stage always produces:
-
-- one `ChallengePlan`;
-- one `ContinuationDecision`.
-
-For each nonempty assignment it additionally produces:
-
-- exactly one `ChallengeArtifact` from the assigned challenger;
-- exactly one `ChallengeResponse` from the assigned target.
-
-An empty challenge plan is allowed only when it records why no material challenge exists. It produces zero challenge and response artifacts. Debate is never fabricated to satisfy a stage schema.
+A challenge stage always produces one plan and one continuation or stopping decision. A plan with N assignments produces exactly N challenges and N responses. An empty plan produces zero of each and explains why no material target exists.
 
 ### 6. Resolve Frame Evidence
 
 **Transition:** `frame_challenges_complete` → `evidence_resolved` only when the session may continue  
 **Owner:** engine and authorized evidence source
 
-Each evidence request must identify the disputed claim, decision impact, information needed, and preferred source.
-
-Evidence output cardinality is exact:
+Evidence is resolved after frame debate, not between rounds of that debate.
 
 - zero requests produce zero resolutions;
-- each request produces exactly one `EvidenceResolution`;
-- orphan and duplicate resolutions are invalid.
+- N requests produce exactly N resolutions;
+- each request ID is resolved exactly once;
+- duplicate, missing, and orphan resolutions are invalid.
 
-Routing rules:
+Allowed outcomes:
 
-- **Ask the user** when the missing information is a user-exclusive preference, constraint, supplied fact, or authorization issue and plausible answers materially change the plan.
-- **Research externally** when the issue is factual, publicly resolvable, and decision-critical. Stage 4 uses only explicit fake or replay evidence sources; it does not perform live network research.
-- **Proceed conditionally** when the uncertainty can be bounded with an explicit assumption and reconsideration trigger without severe or irreversible downside.
-- **Pause** when responsible planning is impossible or proceeding could create severe, irreversible, or unauthorized consequences.
+- gathered evidence;
+- user clarification required;
+- proceed conditionally;
+- deliberation paused.
 
-Session behavior:
+User clarification sets `waiting_for_user`; pause sets `paused`. Neither status may advance. Gathered and conditional outcomes may advance only with explicit provenance, assumptions, uncertainty, bounds, and reconsideration triggers as applicable.
 
-- gathered evidence and valid conditional planning allow advancement;
-- user clarification sets the session to `waiting_for_user` and prevents advancement;
-- a pause sets the session to `paused` and prevents advancement;
-- the request, unresolved issue, and checkpoint remain inspectable and resumable.
-
-Evidence added here informs later stages but does not rewrite historical blind interpretations.
+Resolved frame evidence informs strategy development but does not rewrite blind interpretations or reopen frame debate in protocol 1.3.
 
 ### 7. Develop Independent Strategies
 
@@ -157,31 +118,29 @@ Evidence added here informs later stages but does not rewrite historical blind i
 **Owner:** each advocate independently  
 **Prompt:** `prompts/proposal.md`
 
-Each advocate receives the deliberately disclosed frame record, authored challenges, responses, and resolved evidence, then produces one `StrategyProposal`.
+Each advocate receives the deliberately disclosed frame record, challenge exchange, and resolved frame evidence, then produces one complete `StrategyProposal`.
 
-Every proposal includes actions, benefits, assumptions, tradeoffs, risks, sacrifices, decision triggers, reconsideration conditions, and confidence.
-
-Advocates remain responsive to evidence without optimizing for agreement.
+Every proposal states actions, benefits, assumptions, tradeoffs, risks, sacrifices, triggers, reconsideration conditions, and confidence.
 
 ### 8. Challenge Proposals
 
 **Transition:** `strategies_complete` → `proposal_challenges_complete`  
 **Coordinator:** Seneschal  
-**Challengers and respondents:** assigned advocates  
+**Participants:** assigned advocates  
 **Prompts:** `prompts/challenge_proposals.md`, `prompts/author_challenge.md`, `prompts/respond_challenge.md`
 
-The Seneschal first creates a proposal-phase `ClaimRegister`, then applies the same selection, authored-challenge, target-response, conditional-output, continuation, counterweight, and anti-repetition rules used during frame challenge.
+The Seneschal normalizes controlling proposal claims, then applies the same conditional challenge-turn and ownership rules used for frame debate.
 
-Targets may include controlling assumptions, forecasts, actions, costs, dependencies, burdens, risks, tradeoffs, or reconsideration conditions.
+Targets may include assumptions, forecasts, actions, costs, dependencies, burdens, risks, tradeoffs, or reconsideration conditions.
 
 ### 9. Resolve Proposal Evidence
 
 **Transition:** `proposal_challenges_complete` → `proposal_evidence_resolved` only when the session may continue  
 **Owner:** engine and authorized evidence source
 
-New evidence requests created during proposal debate are resolved before advocates revise. The same exact zero-or-one-per-request cardinality and waiting, pause, gathered, and conditional outcomes apply.
+Proposal evidence requests are resolved after proposal debate and before revisions. They cannot be introduced between proposal debate rounds under protocol 1.3.
 
-This explicit stage prevents a decision-critical factual request from being hidden inside a revision or ignored because the first evidence stage has already passed.
+The same exact cardinality and gathered, conditional, waiting, and pause behavior applies.
 
 ### 10. Revise Positions
 
@@ -189,22 +148,18 @@ This explicit stage prevents a decision-critical factual request from being hidd
 **Owner:** each advocate independently  
 **Prompt:** `prompts/revision.md`
 
-Each advocate submits one complete `Revision`, including when retaining its original position.
+Each advocate produces one complete `Revision` recording:
 
-The record states:
-
-- what changed or was deliberately retained;
-- why;
-- the challenge, evidence, or reasoning responsible;
+- the changed or deliberately retained proposal;
+- reasons;
+- responsible challenge, evidence, or reasoning;
 - concessions;
 - unresolved disagreements;
-- new risks, sacrifices, or uncertainty;
+- new risk, sacrifice, or uncertainty;
 - expected strategic effect;
 - final confidence.
 
-Reasoned retention uses the same `Revision` artifact with a materially unchanged complete proposal, an empty or accurate change list, and explicit reasons. Revision member, original proposal owner, and revised proposal member must match.
-
-A well-defended unchanged position is valid. Performative movement is not.
+A reasoned retention uses the same artifact with a materially unchanged complete proposal. Performative movement is invalid.
 
 ### 11. Seneschal Adjudication
 
@@ -212,19 +167,15 @@ A well-defended unchanged position is valid. Performative movement is not.
 **Owner:** Seneschal  
 **Prompt:** `prompts/adjudication.md`
 
-The Seneschal evaluates the complete record and selects or constructs the strongest strategy.
-
-The adjudication must:
+The Seneschal selects or constructs the strongest strategy. It must:
 
 - identify decisive reasons;
 - preserve accepted frames;
-- explain why every major alternative lost, was incorporated, or survives as a minority objection;
-- seek a coherent hybrid when compatible strengths can resolve a material conflict;
+- explain why major alternatives lost, were incorporated, or remain minority objections;
+- seek a coherent hybrid when it improves the strategy;
 - explain why no hybrid is superior when selecting one revised strategy substantially intact;
-- preserve serious minority objections and reconsideration triggers;
-- state assumptions and residual uncertainty;
-- identify actions requiring user authorization;
-- distinguish recommendation from authorization.
+- preserve serious objections and reconsideration triggers;
+- state assumptions, uncertainty, confidence, and actions requiring user authorization.
 
 Majority support, rhetorical force, or compromise is not sufficient justification.
 
@@ -234,73 +185,69 @@ Majority support, rhetorical force, or compromise is not sufficient justificatio
 **Owner:** Seneschal  
 **Prompt:** `prompts/actionable_plan.md`
 
-The final `ActionablePlan` includes:
+The final plan includes:
 
-- the decision and objective;
-- the immediate next action;
+- decision and objective;
+- immediate next action;
 - ordered steps;
-- responsible owner or party where relevant;
+- owners where relevant;
 - dependencies and completion signals;
 - checkpoints;
 - risks and mitigations;
 - assumptions;
 - decision triggers;
-- stop, exit, or reconsideration conditions.
+- stop, exit, and reconsideration conditions.
 
-A serious surviving objection must remain visible through applicable risks, assumptions, triggers, mitigations, or reconsideration conditions rather than being hidden only in internal state.
-
-A strategically interesting explanation without concrete next steps is incomplete.
+A serious surviving objection must remain visible wherever it changes execution or reconsideration.
 
 ## Challenge Assignment Policy
 
 Challenges are ranked by:
 
-1. conflict with a user hard constraint or stated objective;
-2. critical or high effect on the recommendation;
-3. unsupported controlling fact, assumption, or forecast;
+1. conflict with user authority or objectives;
+2. expected effect on the recommendation;
+3. unsupported controlling facts, assumptions, or forecasts;
 4. severe downside, irreversibility, or missing recovery path;
-5. breadth of disagreement among independent advocates;
-6. fit with a declared strategic counterweight;
-7. stable artifact, claim, and advocate-order tie-breaks.
+5. breadth of independent disagreement;
+6. fit with a declared counterweight;
+7. stable artifact, claim, and member-order tie-breaks.
 
-Minimum-protocol bounds:
+Bounds:
 
-- no more than four primary assignments in one round;
-- no advocate receives more than two primary challenges in one round;
+- no more than four assignments per round;
+- no advocate receives more than two primary challenges per round;
 - no self-challenge;
-- declared counterweights are preferred when relevant;
-- a non-counterweight assignment requires an explicit reason;
-- a repeated challenge to the same claim requires new evidence or a revised claim;
+- counterweights are preferred when relevant;
+- overrides require reasons;
+- repeated challenges require a revised claim or other materially new input already permitted within the phase;
 - low-materiality claims are not challenged merely for completeness.
 
-## Stopping Rule
+## Debate-Round Ordering
 
-A debate phase begins with one bounded challenge round.
+One additional round is permitted only when:
 
-A second round is permitted only when all of the following are true:
+- a high or critical issue remains unresolved;
+- the completed exchange exposed a new material frame, a materially revised claim, or a follow-up that could change adjudication;
+- a specific next challenge is identified;
+- the next challenge is not repetition without new phase-permitted input.
 
-- at least one high or critical claim remains unresolved;
-- the issue could introduce a material frame, change a claim, resolve decision-critical evidence, or change adjudication;
-- a specific next challenge or evidence action is identified;
-- the action is not repetition without new input.
+A decision-critical evidence request ends the challenge phase and routes to the next evidence-resolution transition. Newly resolved evidence informs strategies or revisions; it does not feed a second round of the phase that created the request.
 
 The phase stops when:
 
-- no material open issue remains;
-- objections repeat without new evidence or revision;
+- no material issue remains;
+- objections repeat without new input;
 - user clarification is required;
 - responsible deliberation must pause;
 - the phase is complete;
 - the two-round safety limit is reached.
 
-The safety limit never silently discards unresolved issues. At the limit, Imperium must preserve them and either pause or proceed conditionally with explicit assumptions and reconsideration triggers.
+The safety limit never silently discards unresolved issues.
 
 ## Canonical Challenge Record
 
-Protocol 1.2 uses `ProtocolTrace.challenges` as the sole canonical store for advocate-authored challenge artifacts.
-
-The legacy `DeliberationRecord.challenges` field must remain empty and exists only for compatibility with the early foundation schema. Export validation rejects a record that attempts to store a second challenge history there.
+`ProtocolTrace.challenges` is the sole canonical store for advocate-authored challenge artifacts. The legacy `DeliberationRecord.challenges` field must remain empty and is rejected during record validation if populated.
 
 ## Change Control
 
-Changes to lifecycle stages, visibility, challenge materiality, assignment, continuation, evidence cardinality, halt behavior, stopping, or canonical record ownership require a protocol version increment, regression tests, migration consideration, and explicit user approval.
+Changes to lifecycle stages, visibility, challenge materiality, assignment, continuation, evidence ordering, evidence cardinality, halt behavior, stopping, or canonical record ownership require a protocol version increment, regression tests, migration consideration, and explicit user approval.
