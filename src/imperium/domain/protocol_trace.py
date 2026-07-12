@@ -14,12 +14,12 @@ class ClaimRegisterSnapshot(StrictModel):
 
     phase: ChallengePhase
     round_number: int = Field(ge=0)
-    register: ClaimRegister
+    claim_register: ClaimRegister
     supersedes_register_id: str | None = None
 
     @model_validator(mode="after")
     def validate_snapshot(self) -> "ClaimRegisterSnapshot":
-        if self.register.phase is not self.phase:
+        if self.claim_register.phase is not self.phase:
             raise ValueError("claim-register snapshot phase must match the register")
         if self.round_number == 0 and self.supersedes_register_id is not None:
             raise ValueError("the initial claim register cannot supersede another register")
@@ -77,7 +77,7 @@ class ProtocolTrace(StrictModel):
                     "and remain contiguous"
                 )
             for previous, current in zip(ordered, ordered[1:], strict=False):
-                if current.supersedes_register_id != previous.register.register_id:
+                if current.supersedes_register_id != previous.claim_register.register_id:
                     raise ValueError(
                         f"claim-register snapshot round {current.round_number} for "
                         f"{phase.value!r} must supersede the prior register"
