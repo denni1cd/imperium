@@ -2,12 +2,12 @@
 
 ## Current Position
 
-Imperium remains in **design and validation**.
+Imperium remains in **design and validation**, but the constitutional and protocol design is now largely explicit.
 
-- **Main branch:** Stages 0–4 complete and merged.
-- **Validation:** 71 Python tests passing, including the resumable end-to-end vertical slice.
-- **Current work:** preparing Stage 5, the ChatGPT-authenticated Codex provider.
-- **Next milestone:** one isolated live deliberation using the unchanged Stage 4 engine.
+- **Main branch:** Stages 0–3 complete and merged.
+- **Current work:** preparing Stage 4, the offline deliberation engine.
+- **Next engineering milestone:** one complete, resumable fake/replay deliberation.
+- **Best next hands-on test:** after Stage 4 completes that end-to-end vertical slice.
 
 `MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted decisions. `STRATEGIC_PROJECT_PLAN.md` remains the gated roadmap.
 
@@ -19,8 +19,8 @@ Imperium remains in **design and validation**.
 | 1 — Shared strategic value vocabulary | Complete and merged | Nine approved values, versioned YAML, differentiation rules, exact vector validation |
 | 2 — Member profiles and fixed initial council | Complete and merged | Four advocates, one non-advocating Seneschal, versioned profiles, doctrines, counterweights, known coverage risks |
 | 3 — Exact deliberation protocol | Complete and merged | Twelve transitions, claim normalization, challenge assignment, evidence routing, stopping rules, prompt contracts, protocol trace |
-| 4 — Offline multi-turn debate engine | Complete and merged | Full fake/replay run, direct confrontation, debate consequences, checkpoints, export, reload, and resume |
-| 5 — Codex provider and live vertical slice | Next | Use ChatGPT-authenticated Codex without changing the deliberation engine |
+| 4 — Complete offline deliberation engine | Next | Wire all stages into one resumable fake/replay run from request to actionable plan |
+| 5 — Codex provider and live vertical slice | Not started | Use ChatGPT-authenticated Codex only after the offline engine works |
 | 6 — Controlled experiment harness | Not started | Conditions A1, A2, B, and C with frozen configurations and metrics |
 | 7 — Pilot validation | Not started | Repeated blinded evaluation on representative strategic cases |
 | 8 — Investment decision gate | Not started | Proceed, revise and retest, or stop based on evidence |
@@ -28,7 +28,7 @@ Imperium remains in **design and validation**.
 
 ## What Is Built
 
-### Governance and strategy
+### Governance and design
 
 - Governing manifesto and authority hierarchy
 - Durable decision log
@@ -60,81 +60,69 @@ Imperium remains in **design and validation**.
 - Thematic names isolated as removable presentation metadata
 - Human Sustainability preserved as a known roster coverage risk
 
-### Protocol and Python foundation
+### Python foundation
 
-- Python 3.12 package and strict Pydantic contracts
-- Versioned value, council, and protocol configuration
-- Deterministic twelve-transition lifecycle
-- Explicit information boundaries
-- Normalized claim registers
-- Material challenge assignment and bounded continuation rules
-- Separate frame and proposal evidence stages
+- Python 3.12 package
+- Strict Pydantic domain models
+- Normalized value-vector enforcement
+- Versioned YAML loaders for values and council
+- Deterministic lifecycle state machine
+- Explicit information-boundary context builder
 - Provider-neutral model interface
 - Fake and replay providers
-- Atomic JSON persistence
-- GitHub Actions validation
+- Atomic JSON session export and reload
+- Cross-record validation
+- GitHub Actions test workflow
 
-### Stage 4 offline engine
+### Stage 3 additions
 
-- Complete `OfflineDeliberationEngine`
-- One atomic checkpoint for every lifecycle transition
-- Stop, export, reload, and deterministic resume
-- Direct `DebateExchange` records
-- Explicit `DebateImpact` links from confrontation to later proposal or revision
-- Separate provider calls for challenge selection, challenger articulation, target response, and continuation assessment
-- Static offline evidence resolver
-- Complete protocol trace in the offline session envelope
-- Resumable end-to-end replay test producing adjudication and an actionable plan
-
-## Actual Debate Guarantee
-
-Imperium now distinguishes a real debate from a panel of independent answers.
-
-A full debate requires:
-
-1. the Seneschal selects a material challenge assignment;
-2. the assigned challenger articulates the challenge directly;
-3. the targeted advocate answers that exact challenge directly;
-4. the target later records what changed, strengthened, or became clearer;
-5. every assignment has a matching exchange;
-6. every exchange has a later strategic consequence;
-7. direct confrontation occurs in both frame and proposal phases;
-8. at least two distinct advocates are confronted before adjudication.
-
-The following fail verification:
-
-- independent submissions followed by a shared summary;
-- a Seneschal speaking for the challenger;
-- a challenge with no target response;
-- an exchange that has no effect on a later proposal or revision;
-- a challenge plan that is never executed;
-- only one nominal debate phase before adjudication.
-
-The Stage 4 vertical fixture contains four direct confrontations and four traceable consequences.
+- Versioned `config/protocol.yaml`
+- Exact contract for every lifecycle transition
+- Explicit post-proposal evidence-resolution stage
+- Typed normalized claim registers
+- Typed challenge plans and assignments
+- Typed continuation and stopping decisions
+- Deterministic materiality, counterweight, repetition, and round-limit checks
+- Evidence-routing thresholds
+- Two-round debate safety rule that preserves unresolved issues instead of truncating them
+- Abbreviated path defined but disabled for initial experiments
+- Stage-specific prompt contracts under `prompts/`
+- Typed `ProtocolTrace` for Stage 4 session integration
 
 ## What Can Run Today
 
-The repository can:
+The repository can currently:
 
-- load and validate values, council, and protocol;
-- accept a sovereign request;
-- run all twelve transitions using replayed or fake structured outputs;
-- generate blind independent interpretations;
-- execute direct frame confrontation;
-- produce independent strategy proposals that account for frame debate;
-- execute direct proposal confrontation;
-- produce revisions that account for proposal debate;
-- block adjudication when actual-debate verification fails;
-- produce adjudication and an actionable plan;
-- export after each stage;
-- reload and resume from an interruption;
-- verify the complete record and debate trace.
+- load and validate the value vocabulary;
+- load and validate the fixed council;
+- load and validate the complete Stage 3 protocol;
+- reject invalid stage transitions;
+- reject leaked or forbidden stage artifacts;
+- validate challenge targeting, materiality, counterweights, repetition, and stopping decisions;
+- simulate provider responses through fake and replay providers;
+- export and reload validated session records;
+- run the full automated contract test suite.
 
-It does **not yet use a live model**. Stage 5 will add an isolated Codex provider without changing the deliberation engine.
+It **cannot yet run a complete council deliberation automatically**. The individual pieces exist, but Stage 4 must connect them into one orchestrated vertical slice.
 
-## Hands-On Testing
+## Recommended Hands-On Testing Point
 
-Stage 4 is the first meaningful local testing checkpoint.
+The best point for the user to get to a computer and run Imperium is **the end of Stage 4**, not immediately after Stage 3.
+
+That checkpoint should provide one command or integration test that:
+
+1. loads values, council, protocol, and fake/replay responses;
+2. accepts a sample sovereign request;
+3. advances through all twelve transitions;
+4. enforces every information boundary and output contract;
+5. resolves both evidence stages;
+6. produces revisions, adjudication, and an actionable plan;
+7. exports the complete record and protocol trace;
+8. can be resumed or inspected after a deliberate interruption.
+
+At that point, hands-on testing will evaluate the actual workflow rather than only schemas.
+
+Expected local validation commands will be:
 
 ```bash
 python -m venv .venv
@@ -143,32 +131,52 @@ pytest
 python -m pytest tests/integration/test_offline_vertical_slice.py -vv
 ```
 
-The integration test should show that the run:
+The integration-test path is a Stage 4 target and does not exist yet.
 
-- pauses after strategy development;
-- persists to JSON;
-- reloads successfully;
-- completes proposal debate and revisions;
-- verifies four direct exchanges and four consequences;
-- produces the final actionable plan.
+## Protocol Readiness
 
-## Remaining Before Pilot Validation
+### Approved
 
-- [ ] ChatGPT-authenticated Codex provider
-- [ ] Isolated live vertical slice
+- [x] Governing manifesto and actionable-plan objective
+- [x] Authority hierarchy and action boundary
+- [x] Evidence-resolution routes
+- [x] Shared value vocabulary
+- [x] Member profile contract
+- [x] Fixed initial council and matrices
+- [x] Blind independent interpretation
+- [x] Exact stage inputs, outputs, and artifact visibility
+- [x] Claim and frame normalization method
+- [x] Challenge-assignment policy
+- [x] Operational continuation and stopping rules
+- [x] Stage-specific prompt contracts
+- [x] Required protocol trace
+- [x] Abbreviated-path rules, disabled for initial experiments
+
+### Remaining before live model use
+
+- [ ] Connect contracts into full offline orchestration
+- [ ] Attach `ProtocolTrace` to the authoritative session record
+- [ ] Add deterministic stage runners
+- [ ] Add interruption and resume behavior
+- [ ] Complete fake-provider vertical integration test
+- [ ] Add realistic replay fixture set
+
+### Remaining before pilot validation
+
+- [ ] Codex provider and isolated live vertical slice
 - [ ] Frozen experiment cases and prompts
 - [ ] A1, A2, B, and C experiment runners
 - [ ] Blinded evaluation rubric and process
 - [ ] Repetition count and minimum improvement threshold
-- [ ] Profile-fidelity and Human Sustainability coverage tests
+- [ ] Profile-fidelity and human-sustainability coverage tests
 
 ## Current Risks
 
-- The offline engine proves orchestration and auditability, not model reasoning quality.
-- Numeric profile differences have not yet been proven to create persistent reasoning differences in live calls.
+- Numeric profile differences have not yet been proven to create persistent reasoning differences.
 - The fixed roster may underrepresent Human Sustainability.
-- The two-round debate rule may be too permissive or too restrictive.
-- The Seneschal may still bias synthesis despite formal non-advocacy.
+- The two-round debate rule may be too permissive or too restrictive; experiments must test it.
+- Prompt contracts are approved but have not yet been exercised with a live model.
+- The Seneschal may still bias synthesis despite formal non-advocacy; blinded testing must detect this.
 - The full council may not outperform a strong single adviser or independent panel.
 
-These remain validation risks. They are not reasons to add more architecture before the live vertical slice and controlled experiment are run.
+These are validation risks, not reasons to add more architecture before the current protocol is tested.

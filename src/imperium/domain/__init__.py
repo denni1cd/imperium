@@ -21,15 +21,6 @@ from imperium.domain.enums import (
     StopReason,
 )
 from imperium.domain.models import *  # noqa: F403
-from imperium.domain.offline import (
-    DebateExchange,
-    DebateImpact,
-    FrameComparisonOutput,
-    OfflineDeliberationSession,
-    RevisionOutput,
-    StageCheckpoint,
-    StrategyDevelopmentOutput,
-)
 from imperium.domain.protocol import (
     AbbreviatedPathPolicy,
     ChallengeAssignment,
@@ -67,27 +58,20 @@ __all__ = [
     "CouncilConfiguration",
     "CouncilMemberProfile",
     "CouncilRole",
-    "DebateExchange",
-    "DebateImpact",
     "DeliberationStage",
     "EvidenceOutcome",
     "EvidencePolicy",
-    "FrameComparisonOutput",
     "Materiality",
     "MemberDifferentiation",
     "NormalizedClaim",
-    "OfflineDeliberationSession",
     "ProtocolActor",
     "ProtocolConfiguration",
     "ProtocolTrace",
-    "RevisionOutput",
     "SessionStatus",
-    "StageCheckpoint",
     "StageContract",
     "StopReason",
     "StoppingPolicy",
     "StrategicValueDefinition",
-    "StrategyDevelopmentOutput",
     "ValueDistinction",
     "ValueVocabulary",
 ]
