@@ -38,7 +38,7 @@ def _load_dependencies():
 def test_protocol_loads_and_covers_every_lifecycle_transition() -> None:
     _, _, protocol = _load_dependencies()
 
-    assert protocol.version == "1.0"
+    assert protocol.version == "1.1"
     assert len(protocol.stage_contracts) == len(DeliberationStage) - 1
     assert protocol.stage_contracts[0].prerequisite_stage is DeliberationStage.CREATED
     assert protocol.stage_contracts[-1].resulting_stage is DeliberationStage.PLAN_COMPLETE
@@ -56,6 +56,27 @@ def test_independent_interpretation_is_blind_and_advocate_owned() -> None:
         ArtifactKind.COUNCIL_SNAPSHOT,
     }
     assert contract.required_output_artifacts == (ArtifactKind.INTERPRETATION,)
+
+
+def test_challenge_stages_route_distinct_advocate_subturns() -> None:
+    _, _, protocol = _load_dependencies()
+
+    for resulting_stage in (
+        DeliberationStage.FRAME_CHALLENGES_COMPLETE,
+        DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE,
+    ):
+        contract = protocol.contract_for(resulting_stage)
+        assert contract.actor is ProtocolActor.SENESCHAL
+        assert tuple(turn.speaker_from_assignment for turn in contract.challenge_turns) == (
+            "challenger",
+            "target",
+        )
+        assert tuple(turn.required_output_artifact for turn in contract.challenge_turns) == (
+            ArtifactKind.CHALLENGE,
+            ArtifactKind.CHALLENGE_RESPONSE,
+        )
+        assert ArtifactKind.CHALLENGE in contract.required_output_artifacts
+        assert ArtifactKind.CHALLENGE in contract.challenge_turns[1].allowed_input_artifacts
 
 
 def test_protocol_has_explicit_post_proposal_evidence_resolution() -> None:
@@ -102,4 +123,18 @@ def test_protocol_rejects_out_of_order_stage_contracts() -> None:
     contracts[3], contracts[4] = contracts[4], contracts[3]
 
     with pytest.raises(ValidationError, match="expected"):
+        ProtocolConfiguration.model_validate(raw)
+
+
+def test_protocol_rejects_challenge_stage_without_advocate_subturns() -> None:
+    _, _, protocol = _load_dependencies()
+    raw = protocol.model_dump(mode="json")
+    challenge_contract = next(
+        contract
+        for contract in raw["stage_contracts"]
+        if contract["resulting_stage"] == "proposal_challenges_complete"
+    )
+    challenge_contract["challenge_turns"] = []
+
+    with pytest.raises(ValidationError, match="must define advocate subturns"):
         ProtocolConfiguration.model_validate(raw)
