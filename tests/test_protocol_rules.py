@@ -11,6 +11,7 @@ from imperium.configuration import (
 )
 from imperium.domain.enums import (
     ArtifactKind,
+    ChallengeDisposition,
     ChallengePhase,
     ClaimKind,
     ContinuationReason,
@@ -18,7 +19,9 @@ from imperium.domain.enums import (
     Materiality,
     StopReason,
 )
+from imperium.domain.models import ChallengeResponse
 from imperium.domain.protocol import (
+    ChallengeArtifact,
     ChallengeAssignment,
     ChallengePlan,
     ClaimRegister,
@@ -27,7 +30,9 @@ from imperium.domain.protocol import (
 )
 from imperium.engine.protocol_rules import (
     InvalidProtocolArtifact,
+    validate_challenge_artifact,
     validate_challenge_plan,
+    validate_challenge_response,
     validate_continuation_decision,
     validate_stage_inputs,
     validate_stage_outputs,
@@ -85,6 +90,20 @@ def _assignment(*, challenger: str = "vanguard") -> ChallengeAssignment:
     )
 
 
+def _authored_challenge() -> ChallengeArtifact:
+    return ChallengeArtifact(
+        challenge_id="challenge-demand",
+        phase=ChallengePhase.PROPOSAL,
+        round_number=1,
+        challenger_member_id="vanguard",
+        target_member_id="steward",
+        target_artifact_id="proposal-steward",
+        target_claim_id="claim-demand",
+        statement="What committed demand supports this level of investment?",
+        failure_consequence="The proposed commitment could consume resources without adoption.",
+    )
+
+
 def test_stage_visibility_rejects_forbidden_artifacts() -> None:
     _, protocol = _load_configuration()
     interpretation = protocol.contract_for(DeliberationStage.INTERPRETATIONS_COMPLETE)
@@ -127,6 +146,32 @@ def test_valid_counterweighted_challenge_plan_passes() -> None:
         council=council,
         policy=protocol.challenge_policy,
     )
+
+
+def test_authored_challenge_must_match_assignment() -> None:
+    assignment = _assignment()
+    validate_challenge_artifact(_authored_challenge(), assignment=assignment)
+
+    wrong_author = _authored_challenge().model_copy(
+        update={"challenger_member_id": "castellan"}
+    )
+    with pytest.raises(InvalidProtocolArtifact, match="does not match its assignment"):
+        validate_challenge_artifact(wrong_author, assignment=assignment)
+
+
+def test_challenge_response_must_come_from_assigned_target() -> None:
+    assignment = _assignment()
+    valid = ChallengeResponse(
+        challenge_id=assignment.challenge_id,
+        member_id=assignment.target_member_id,
+        disposition=ChallengeDisposition.DEFEND,
+        response="The staged commitment is supported by the supplied demand evidence.",
+    )
+    validate_challenge_response(valid, assignment=assignment)
+
+    wrong_target = valid.model_copy(update={"member_id": "architect"})
+    with pytest.raises(InvalidProtocolArtifact, match="assigned target"):
+        validate_challenge_response(wrong_target, assignment=assignment)
 
 
 def test_non_counterweight_requires_explicit_override() -> None:
