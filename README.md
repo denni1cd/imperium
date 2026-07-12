@@ -10,30 +10,27 @@ Imperium is a strategic deliberation system designed to produce better, actionab
 
 ## Current Stage
 
-Imperium is in **design and validation**. Stages 1 and 2 are approved and encoded: the shared strategic value vocabulary, member profile contract, and fixed initial council. The immediate design focus is Stage 3—the exact deliberation protocol.
+Imperium is in **design and validation**. Stages 1–3 are now explicit and encoded: the value vocabulary, member profiles and fixed council, and the exact deliberation protocol.
 
-The project must establish:
+The next engineering target is **Stage 4: a complete offline fake/replay deliberation from sovereign request to actionable plan**.
 
-1. an approved shared strategic value vocabulary;
-2. a persistent council member profile format and fixed initial roster;
-3. the exact deliberation lifecycle;
-4. a definition and measurement of consequential debate;
-5. operational challenge and stopping rules;
-6. an experiment comparing direct advice, equivalent-budget self-critique, independent advisers, and the full Imperium process.
+For the shortest current status and recommended testing checkpoint, see [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
 
 ## Repository Map
 
 - [`MANIFESTO.md`](MANIFESTO.md) — governing project rules
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) — durable accepted decisions
-- [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — current stage, readiness, and open work
+- [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — mobile-friendly stage status, built capabilities, risks, and test checkpoint
 - [`docs/STRATEGIC_PROJECT_PLAN.md`](docs/STRATEGIC_PROJECT_PLAN.md) — gated roadmap to a first usable implementation
 - [`docs/VALUE_VOCABULARY.md`](docs/VALUE_VOCABULARY.md) — approved strategic values and operating rules
-- [`config/values.yaml`](config/values.yaml) — versioned machine-readable value vocabulary
+- [`config/values.yaml`](config/values.yaml) — versioned value vocabulary
 - [`docs/COUNCIL_MEMBER_PROFILE.md`](docs/COUNCIL_MEMBER_PROFILE.md) — approved member profile contract
 - [`docs/INITIAL_COUNCIL.md`](docs/INITIAL_COUNCIL.md) — approved fixed first-experiment roster
-- [`config/council.yaml`](config/council.yaml) — versioned machine-readable member profiles and roster
-- [`docs/DELIBERATION_LIFECYCLE.md`](docs/DELIBERATION_LIFECYCLE.md) — controlled council process
-- [`docs/CONSEQUENTIAL_DEBATE.md`](docs/CONSEQUENTIAL_DEBATE.md) — standards and measurements for meaningful debate
+- [`config/council.yaml`](config/council.yaml) — versioned member profiles and roster
+- [`docs/DELIBERATION_LIFECYCLE.md`](docs/DELIBERATION_LIFECYCLE.md) — approved twelve-transition protocol
+- [`docs/CONSEQUENTIAL_DEBATE.md`](docs/CONSEQUENTIAL_DEBATE.md) — approved materiality, challenge, revision, and measurement rules
+- [`config/protocol.yaml`](config/protocol.yaml) — exact machine-readable stage, evidence, challenge, and stopping contracts
+- [`prompts/`](prompts/) — stage-specific prompt interfaces
 - [`docs/EXPERIMENT_PLAN.md`](docs/EXPERIMENT_PLAN.md) — validation against simpler approaches
 
 ## Supporting Code
@@ -41,18 +38,18 @@ The project must establish:
 The current Python foundation implements accepted, provider-neutral constraints:
 
 - validated deliberation artifacts and normalized value vectors;
-- versioned loading and validation of the approved strategic value vocabulary;
-- versioned loading and validation of the fixed council and profile contract;
-- exact vocabulary compatibility for every member vector;
+- versioned loading of values, council, and protocol configuration;
+- exact vocabulary and council-version compatibility;
 - explicit separation between advocates and the non-advocating Seneschal;
-- differentiation claims, counterweights, and known coverage risks;
-- an explicit lifecycle state machine;
-- stage-specific information boundaries;
+- deterministic lifecycle transitions, including post-proposal evidence resolution;
+- stage-specific information-boundary contracts;
+- normalized claim, challenge-plan, continuation-decision, and protocol-trace models;
+- deterministic challenge materiality, counterweight, repetition, and stopping checks;
 - fake and replay providers for zero-cost testing;
 - inspectable JSON session exports;
-- tests for constitutional, vocabulary, profile, and roster invariants.
+- automated constitutional, vocabulary, profile, roster, lifecycle, and protocol tests.
 
-It does not yet finalize stage prompts, claim and frame normalization, challenge assignment, stopping rules, or a live model provider.
+It does not yet connect every stage into one complete offline deliberation. Stage 4 will provide that vertical slice before Codex or API integration.
 
 ### Local Development
 
@@ -66,4 +63,4 @@ Source code lives under `src/imperium/`; tests live under `tests/`.
 
 ## Implementation Gate
 
-Full offline orchestration should begin only after the Stage 3 lifecycle contracts are explicit enough to simulate deterministically. Imperium is not being designed as a coding swarm, roleplaying system, or autonomous execution framework.
+Live-model integration should begin only after the Stage 4 offline engine completes and resumes a full deliberation using fake or replay providers. Imperium is not a coding swarm, roleplaying system, or autonomous execution framework.
