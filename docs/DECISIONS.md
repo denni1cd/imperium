@@ -152,3 +152,18 @@ Version `1.0` of the minimum deliberation protocol is approved.
 - The protocol trace preserves claim registers, challenge plans, continuation decisions, empty-plan reasons, and issues surviving the safety limit.
 - The authoritative configuration is `config/protocol.yaml`; stage prompt contracts are stored in `prompts/`; the lifecycle and debate rules are documented in `docs/DELIBERATION_LIFECYCLE.md` and `docs/CONSEQUENTIAL_DEBATE.md`.
 - Future protocol changes require explicit user approval, a version increment, regression tests, and migration consideration for saved sessions and frozen experiments.
+
+### 2026-07-12 — Actual debate and offline vertical engine
+
+Stage 4 defines actual debate as a direct, multi-turn interaction rather than a collection of independent submissions.
+
+- The Seneschal may select and bound challenge assignments but may not articulate an advocate's challenge or answer for the targeted advocate.
+- Every assigned challenge requires a separate challenger turn, a separate target response, and a matching durable challenge identifier.
+- The targeted advocate must later record what the confrontation changed, strengthened, or clarified in its proposal or revision.
+- A challenge plan, council summary, or single shared response does not count as debate.
+- Full-protocol adjudication is blocked unless direct confrontation occurs in both frame and proposal phases.
+- Every planned challenge must have a direct exchange, and every direct exchange must have a traceable later strategic consequence.
+- At least two distinct advocates must be confronted during a full run.
+- Panel-only, Seneschal-proxied, unanswered, or consequence-free exchanges fail debate verification.
+- The offline engine executes all twelve transitions using fake or replay providers, records direct exchanges and consequences, supports atomic stage checkpoints, and can stop, export, reload, and resume.
+- Live Codex or API integration remains gated until the offline vertical slice passes independently.

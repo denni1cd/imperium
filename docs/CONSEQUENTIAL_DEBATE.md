@@ -69,6 +69,30 @@ Every challenge must:
 
 An empty challenge plan is valid when no material target exists and the reason is recorded.
 
+## Direct Multi-Turn Debate Requirement
+
+Challenge assignment is not itself debate. A Seneschal summary of several positions is not debate. Independent submissions followed by a synthesis are not debate.
+
+Every executed challenge requires this sequence:
+
+1. **Assignment:** the Seneschal selects a material target, challenger, and expected consequence.
+2. **Challenger turn:** the assigned advocate articulates the challenge in its own provider call.
+3. **Target turn:** the challenged advocate answers that exact challenge in a separate provider call.
+4. **Disposition:** the target defends, refines, concedes, withdraws, or requests evidence.
+5. **Later consequence:** the target's next proposal or revision identifies what the exchange changed, strengthened, or clarified.
+
+The Seneschal may coordinate and assess the exchange but may not speak for the challenger or target.
+
+A full-protocol run may not proceed to adjudication unless:
+
+- direct exchanges occurred in both frame and proposal phases;
+- every planned challenge has a matching challenger turn and target response;
+- every direct exchange has a traceable later strategic consequence;
+- at least two distinct advocates were confronted;
+- exchange identities, members, target artifacts, and dispositions remain consistent across the trace.
+
+Panel-only, Seneschal-proxied, unanswered, or consequence-free exchanges fail debate verification.
+
 ## Non-Contributions
 
 The following do not count as meaningful debate by themselves:
@@ -84,7 +108,9 @@ The following do not count as meaningful debate by themselves:
 - compromise that weakens the plan without resolving a material conflict;
 - evidence requests that do not identify why the evidence matters or what route follows;
 - forced challenges assigned only because the protocol contains a debate stage;
-- confidence changes without stated reasoning.
+- confidence changes without stated reasoning;
+- challenge plans that are not executed as direct exchanges;
+- responses written by the Seneschal on behalf of an advocate.
 
 ## Hybrid Strategy Test
 
@@ -105,7 +131,9 @@ The system can measure reliably:
 - number and materiality of normalized claims;
 - number of distinct frames and proposals;
 - challenge assignments by phase and round;
+- direct challenger turns and target responses;
 - defenses, refinements, concessions, withdrawals, and evidence requests;
+- debate impacts linked to later proposals and revisions;
 - repeated challenges rejected for lack of new input;
 - evidence outcomes;
 - proposal revisions and recorded reasons;
@@ -122,6 +150,8 @@ Blinded evaluation is required for:
 
 - whether independent perspectives are genuinely distinct;
 - whether a challenge exposed an important issue;
+- whether a response genuinely confronted the challenge;
+- whether a recorded debate impact is real rather than post-hoc labeling;
 - whether a revision improved the strategy;
 - whether a hybrid is coherent and stronger;
 - whether the final plan is strategically sound and actionable;
@@ -135,6 +165,7 @@ Automated counts may support evaluation but may not substitute for these judgmen
 Each completed session should eventually report:
 
 - claims challenged by materiality;
+- direct exchanges by phase, challenger, and target;
 - consequential outcomes by disposition;
 - evidence requests and routes;
 - proposals changed or retained;
@@ -145,7 +176,7 @@ Each completed session should eventually report:
 - debate calls and token use;
 - unresolved high or critical issues.
 
-The Stage 3 `ProtocolTrace` preserves the typed inputs needed for this report. Stage 4 will attach the trace to the complete offline session.
+The `ProtocolTrace`, `DebateExchange`, and `DebateImpact` records preserve the typed inputs needed for this report.
 
 ## Minimum Success Test
 
@@ -160,10 +191,12 @@ If debate does not improve the output beyond independent collection or self-crit
 
 ## Failure Signals
 
-Stage 3 should be reconsidered when testing shows:
+The protocol should be reconsidered when testing shows:
 
 - most challenge plans are empty or target only medium-impact wording differences;
 - advocates repeatedly collapse into generic consensus;
+- challenger and target turns do not materially confront each other;
+- debate impacts are merely asserted rather than visible in later artifacts;
 - second rounds rarely change adjudication;
 - revisions are predominantly neutral or harmful;
 - the Seneschal rewards compromise rather than decisive reasoning;
@@ -173,4 +206,4 @@ Stage 3 should be reconsidered when testing shows:
 
 ## Change Control
 
-Changes to debate materiality, assignment, continuation, stopping, or measurement rules require a protocol version increment, regression tests, experiment migration consideration, and explicit user approval.
+Changes to debate materiality, assignment, direct-turn execution, continuation, stopping, or measurement rules require a protocol version increment, regression tests, experiment migration consideration, and explicit user approval.
