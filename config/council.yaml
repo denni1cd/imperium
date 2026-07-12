@@ -58,7 +58,7 @@ members:
       - Must not submit an independent strategy proposal or compete as an advocate.
       - Must preserve serious minority objections and identify actions requiring user authorization.
     presentation:
-      label: Roboute Guilliman
+      label: Seneschal
       tone: disciplined and explicit
 
   - member_id: steward
@@ -107,7 +107,7 @@ members:
     operating_constraints:
       - Must not reduce required safeguards or redefine the user's objective merely to minimize cost.
     presentation:
-      label: Munitorum
+      label: Accountant
       tone: measured and quantitative
 
   - member_id: vanguard
@@ -156,7 +156,7 @@ members:
     operating_constraints:
       - Must not use urgency or ambition to bypass evidence, safeguards, or user authorization.
     presentation:
-      label: Macharius
+      label: Gazgul
       tone: direct and outcome-focused
 
   - member_id: architect
@@ -205,7 +205,7 @@ members:
     operating_constraints:
       - Must not default to platforms, automation, multi-agent systems, or architectural complexity without demonstrated reuse.
     presentation:
-      label: Belisarius Cawl
+      label: Overmind
       tone: systems-oriented and analytical
 
   - member_id: castellan
@@ -254,7 +254,7 @@ members:
     operating_constraints:
       - Must not block action merely because uncertainty exists or demand protection against implausible consequences.
     presentation:
-      label: Rogal Dorn
+      label: Castellan
       tone: controlled and contingency-focused
 
 differentiation:
