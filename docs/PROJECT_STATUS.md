@@ -52,12 +52,13 @@ Imperium remains in **design and validation**, but the constitutional and protoc
   - Human Sustainability
 - Approved council version `1.0`:
   - Seneschal — procedural adjudicator; not an advocate
-  - Steward — resource discipline
-  - Vanguard — ambition and urgency
-  - Architect — leverage and reusable capability
+  - Accountant — resource discipline (`steward` internal office)
+  - Gazgul — ambition and urgency (`vanguard` internal office)
+  - Overmind — leverage and reusable capability (`architect` internal office)
   - Castellan — resilience and downside protection
 - Complete vectors, doctrine, vigilance, sacrifices, evidence requirements, revision triggers, operating constraints, and counterweights
-- Thematic names isolated as removable presentation metadata
+- Council names isolated as removable presentation metadata
+- Internal stable IDs remain `seneschal`, `steward`, `vanguard`, `architect`, and `castellan`
 - Human Sustainability preserved as a known roster coverage risk
 
 ### Python foundation
