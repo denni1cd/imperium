@@ -4,10 +4,10 @@
 
 Imperium remains in **design and validation**.
 
-- **Merged foundation:** Stages 0–3.
-- **Current PR:** Stage 4 offline multi-turn debate engine.
+- **Main branch:** Stages 0–4 complete and merged.
 - **Validation:** 71 Python tests passing, including the resumable end-to-end vertical slice.
-- **Next stage after merge:** Stage 5 ChatGPT-authenticated Codex provider and first live deliberation.
+- **Current work:** preparing Stage 5, the ChatGPT-authenticated Codex provider.
+- **Next milestone:** one isolated live deliberation using the unchanged Stage 4 engine.
 
 `MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted decisions. `STRATEGIC_PROJECT_PLAN.md` remains the gated roadmap.
 
@@ -19,8 +19,8 @@ Imperium remains in **design and validation**.
 | 1 — Shared strategic value vocabulary | Complete and merged | Nine approved values, versioned YAML, differentiation rules, exact vector validation |
 | 2 — Member profiles and fixed initial council | Complete and merged | Four advocates, one non-advocating Seneschal, versioned profiles, doctrines, counterweights, known coverage risks |
 | 3 — Exact deliberation protocol | Complete and merged | Twelve transitions, claim normalization, challenge assignment, evidence routing, stopping rules, prompt contracts, protocol trace |
-| 4 — Offline multi-turn debate engine | Complete in PR #5 | Full fake/replay run, direct confrontation, debate consequences, checkpoints, export, reload, and resume |
-| 5 — Codex provider and live vertical slice | Next | Use ChatGPT-authenticated Codex only after the offline engine is merged |
+| 4 — Offline multi-turn debate engine | Complete and merged | Full fake/replay run, direct confrontation, debate consequences, checkpoints, export, reload, and resume |
+| 5 — Codex provider and live vertical slice | Next | Use ChatGPT-authenticated Codex without changing the deliberation engine |
 | 6 — Controlled experiment harness | Not started | Conditions A1, A2, B, and C with frozen configurations and metrics |
 | 7 — Pilot validation | Not started | Repeated blinded evaluation on representative strategic cases |
 | 8 — Investment decision gate | Not started | Proceed, revise and retest, or stop based on evidence |
@@ -112,7 +112,7 @@ The following fail verification:
 
 The Stage 4 vertical fixture contains four direct confrontations and four traceable consequences.
 
-## What Can Run After Stage 4 Merge
+## What Can Run Today
 
 The repository can:
 
