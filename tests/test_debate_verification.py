@@ -143,6 +143,7 @@ def test_direct_exchange_with_traceable_impact_passes_single_phase() -> None:
     report = require_actual_debate(
         _session(exchanges=(exchange,), impacts=(impact,), plans=(plan,)),
         require_both_phases=False,
+        minimum_targeted_members=1,
     )
     assert report.passed is True
     assert report.direct_exchange_count == 1
