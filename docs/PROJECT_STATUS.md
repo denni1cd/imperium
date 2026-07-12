@@ -2,133 +2,102 @@
 
 ## Current Position
 
-Imperium remains in **design and validation**, with the constitutional, council, and protocol contracts now explicit through protocol version `1.2`.
+Imperium remains in **design and validation**.
 
-- **Main branch:** Stages 0–3 complete and merged through protocol 1.1.
-- **Current patch:** protocol 1.2 resolves conditional output, evidence cardinality, halt, and canonical-record blockers before Stage 4.
-- **Current Stage 4 work:** draft implementation plan only; no offline engine code is authorized yet.
-- **Next engineering milestone:** one complete, resumable fake/replay deliberation.
-- **Best next hands-on test:** after Stage 4 produces the end-to-end vertical slice and its inspectable artifacts.
+- **Main branch:** Stages 0–3 are merged through protocol 1.2.
+- **Current patch:** protocol 1.3 clarifies evidence and same-phase debate-round ordering.
+- **Stage 4:** draft implementation plan only; the offline engine is not implemented or authorized yet.
+- **Next engineering milestone:** one complete, resumable synthetic fake/replay deliberation.
+- **Best hands-on test:** after Stage 4 produces an inspectable end-to-end session.
 
-`MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted decisions. `STRATEGIC_PROJECT_PLAN.md` remains the gated roadmap.
+`MANIFESTO.md` is the governing source of truth. `DECISIONS.md` records accepted decisions. `STRATEGIC_PROJECT_PLAN.md` remains the gated roadmap.
 
 ## Stage Summary
 
 | Stage | Status | Result |
 |---|---|---|
-| 0 — Governance and provider-neutral foundation | Complete and merged | Manifesto, decisions, roadmap, Pydantic artifacts, lifecycle foundation, context isolation, fake/replay providers, persistence, CI |
-| 1 — Shared strategic value vocabulary | Complete and merged | Nine approved values, versioned YAML, differentiation rules, exact vector validation |
-| 2 — Member profiles and fixed initial council | Complete and merged | Four advocates, one non-advocating Seneschal, versioned profiles, doctrines, counterweights, known coverage risks |
-| 3 — Exact deliberation protocol | Protocol 1.2 patch under review | Twelve transitions, blind interpretation, advocate-authored challenges, conditional outputs, evidence routing/cardinality, halt behavior, stopping rules, protocol trace |
-| 4 — Complete offline deliberation engine | Planned, not implemented | Wire every approved stage and subturn into one resumable fake/replay run from request to actionable plan |
-| 5 — Codex provider and live vertical slice | Not started | Use ChatGPT-authenticated Codex only after the offline engine works |
-| 6 — Controlled experiment harness | Not started | Conditions A1, A2, B, and C with frozen configurations and metrics |
-| 7 — Pilot validation | Not started | Repeated blinded evaluation on representative strategic cases |
-| 8 — Investment decision gate | Not started | Proceed, revise and retest, or stop based on evidence |
+| 0 — Governance and provider-neutral foundation | Complete | Manifesto, decisions, roadmap, domain contracts, lifecycle foundation, context isolation, providers, persistence, CI |
+| 1 — Shared strategic vocabulary | Complete | Nine approved values, versioned configuration, differentiation and vector validation |
+| 2 — Profiles and fixed council | Complete | Seneschal plus Accountant, Gazgul, Overmind, and Castellan with persistent profiles and counterweights |
+| 3 — Exact deliberation protocol | Protocol 1.3 patch under review | Twelve transitions, blind interpretation, direct challenge turns, evidence/cardinality/halt rules, bounded rounds, protocol trace |
+| 4 — Offline deliberation engine | Planned, not implemented | One resumable synthetic/replay run from request to actionable plan |
+| 5 — Codex provider and live slice | Not started | First live provider only after Stage 4 works |
+| 6 — Experiment harness | Not started | A1, A2, B, and C with frozen controls |
+| 7 — Pilot validation | Not started | Repeated blinded evaluation |
+| 8 — Investment gate | Not started | Proceed, revise and retest, or stop |
 | 9 — First usable local tool | Not started | CLI, durable sessions, exports, provider replacement, authorization checkpoints |
 
-## What Is Built
+## Approved Strategic Foundation
 
-### Governance and design
+### Values 1.0
 
-- Governing manifesto and authority hierarchy
-- Durable decision log
-- Gated strategic roadmap
-- Explicit recommendation, authorization, and execution boundary
-- Evidence-resolution outcomes
-- Actionable-plan minimum contract
-- Consequential-debate definition and measurements
+- Ambition
+- Urgency
+- Economy
+- Simplicity
+- Resilience
+- Optionality
+- Leverage
+- Adaptability
+- Human Sustainability
 
-### Strategic profiles
+### Council 1.0
 
-- Approved vocabulary version `1.0`:
-  - Ambition
-  - Urgency
-  - Economy
-  - Simplicity
-  - Resilience
-  - Optionality
-  - Leverage
-  - Adaptability
-  - Human Sustainability
-- Approved council version `1.0`:
-  - Seneschal — procedural adjudicator; not an advocate
-  - Accountant — resource discipline (`steward` internal office)
-  - Gazgul — ambition and urgency (`vanguard` internal office)
-  - Overmind — leverage and reusable capability (`architect` internal office)
-  - Castellan — resilience and downside protection
-- Complete vectors, doctrine, vigilance, sacrifices, evidence requirements, revision triggers, operating constraints, and counterweights
-- Council names isolated as removable presentation metadata
-- Internal stable IDs remain `seneschal`, `steward`, `vanguard`, `architect`, and `castellan`
-- Human Sustainability preserved as a known roster coverage risk
+- Seneschal — procedural coordinator and adjudicator
+- Accountant (`steward`) — resource discipline
+- Gazgul (`vanguard`) — ambition and urgency
+- Overmind (`architect`) — leverage and reusable capability
+- Castellan (`castellan`) — resilience and downside protection
 
-### Python foundation
+The four advocates and Seneschal have versioned profiles, normalized vectors, doctrines, vigilance, sacrifices, evidence requirements, revision triggers, constraints, and counterweights. Human Sustainability remains a known roster-coverage risk.
 
-- Python 3.12 package
-- Strict Pydantic domain models
-- Normalized value-vector enforcement
-- Versioned YAML loaders for values, council, and protocol
-- Deterministic lifecycle state machine
-- Explicit information-boundary context builder
-- Provider-neutral model interface
-- Fake and replay providers
-- Atomic JSON record export and reload
-- Cross-record validation
-- GitHub Actions test workflow
+## Approved Protocol Capabilities
 
-### Stage 3 protocol capabilities
+Protocol 1.3 contains:
 
-- Versioned `config/protocol.yaml`
-- Exact contract for every lifecycle transition
-- Typed normalized claim registers
-- Typed challenge plans and assignments
-- Advocate-authored challenger and target-response subturns
-- Typed continuation and stopping decisions
-- Deterministic materiality, counterweight, repetition, and round-limit checks
-- Conditional challenge outputs: zero exchanges for empty plans, one exchange per assignment otherwise
-- Exact evidence cardinality: one resolution per request, including zero
-- User-wait and deliberation-pause status rules
-- Explicit post-proposal evidence-resolution stage
-- Evidence-routing thresholds
-- Two-round debate safety rule preserving unresolved issues
-- Abbreviated path defined but disabled for initial experiments
-- Stage-specific prompt contracts under `prompts/`
-- Typed `ProtocolTrace` as the canonical challenge and protocol record fragment
+- twelve ordered lifecycle transitions;
+- blind independent interpretation;
+- normalized frame and proposal claim registers;
+- bounded challenge plans;
+- advocate-authored challenger and target-response subturns;
+- exact empty/nonempty challenge cardinality;
+- one evidence resolution per request, including zero;
+- waiting and paused halt states;
+- evidence resolution after the challenge phase that created the request;
+- same-phase second rounds based only on revised claims, new material frames, or other already-permitted input;
+- counterweight, materiality, anti-repetition, continuation, and round-limit validation;
+- reasoned revision or retention;
+- minority-objection preservation;
+- Seneschal adjudication and actionable-plan contracts;
+- canonical authored challenges in `ProtocolTrace`.
 
 ## What Can Run Today
 
-The repository can currently:
+The repository can:
 
-- load and validate the value vocabulary;
-- load and validate the fixed council;
-- load and validate the protocol configuration;
-- reject invalid stage transitions;
-- reject leaked or forbidden artifact kinds;
-- validate challenge targeting, materiality, counterweights, repetition, and stopping decisions;
-- validate authored challenger and target ownership;
-- validate empty and nonempty challenge-round cardinality;
+- load and validate values, council, and protocol configuration;
+- reject invalid transitions and forbidden artifact kinds;
+- validate challenge plans, authored challenges, target responses, and round cardinality;
 - validate evidence request-resolution cardinality and halt status;
-- simulate provider responses through fake and replay providers;
-- export and reload validated foundation records;
-- run the automated contract test suite.
+- validate protocol trace continuity and canonical challenge ownership;
+- run fake and replay providers;
+- atomically export and reload foundation records;
+- run the complete automated contract test suite.
 
-It **cannot yet run a complete council deliberation automatically**. Stage 4 must connect the approved pieces into one orchestrated vertical slice.
+It cannot yet orchestrate a complete council session automatically.
 
-## Recommended Hands-On Testing Point
+## Stage 4 Hands-On Checkpoint
 
-The best point for local use is the end of Stage 4, when one command should:
+The local checkpoint should provide one credential-free command that:
 
-1. load frozen values, council, protocol, prompts, and fake/replay responses;
-2. accept a synthetic sample sovereign request;
-3. advance through all twelve transitions when no halt outcome blocks progress;
-4. execute separate challenger and target calls;
-5. enforce information boundaries and output cardinality;
-6. exercise evidence continuation, waiting, and pause paths;
-7. produce revisions, adjudication, and an actionable plan;
-8. export the authoritative session, protocol trace, readable transcript, lineage, and plan;
-9. resume safely after a deliberate interruption.
+1. loads frozen values, profiles, protocol, prompts, and synthetic fixtures;
+2. preserves a sample sovereign request;
+3. runs all permitted transitions and direct advocate turns;
+4. exercises challenge, evidence, waiting, pause, revision, adjudication, and plan paths;
+5. exports the authoritative session, frozen manifest, transcript, lineage, and actionable plan;
+6. resumes safely after a deliberate interruption.
 
-Expected local validation commands remain:
+Expected development commands remain:
 
 ```bash
 python -m venv .venv
@@ -137,43 +106,31 @@ pytest
 python -m pytest tests/integration/test_offline_vertical_slice.py -vv
 ```
 
-The Stage 4 integration test does not exist yet.
+The Stage 4 integration test and command do not exist yet.
 
 ## Remaining Before Stage 4 Implementation
 
-- [ ] Merge the reviewed protocol 1.2 patch
-- [ ] Rebase and update the Stage 4 plan to protocol 1.2
-- [ ] Freeze prompt/configuration content requirements in the Stage 4 session envelope
-- [ ] Require positive minority-objection and hybrid-or-no-hybrid acceptance paths
-- [ ] Require synthetic-only CI artifacts and exact profile projection boundaries
-- [ ] Approve the final Stage 4 scope before coding
+- [ ] Merge the reviewed protocol 1.3 ordering patch
+- [ ] Rebase and update PR #8 to protocol 1.3
+- [ ] Complete a final manifesto/protocol review of the Stage 4 plan
+- [ ] Receive explicit authorization before engine code begins
 
 ## Remaining Before Live Model Use
 
-- [ ] Connect contracts into full offline orchestration
-- [ ] Attach `ProtocolTrace` to the authoritative offline session envelope
-- [ ] Add deterministic stage and challenge-subturn runners
-- [ ] Add interruption and resume behavior
-- [ ] Complete fake-provider vertical integration tests
-- [ ] Add realistic replay fixture sets
-- [ ] Review generated offline session artifacts
+- [ ] Full offline orchestration
+- [ ] Frozen session manifest and context/call lineage
+- [ ] Deterministic checkpoint and resume
+- [ ] Synthetic challenged, empty, conditional, waiting, and paused fixtures
+- [ ] CI-generated inspectable session artifacts
+- [ ] Review of the actual mocked session
 
-## Remaining Before Pilot Validation
+## Current Validation Risks
 
-- [ ] Codex provider and isolated live vertical slice
-- [ ] Frozen experiment cases and prompts
-- [ ] A1, A2, B, and C experiment runners
-- [ ] Blinded evaluation rubric and process
-- [ ] Repetition count and minimum improvement threshold
-- [ ] Profile-fidelity and human-sustainability coverage tests
+- Numeric profiles have not been proven to create persistent reasoning differences.
+- Human Sustainability may be underrepresented.
+- Two debate rounds may be too permissive or restrictive.
+- Prompt contracts have not been exercised with a live model.
+- Seneschal synthesis may still bias outcomes.
+- Full deliberation may not outperform strong single-adviser or independent-panel baselines.
 
-## Current Risks
-
-- Numeric profile differences have not yet been proven to create persistent reasoning differences.
-- The fixed roster may underrepresent Human Sustainability.
-- The two-round debate rule may be too permissive or too restrictive; experiments must test it.
-- Prompt contracts have not yet been exercised with a live model.
-- The Seneschal may still bias synthesis despite formal non-advocacy; blinded testing must detect this.
-- The full council may not outperform a strong single adviser or independent panel.
-
-These are validation risks, not reasons to add more architecture before the current protocol is tested.
+These risks should be tested rather than answered with additional speculative architecture.
