@@ -2,25 +2,47 @@
 
 from __future__ import annotations
 
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
 from imperium.domain.enums import ChallengePhase
 from imperium.domain.models import StrictModel
 from imperium.domain.protocol import ChallengePlan, ClaimRegister, ContinuationDecision
 
 
+class ClaimRegisterSnapshot(StrictModel):
+    """Versioned canonical claims visible for one phase and debate round."""
+
+    phase: ChallengePhase
+    round_number: int = Field(ge=0)
+    register: ClaimRegister
+    supersedes_register_id: str | None = None
+
+    @model_validator(mode="after")
+    def validate_snapshot(self) -> "ClaimRegisterSnapshot":
+        if self.register.phase is not self.phase:
+            raise ValueError("claim-register snapshot phase must match the register")
+        if self.round_number == 0 and self.supersedes_register_id is not None:
+            raise ValueError("the initial claim register cannot supersede another register")
+        if self.round_number > 0 and not self.supersedes_register_id:
+            raise ValueError("a later claim-register snapshot must identify what it supersedes")
+        return self
+
+
 class ProtocolTrace(StrictModel):
     """Typed protocol artifacts that Stage 4 will attach to a deliberation session."""
 
-    claim_registers: tuple[ClaimRegister, ...] = ()
+    claim_register_snapshots: tuple[ClaimRegisterSnapshot, ...] = ()
     challenge_plans: tuple[ChallengePlan, ...] = ()
     continuation_decisions: tuple[ContinuationDecision, ...] = ()
 
     @model_validator(mode="after")
     def validate_phase_records(self) -> "ProtocolTrace":
-        register_phases = [register.phase for register in self.claim_registers]
-        if len(set(register_phases)) != len(register_phases):
-            raise ValueError("a protocol trace may contain only one claim register per phase")
+        snapshot_keys = [
+            (snapshot.phase, snapshot.round_number)
+            for snapshot in self.claim_register_snapshots
+        ]
+        if len(set(snapshot_keys)) != len(snapshot_keys):
+            raise ValueError("claim-register phase and round combinations must be unique")
 
         plan_keys = [(plan.phase, plan.round_number) for plan in self.challenge_plans]
         if len(set(plan_keys)) != len(plan_keys):
@@ -42,7 +64,22 @@ class ProtocolTrace(StrictModel):
                 f"{rendered}"
             )
 
-        known_phases = {ChallengePhase.FRAME, ChallengePhase.PROPOSAL}
-        if set(register_phases) - known_phases:
-            raise ValueError("protocol trace contains an unsupported challenge phase")
+        snapshots_by_phase: dict[ChallengePhase, list[ClaimRegisterSnapshot]] = {}
+        for snapshot in self.claim_register_snapshots:
+            snapshots_by_phase.setdefault(snapshot.phase, []).append(snapshot)
+
+        for phase, snapshots in snapshots_by_phase.items():
+            ordered = sorted(snapshots, key=lambda item: item.round_number)
+            rounds = [snapshot.round_number for snapshot in ordered]
+            if rounds[0] != 0 or rounds != list(range(rounds[-1] + 1)):
+                raise ValueError(
+                    f"claim-register snapshots for {phase.value!r} must begin at round 0 "
+                    "and remain contiguous"
+                )
+            for previous, current in zip(ordered, ordered[1:], strict=False):
+                if current.supersedes_register_id != previous.register.register_id:
+                    raise ValueError(
+                        f"claim-register snapshot round {current.round_number} for "
+                        f"{phase.value!r} must supersede the prior register"
+                    )
         return self
