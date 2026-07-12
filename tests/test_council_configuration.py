@@ -68,7 +68,7 @@ def test_every_member_has_an_inspectable_differentiation_claim() -> None:
         assert by_id[advocate_id].counterweight_member_ids
 
 
-def test_presentation_labels_are_metadata_not_member_identifiers() -> None:
+def test_council_names_are_metadata_not_member_identifiers() -> None:
     council = _load_council()
 
     assert {member.member_id for member in council.members} == {
@@ -79,11 +79,11 @@ def test_presentation_labels_are_metadata_not_member_identifiers() -> None:
         "castellan",
     }
     assert {member.presentation_label for member in council.members} == {
-        "Roboute Guilliman",
-        "Munitorum",
-        "Macharius",
-        "Belisarius Cawl",
-        "Rogal Dorn",
+        "Seneschal",
+        "Accountant",
+        "Gazgul",
+        "Overmind",
+        "Castellan",
     }
 
 
