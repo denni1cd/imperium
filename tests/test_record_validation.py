@@ -8,6 +8,7 @@ from imperium.domain.enums import DeliberationStage, SessionStatus
 from imperium.domain.models import (
     ActionStep,
     ActionablePlan,
+    Challenge,
     DeliberationRecord,
     Interpretation,
 )
@@ -90,6 +91,26 @@ def test_record_rejects_duplicate_member_interpretations(sovereign_request, memb
     )
 
     with pytest.raises(InvalidDeliberationRecord, match="only one blind interpretation"):
+        validate_deliberation_record(record)
+
+
+def test_record_rejects_legacy_challenge_storage(sovereign_request, member) -> None:
+    legacy = Challenge(
+        challenger_member_id="vanguard",
+        target_member_id="steward",
+        target_artifact_id="proposal-steward",
+        disputed_claim="Expected demand justifies the commitment.",
+        materiality="The preferred strategy changes if demand is lower.",
+        failure_consequence="Resources could be committed without adoption.",
+    )
+    record = DeliberationRecord(
+        request=sovereign_request,
+        member_snapshots=(member,),
+        selected_member_ids=(member.member_id,),
+        challenges=(legacy,),
+    )
+
+    with pytest.raises(InvalidDeliberationRecord, match="canonical authored challenges"):
         validate_deliberation_record(record)
 
 

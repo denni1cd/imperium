@@ -38,7 +38,7 @@ def _load_dependencies():
 def test_protocol_loads_and_covers_every_lifecycle_transition() -> None:
     _, _, protocol = _load_dependencies()
 
-    assert protocol.version == "1.1"
+    assert protocol.version == "1.2"
     assert len(protocol.stage_contracts) == len(DeliberationStage) - 1
     assert protocol.stage_contracts[0].prerequisite_stage is DeliberationStage.CREATED
     assert protocol.stage_contracts[-1].resulting_stage is DeliberationStage.PLAN_COMPLETE
@@ -58,7 +58,7 @@ def test_independent_interpretation_is_blind_and_advocate_owned() -> None:
     assert contract.required_output_artifacts == (ArtifactKind.INTERPRETATION,)
 
 
-def test_challenge_stages_route_distinct_advocate_subturns() -> None:
+def test_challenge_stages_route_conditional_advocate_subturns() -> None:
     _, _, protocol = _load_dependencies()
 
     for resulting_stage in (
@@ -75,8 +75,27 @@ def test_challenge_stages_route_distinct_advocate_subturns() -> None:
             ArtifactKind.CHALLENGE,
             ArtifactKind.CHALLENGE_RESPONSE,
         )
-        assert ArtifactKind.CHALLENGE in contract.required_output_artifacts
+        assert ArtifactKind.CHALLENGE not in contract.required_output_artifacts
+        assert ArtifactKind.CHALLENGE_RESPONSE not in contract.required_output_artifacts
+        assert ArtifactKind.CHALLENGE_PLAN in contract.required_output_artifacts
+        assert ArtifactKind.CONTINUATION_DECISION in contract.required_output_artifacts
         assert ArtifactKind.CHALLENGE in contract.challenge_turns[1].allowed_input_artifacts
+
+
+def test_evidence_stages_resolve_each_request_exactly_once() -> None:
+    _, _, protocol = _load_dependencies()
+
+    for resulting_stage in (
+        DeliberationStage.EVIDENCE_RESOLVED,
+        DeliberationStage.PROPOSAL_EVIDENCE_RESOLVED,
+    ):
+        contract = protocol.contract_for(resulting_stage)
+        assert contract.actor is ProtocolActor.ENGINE
+        assert contract.required_output_artifacts == ()
+        assert len(contract.output_cardinality) == 1
+        rule = contract.output_cardinality[0]
+        assert rule.output_artifact is ArtifactKind.EVIDENCE_RESOLUTION
+        assert rule.count_from_input_artifact is ArtifactKind.EVIDENCE_REQUEST
 
 
 def test_protocol_has_explicit_post_proposal_evidence_resolution() -> None:
@@ -85,7 +104,6 @@ def test_protocol_has_explicit_post_proposal_evidence_resolution() -> None:
 
     assert contract.actor is ProtocolActor.ENGINE
     assert contract.prerequisite_stage is DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE
-    assert contract.required_output_artifacts == (ArtifactKind.EVIDENCE_RESOLUTION,)
 
 
 def test_first_experiments_cannot_use_abbreviated_path() -> None:
@@ -136,5 +154,33 @@ def test_protocol_rejects_challenge_stage_without_advocate_subturns() -> None:
     )
     challenge_contract["challenge_turns"] = []
 
-    with pytest.raises(ValidationError, match="must define challenge subturns"):
+    with pytest.raises(ValidationError, match="must define advocate subturns"):
+        ProtocolConfiguration.model_validate(raw)
+
+
+def test_protocol_rejects_unconditional_challenge_artifacts() -> None:
+    _, _, protocol = _load_dependencies()
+    raw = protocol.model_dump(mode="json")
+    challenge_contract = next(
+        contract
+        for contract in raw["stage_contracts"]
+        if contract["resulting_stage"] == "proposal_challenges_complete"
+    )
+    challenge_contract["required_output_artifacts"].append("challenge")
+
+    with pytest.raises(ValidationError, match="conditional on assignments"):
+        ProtocolConfiguration.model_validate(raw)
+
+
+def test_protocol_rejects_evidence_stage_without_cardinality_rule() -> None:
+    _, _, protocol = _load_dependencies()
+    raw = protocol.model_dump(mode="json")
+    evidence_contract = next(
+        contract
+        for contract in raw["stage_contracts"]
+        if contract["resulting_stage"] == "proposal_evidence_resolved"
+    )
+    evidence_contract["output_cardinality"] = []
+
+    with pytest.raises(ValidationError, match="resolve each evidence request exactly once"):
         ProtocolConfiguration.model_validate(raw)

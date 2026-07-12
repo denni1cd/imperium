@@ -172,4 +172,22 @@ Version `1.1` corrects an execution gap in the approved challenge stages without
 - Empty challenge plans remain permitted and do not create synthetic advocate turns.
 - Authored challenges are included in the protocol trace and must match their assignment's phase, round, members, artifact, and claim.
 - The same structure applies to frame and proposal challenge phases.
-- The authoritative machine-readable contract is `config/protocol.yaml`; the amendment is documented in `docs/PROTOCOL_1_1_CHALLENGE_TURNS.md`.
+- The amendment is documented in `docs/PROTOCOL_1_1_CHALLENGE_TURNS.md`.
+
+### 2026-07-12 — Protocol 1.2 cardinality, halt, and canonical record semantics
+
+Version `1.2` corrects remaining execution contradictions without changing the twelve lifecycle transitions, challenge-selection policy, evidence routes, or stopping thresholds.
+
+- `ChallengePlan` and `ContinuationDecision` are unconditional challenge-stage outputs.
+- `ChallengeArtifact` and `ChallengeResponse` are conditional per-assignment outputs.
+- An empty challenge plan produces zero challenge and response artifacts; synthetic exchanges are invalid.
+- Every evidence stage resolves exactly one `EvidenceResolution` per `EvidenceRequest`, including the valid zero-request and zero-resolution case.
+- Duplicate, orphan, and unresolved evidence mappings are invalid.
+- User-clarification outcomes set the session to `waiting_for_user` and prevent lifecycle advancement.
+- Deliberation-pause outcomes set the session to `paused` and prevent lifecycle advancement.
+- Gathered evidence and conditional planning may continue only with explicit provenance, conditions, uncertainty, and reconsideration triggers.
+- `ProtocolTrace.challenges` is the sole canonical store for advocate-authored challenges.
+- The legacy `DeliberationRecord.challenges` field must remain empty and is rejected during record validation if populated.
+- `docs/DELIBERATION_LIFECYCLE.md` and `docs/CONSEQUENTIAL_DEBATE.md` are synchronized to protocol 1.2.
+- Saved protocol 1.0 or 1.1 sessions must remain associated with their original version unless explicitly migrated.
+- The authoritative machine-readable contract is `config/protocol.yaml`; the amendment is documented in `docs/PROTOCOL_1_2_CARDINALITY_AND_HALTS.md`.

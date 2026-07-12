@@ -1,4 +1,4 @@
-"""Tests for deterministic challenge, visibility, and stopping rules."""
+"""Tests for deterministic challenge, evidence, visibility, and stopping rules."""
 
 from pathlib import Path
 
@@ -16,10 +16,16 @@ from imperium.domain.enums import (
     ClaimKind,
     ContinuationReason,
     DeliberationStage,
+    EvidenceOutcome,
     Materiality,
+    SessionStatus,
     StopReason,
 )
-from imperium.domain.models import ChallengeResponse
+from imperium.domain.models import (
+    ChallengeResponse,
+    EvidenceRequest,
+    EvidenceResolution,
+)
 from imperium.domain.protocol import (
     ChallengeArtifact,
     ChallengeAssignment,
@@ -30,10 +36,13 @@ from imperium.domain.protocol import (
 )
 from imperium.engine.protocol_rules import (
     InvalidProtocolArtifact,
+    evidence_session_status,
     validate_challenge_artifact,
     validate_challenge_plan,
     validate_challenge_response,
+    validate_challenge_round_outputs,
     validate_continuation_decision,
+    validate_evidence_resolutions,
     validate_stage_inputs,
     validate_stage_outputs,
 )
@@ -104,6 +113,26 @@ def _authored_challenge() -> ChallengeArtifact:
     )
 
 
+def _response() -> ChallengeResponse:
+    return ChallengeResponse(
+        challenge_id="challenge-demand",
+        member_id="steward",
+        disposition=ChallengeDisposition.DEFEND,
+        response="The staged commitment is supported by supplied demand evidence.",
+    )
+
+
+def _evidence_request(request_id: str = "evidence-demand") -> EvidenceRequest:
+    return EvidenceRequest(
+        evidence_request_id=request_id,
+        requester_member_id="steward",
+        disputed_claim="Expected demand justifies the commitment.",
+        decision_impact="The preferred investment changes if demand is lower.",
+        requested_information="Committed demand evidence.",
+        preferred_source="synthetic replay fixture",
+    )
+
+
 def test_stage_visibility_rejects_forbidden_artifacts() -> None:
     _, protocol = _load_configuration()
     interpretation = protocol.contract_for(DeliberationStage.INTERPRETATIONS_COMPLETE)
@@ -130,6 +159,62 @@ def test_stage_output_contract_requires_all_and_only_declared_artifacts() -> Non
         compare_frames,
         (ArtifactKind.CLAIM_REGISTER, ArtifactKind.FRAME_REGISTER),
     )
+
+
+def test_empty_challenge_stage_does_not_require_synthetic_exchange() -> None:
+    _, protocol = _load_configuration()
+    contract = protocol.contract_for(DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE)
+
+    validate_stage_outputs(
+        contract,
+        (
+            ArtifactKind.CLAIM_REGISTER,
+            ArtifactKind.CHALLENGE_PLAN,
+            ArtifactKind.CONTINUATION_DECISION,
+        ),
+    )
+
+
+def test_nonempty_challenge_stage_allows_subturn_outputs() -> None:
+    _, protocol = _load_configuration()
+    contract = protocol.contract_for(DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE)
+
+    validate_stage_outputs(
+        contract,
+        (
+            ArtifactKind.CLAIM_REGISTER,
+            ArtifactKind.CHALLENGE_PLAN,
+            ArtifactKind.CHALLENGE,
+            ArtifactKind.CHALLENGE_RESPONSE,
+            ArtifactKind.CONTINUATION_DECISION,
+        ),
+    )
+
+
+def test_evidence_stage_output_count_matches_request_count() -> None:
+    _, protocol = _load_configuration()
+    contract = protocol.contract_for(DeliberationStage.PROPOSAL_EVIDENCE_RESOLVED)
+
+    validate_stage_outputs(contract, (), supplied_input_artifacts=())
+    validate_stage_outputs(
+        contract,
+        (ArtifactKind.EVIDENCE_RESOLUTION,),
+        supplied_input_artifacts=(ArtifactKind.EVIDENCE_REQUEST,),
+    )
+
+    with pytest.raises(InvalidProtocolArtifact, match="cardinality"):
+        validate_stage_outputs(
+            contract,
+            (),
+            supplied_input_artifacts=(ArtifactKind.EVIDENCE_REQUEST,),
+        )
+
+    with pytest.raises(InvalidProtocolArtifact, match="expected 0"):
+        validate_stage_outputs(
+            contract,
+            (ArtifactKind.EVIDENCE_RESOLUTION,),
+            supplied_input_artifacts=(),
+        )
 
 
 def test_valid_counterweighted_challenge_plan_passes() -> None:
@@ -161,17 +246,94 @@ def test_authored_challenge_must_match_assignment() -> None:
 
 def test_challenge_response_must_come_from_assigned_target() -> None:
     assignment = _assignment()
-    valid = ChallengeResponse(
-        challenge_id=assignment.challenge_id,
-        member_id=assignment.target_member_id,
-        disposition=ChallengeDisposition.DEFEND,
-        response="The staged commitment is supported by the supplied demand evidence.",
-    )
+    valid = _response()
     validate_challenge_response(valid, assignment=assignment)
 
     wrong_target = valid.model_copy(update={"member_id": "architect"})
     with pytest.raises(InvalidProtocolArtifact, match="assigned target"):
         validate_challenge_response(wrong_target, assignment=assignment)
+
+
+def test_challenge_round_requires_exactly_one_exchange_per_assignment() -> None:
+    assigned = ChallengePlan(
+        phase=ChallengePhase.PROPOSAL,
+        round_number=1,
+        assignments=(_assignment(),),
+    )
+    validate_challenge_round_outputs(
+        assigned,
+        challenges=(_authored_challenge(),),
+        responses=(_response(),),
+    )
+
+    with pytest.raises(InvalidProtocolArtifact, match="exactly match"):
+        validate_challenge_round_outputs(
+            assigned,
+            challenges=(),
+            responses=(_response(),),
+        )
+
+    empty = ChallengePlan(
+        phase=ChallengePhase.PROPOSAL,
+        round_number=1,
+        no_challenge_reason="No material proposal claim remains contested.",
+    )
+    validate_challenge_round_outputs(empty, challenges=(), responses=())
+
+    with pytest.raises(InvalidProtocolArtifact, match="exactly match"):
+        validate_challenge_round_outputs(
+            empty,
+            challenges=(_authored_challenge(),),
+            responses=(),
+        )
+
+
+def test_evidence_resolutions_map_exactly_to_requests() -> None:
+    request = _evidence_request()
+    resolution = EvidenceResolution(
+        evidence_request_id=request.evidence_request_id,
+        outcome=EvidenceOutcome.GATHERED,
+        evidence=("Synthetic fixture confirms committed demand.",),
+        source_references=("fixture:evidence-demand",),
+    )
+    validate_evidence_resolutions((), ())
+    validate_evidence_resolutions((request,), (resolution,))
+
+    with pytest.raises(InvalidProtocolArtifact, match="missing=.*evidence-demand"):
+        validate_evidence_resolutions((request,), ())
+
+    orphan = resolution.model_copy(update={"evidence_request_id": "orphan"})
+    with pytest.raises(InvalidProtocolArtifact, match="orphaned=.*orphan"):
+        validate_evidence_resolutions((), (orphan,))
+
+
+def test_evidence_outcomes_set_required_session_status() -> None:
+    gathered = EvidenceResolution(
+        evidence_request_id="evidence-gathered",
+        outcome=EvidenceOutcome.GATHERED,
+        evidence=("Synthetic evidence.",),
+        source_references=("fixture:gathered",),
+    )
+    waiting = EvidenceResolution(
+        evidence_request_id="evidence-user",
+        outcome=EvidenceOutcome.USER_CLARIFICATION_REQUIRED,
+        remaining_uncertainty=("The user's acceptable downside is unknown.",),
+    )
+    paused = EvidenceResolution(
+        evidence_request_id="evidence-paused",
+        outcome=EvidenceOutcome.DELIBERATION_PAUSED,
+        remaining_uncertainty=("Responsible planning is impossible without the fact.",),
+    )
+    conditional = EvidenceResolution(
+        evidence_request_id="evidence-conditional",
+        outcome=EvidenceOutcome.PROCEED_CONDITIONALLY,
+        planning_conditions=("Proceed only below the reversible commitment limit.",),
+    )
+
+    assert evidence_session_status(()) is SessionStatus.ACTIVE
+    assert evidence_session_status((gathered, conditional)) is SessionStatus.ACTIVE
+    assert evidence_session_status((waiting,)) is SessionStatus.WAITING_FOR_USER
+    assert evidence_session_status((waiting, paused)) is SessionStatus.PAUSED
 
 
 def test_non_counterweight_requires_explicit_override() -> None:

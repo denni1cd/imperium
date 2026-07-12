@@ -2,12 +2,13 @@
 
 ## Current Position
 
-Imperium remains in **design and validation**, but the constitutional and protocol design is now largely explicit.
+Imperium remains in **design and validation**, with the constitutional, council, and protocol contracts now explicit through protocol version `1.2`.
 
-- **Main branch:** Stages 0–3 complete and merged.
-- **Current work:** preparing Stage 4, the offline deliberation engine.
+- **Main branch:** Stages 0–3 complete and merged through protocol 1.1.
+- **Current patch:** protocol 1.2 resolves conditional output, evidence cardinality, halt, and canonical-record blockers before Stage 4.
+- **Current Stage 4 work:** draft implementation plan only; no offline engine code is authorized yet.
 - **Next engineering milestone:** one complete, resumable fake/replay deliberation.
-- **Best next hands-on test:** after Stage 4 completes that end-to-end vertical slice.
+- **Best next hands-on test:** after Stage 4 produces the end-to-end vertical slice and its inspectable artifacts.
 
 `MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted decisions. `STRATEGIC_PROJECT_PLAN.md` remains the gated roadmap.
 
@@ -18,8 +19,8 @@ Imperium remains in **design and validation**, but the constitutional and protoc
 | 0 — Governance and provider-neutral foundation | Complete and merged | Manifesto, decisions, roadmap, Pydantic artifacts, lifecycle foundation, context isolation, fake/replay providers, persistence, CI |
 | 1 — Shared strategic value vocabulary | Complete and merged | Nine approved values, versioned YAML, differentiation rules, exact vector validation |
 | 2 — Member profiles and fixed initial council | Complete and merged | Four advocates, one non-advocating Seneschal, versioned profiles, doctrines, counterweights, known coverage risks |
-| 3 — Exact deliberation protocol | Complete and merged | Twelve transitions, claim normalization, challenge assignment, evidence routing, stopping rules, prompt contracts, protocol trace |
-| 4 — Complete offline deliberation engine | Next | Wire all stages into one resumable fake/replay run from request to actionable plan |
+| 3 — Exact deliberation protocol | Protocol 1.2 patch under review | Twelve transitions, blind interpretation, advocate-authored challenges, conditional outputs, evidence routing/cardinality, halt behavior, stopping rules, protocol trace |
+| 4 — Complete offline deliberation engine | Planned, not implemented | Wire every approved stage and subturn into one resumable fake/replay run from request to actionable plan |
 | 5 — Codex provider and live vertical slice | Not started | Use ChatGPT-authenticated Codex only after the offline engine works |
 | 6 — Controlled experiment harness | Not started | Conditions A1, A2, B, and C with frozen configurations and metrics |
 | 7 — Pilot validation | Not started | Repeated blinded evaluation on representative strategic cases |
@@ -66,29 +67,33 @@ Imperium remains in **design and validation**, but the constitutional and protoc
 - Python 3.12 package
 - Strict Pydantic domain models
 - Normalized value-vector enforcement
-- Versioned YAML loaders for values and council
+- Versioned YAML loaders for values, council, and protocol
 - Deterministic lifecycle state machine
 - Explicit information-boundary context builder
 - Provider-neutral model interface
 - Fake and replay providers
-- Atomic JSON session export and reload
+- Atomic JSON record export and reload
 - Cross-record validation
 - GitHub Actions test workflow
 
-### Stage 3 additions
+### Stage 3 protocol capabilities
 
 - Versioned `config/protocol.yaml`
 - Exact contract for every lifecycle transition
-- Explicit post-proposal evidence-resolution stage
 - Typed normalized claim registers
 - Typed challenge plans and assignments
+- Advocate-authored challenger and target-response subturns
 - Typed continuation and stopping decisions
 - Deterministic materiality, counterweight, repetition, and round-limit checks
+- Conditional challenge outputs: zero exchanges for empty plans, one exchange per assignment otherwise
+- Exact evidence cardinality: one resolution per request, including zero
+- User-wait and deliberation-pause status rules
+- Explicit post-proposal evidence-resolution stage
 - Evidence-routing thresholds
-- Two-round debate safety rule that preserves unresolved issues instead of truncating them
+- Two-round debate safety rule preserving unresolved issues
 - Abbreviated path defined but disabled for initial experiments
 - Stage-specific prompt contracts under `prompts/`
-- Typed `ProtocolTrace` for Stage 4 session integration
+- Typed `ProtocolTrace` as the canonical challenge and protocol record fragment
 
 ## What Can Run Today
 
@@ -96,34 +101,34 @@ The repository can currently:
 
 - load and validate the value vocabulary;
 - load and validate the fixed council;
-- load and validate the complete Stage 3 protocol;
+- load and validate the protocol configuration;
 - reject invalid stage transitions;
-- reject leaked or forbidden stage artifacts;
+- reject leaked or forbidden artifact kinds;
 - validate challenge targeting, materiality, counterweights, repetition, and stopping decisions;
+- validate authored challenger and target ownership;
+- validate empty and nonempty challenge-round cardinality;
+- validate evidence request-resolution cardinality and halt status;
 - simulate provider responses through fake and replay providers;
-- export and reload validated session records;
-- run the full automated contract test suite.
+- export and reload validated foundation records;
+- run the automated contract test suite.
 
-It **cannot yet run a complete council deliberation automatically**. The individual pieces exist, but Stage 4 must connect them into one orchestrated vertical slice.
+It **cannot yet run a complete council deliberation automatically**. Stage 4 must connect the approved pieces into one orchestrated vertical slice.
 
 ## Recommended Hands-On Testing Point
 
-The best point for the user to get to a computer and run Imperium is **the end of Stage 4**, not immediately after Stage 3.
+The best point for local use is the end of Stage 4, when one command should:
 
-That checkpoint should provide one command or integration test that:
+1. load frozen values, council, protocol, prompts, and fake/replay responses;
+2. accept a synthetic sample sovereign request;
+3. advance through all twelve transitions when no halt outcome blocks progress;
+4. execute separate challenger and target calls;
+5. enforce information boundaries and output cardinality;
+6. exercise evidence continuation, waiting, and pause paths;
+7. produce revisions, adjudication, and an actionable plan;
+8. export the authoritative session, protocol trace, readable transcript, lineage, and plan;
+9. resume safely after a deliberate interruption.
 
-1. loads values, council, protocol, and fake/replay responses;
-2. accepts a sample sovereign request;
-3. advances through all twelve transitions;
-4. enforces every information boundary and output contract;
-5. resolves both evidence stages;
-6. produces revisions, adjudication, and an actionable plan;
-7. exports the complete record and protocol trace;
-8. can be resumed or inspected after a deliberate interruption.
-
-At that point, hands-on testing will evaluate the actual workflow rather than only schemas.
-
-Expected local validation commands will be:
+Expected local validation commands remain:
 
 ```bash
 python -m venv .venv
@@ -132,37 +137,28 @@ pytest
 python -m pytest tests/integration/test_offline_vertical_slice.py -vv
 ```
 
-The integration-test path is a Stage 4 target and does not exist yet.
+The Stage 4 integration test does not exist yet.
 
-## Protocol Readiness
+## Remaining Before Stage 4 Implementation
 
-### Approved
+- [ ] Merge the reviewed protocol 1.2 patch
+- [ ] Rebase and update the Stage 4 plan to protocol 1.2
+- [ ] Freeze prompt/configuration content requirements in the Stage 4 session envelope
+- [ ] Require positive minority-objection and hybrid-or-no-hybrid acceptance paths
+- [ ] Require synthetic-only CI artifacts and exact profile projection boundaries
+- [ ] Approve the final Stage 4 scope before coding
 
-- [x] Governing manifesto and actionable-plan objective
-- [x] Authority hierarchy and action boundary
-- [x] Evidence-resolution routes
-- [x] Shared value vocabulary
-- [x] Member profile contract
-- [x] Fixed initial council and matrices
-- [x] Blind independent interpretation
-- [x] Exact stage inputs, outputs, and artifact visibility
-- [x] Claim and frame normalization method
-- [x] Challenge-assignment policy
-- [x] Operational continuation and stopping rules
-- [x] Stage-specific prompt contracts
-- [x] Required protocol trace
-- [x] Abbreviated-path rules, disabled for initial experiments
-
-### Remaining before live model use
+## Remaining Before Live Model Use
 
 - [ ] Connect contracts into full offline orchestration
-- [ ] Attach `ProtocolTrace` to the authoritative session record
-- [ ] Add deterministic stage runners
+- [ ] Attach `ProtocolTrace` to the authoritative offline session envelope
+- [ ] Add deterministic stage and challenge-subturn runners
 - [ ] Add interruption and resume behavior
-- [ ] Complete fake-provider vertical integration test
-- [ ] Add realistic replay fixture set
+- [ ] Complete fake-provider vertical integration tests
+- [ ] Add realistic replay fixture sets
+- [ ] Review generated offline session artifacts
 
-### Remaining before pilot validation
+## Remaining Before Pilot Validation
 
 - [ ] Codex provider and isolated live vertical slice
 - [ ] Frozen experiment cases and prompts
@@ -176,7 +172,7 @@ The integration-test path is a Stage 4 target and does not exist yet.
 - Numeric profile differences have not yet been proven to create persistent reasoning differences.
 - The fixed roster may underrepresent Human Sustainability.
 - The two-round debate rule may be too permissive or too restrictive; experiments must test it.
-- Prompt contracts are approved but have not yet been exercised with a live model.
+- Prompt contracts have not yet been exercised with a live model.
 - The Seneschal may still bias synthesis despite formal non-advocacy; blinded testing must detect this.
 - The full council may not outperform a strong single adviser or independent panel.
 
