@@ -6,8 +6,14 @@ from collections import Counter
 from collections.abc import Collection, Iterable
 
 from imperium.domain.council import CouncilConfiguration
-from imperium.domain.enums import ArtifactKind, Materiality, StopReason
-from imperium.domain.models import ChallengeResponse
+from imperium.domain.enums import (
+    ArtifactKind,
+    EvidenceOutcome,
+    Materiality,
+    SessionStatus,
+    StopReason,
+)
+from imperium.domain.models import ChallengeResponse, EvidenceRequest, EvidenceResolution
 from imperium.domain.protocol import (
     ChallengeArtifact,
     ChallengeAssignment,
@@ -35,6 +41,11 @@ def _at_least(actual: Materiality, threshold: Materiality) -> bool:
     return _MATERIALITY_RANK[actual] >= _MATERIALITY_RANK[threshold]
 
 
+def _duplicates(values: Iterable[str]) -> set[str]:
+    counts = Counter(values)
+    return {value for value, count in counts.items() if count > 1}
+
+
 def validate_stage_inputs(
     contract: StageContract,
     supplied_artifacts: Iterable[ArtifactKind],
@@ -53,20 +64,43 @@ def validate_stage_inputs(
 def validate_stage_outputs(
     contract: StageContract,
     produced_artifacts: Iterable[ArtifactKind],
+    *,
+    supplied_input_artifacts: Iterable[ArtifactKind] = (),
 ) -> None:
-    """Require every output promised by the stage contract and reject undeclared output."""
+    """Validate unconditional, subturn, and input-counted stage outputs."""
 
     produced = tuple(produced_artifacts)
+    produced_counts = Counter(produced)
+    input_counts = Counter(supplied_input_artifacts)
+
     required = set(contract.required_output_artifacts)
+    conditional = {rule.output_artifact for rule in contract.output_cardinality}
+    subturn_outputs = {
+        turn.required_output_artifact for turn in contract.challenge_turns
+    }
+    allowed = required | conditional | subturn_outputs
     actual = set(produced)
-    missing = required - actual
-    unexpected = actual - required
-    if missing or unexpected:
+
+    missing = {artifact for artifact in required if produced_counts[artifact] == 0}
+    unexpected = actual - allowed
+    cardinality_errors: list[str] = []
+    for rule in contract.output_cardinality:
+        expected_count = input_counts[rule.count_from_input_artifact]
+        actual_count = produced_counts[rule.output_artifact]
+        if actual_count != expected_count:
+            cardinality_errors.append(
+                f"{rule.output_artifact.value}={actual_count}; "
+                f"expected {expected_count} from {rule.count_from_input_artifact.value}"
+            )
+
+    if missing or unexpected or cardinality_errors:
         details: list[str] = []
         if missing:
             details.append(f"missing={sorted(item.value for item in missing)}")
         if unexpected:
             details.append(f"unexpected={sorted(item.value for item in unexpected)}")
+        if cardinality_errors:
+            details.append("cardinality=" + ", ".join(cardinality_errors))
         raise InvalidProtocolArtifact(
             f"stage {contract.stage_id!r} output contract failed: " + "; ".join(details)
         )
@@ -225,6 +259,98 @@ def validate_challenge_response(
         raise InvalidProtocolArtifact("challenge response references the wrong challenge")
     if response.member_id != assignment.target_member_id:
         raise InvalidProtocolArtifact("challenge response was not produced by the assigned target")
+
+
+def validate_challenge_round_outputs(
+    plan: ChallengePlan,
+    *,
+    challenges: Iterable[ChallengeArtifact],
+    responses: Iterable[ChallengeResponse],
+) -> None:
+    """Require one authored challenge and response per nonempty assignment, or none."""
+
+    challenge_items = tuple(challenges)
+    response_items = tuple(responses)
+    assignment_by_id = {
+        assignment.challenge_id: assignment for assignment in plan.assignments
+    }
+    expected_ids = set(assignment_by_id)
+
+    challenge_ids = [item.challenge_id for item in challenge_items]
+    response_ids = [item.challenge_id for item in response_items]
+    duplicate_challenges = _duplicates(challenge_ids)
+    duplicate_responses = _duplicates(response_ids)
+    if duplicate_challenges:
+        raise InvalidProtocolArtifact(
+            f"challenge round contains duplicate authored challenges: {sorted(duplicate_challenges)}"
+        )
+    if duplicate_responses:
+        raise InvalidProtocolArtifact(
+            f"challenge round contains duplicate responses: {sorted(duplicate_responses)}"
+        )
+
+    if set(challenge_ids) != expected_ids:
+        raise InvalidProtocolArtifact(
+            "authored challenge identifiers must exactly match challenge assignments"
+        )
+    if set(response_ids) != expected_ids:
+        raise InvalidProtocolArtifact(
+            "challenge response identifiers must exactly match challenge assignments"
+        )
+
+    for challenge in challenge_items:
+        validate_challenge_artifact(
+            challenge,
+            assignment=assignment_by_id[challenge.challenge_id],
+        )
+    for response in response_items:
+        validate_challenge_response(
+            response,
+            assignment=assignment_by_id[response.challenge_id],
+        )
+
+
+def validate_evidence_resolutions(
+    requests: Iterable[EvidenceRequest],
+    resolutions: Iterable[EvidenceResolution],
+) -> None:
+    """Require exactly one resolution for every evidence request, including zero."""
+
+    request_items = tuple(requests)
+    resolution_items = tuple(resolutions)
+    request_ids = [item.evidence_request_id for item in request_items]
+    resolution_ids = [item.evidence_request_id for item in resolution_items]
+
+    duplicate_requests = _duplicates(request_ids)
+    duplicate_resolutions = _duplicates(resolution_ids)
+    if duplicate_requests:
+        raise InvalidProtocolArtifact(
+            f"evidence request identifiers must be unique: {sorted(duplicate_requests)}"
+        )
+    if duplicate_resolutions:
+        raise InvalidProtocolArtifact(
+            f"evidence requests may be resolved only once: {sorted(duplicate_resolutions)}"
+        )
+    if set(request_ids) != set(resolution_ids):
+        missing = set(request_ids) - set(resolution_ids)
+        orphaned = set(resolution_ids) - set(request_ids)
+        raise InvalidProtocolArtifact(
+            "evidence resolution mapping is incomplete; "
+            f"missing={sorted(missing)}, orphaned={sorted(orphaned)}"
+        )
+
+
+def evidence_session_status(
+    resolutions: Iterable[EvidenceResolution],
+) -> SessionStatus:
+    """Return the required session status after a validated evidence stage."""
+
+    outcomes = {item.outcome for item in resolutions}
+    if EvidenceOutcome.DELIBERATION_PAUSED in outcomes:
+        return SessionStatus.PAUSED
+    if EvidenceOutcome.USER_CLARIFICATION_REQUIRED in outcomes:
+        return SessionStatus.WAITING_FOR_USER
+    return SessionStatus.ACTIVE
 
 
 def validate_continuation_decision(
