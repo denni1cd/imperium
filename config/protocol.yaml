@@ -1,4 +1,4 @@
-version: "1.1"
+version: "1.2"
 status: approved
 vocabulary_version: "1.0"
 council_version: "1.0"
@@ -82,8 +82,6 @@ stage_contracts:
       - council_snapshot
     required_output_artifacts:
       - challenge_plan
-      - challenge
-      - challenge_response
       - continuation_decision
     prompt_template: prompts/challenge_frames.md
     per_advocate: false
@@ -126,8 +124,10 @@ stage_contracts:
       - challenge
       - challenge_response
       - evidence_request
-    required_output_artifacts:
-      - evidence_resolution
+    required_output_artifacts: []
+    output_cardinality:
+      - output_artifact: evidence_resolution
+        count_from_input_artifact: evidence_request
     prompt_template: null
     per_advocate: false
     blind: false
@@ -166,8 +166,6 @@ stage_contracts:
     required_output_artifacts:
       - claim_register
       - challenge_plan
-      - challenge
-      - challenge_response
       - continuation_decision
     prompt_template: prompts/challenge_proposals.md
     per_advocate: false
@@ -212,8 +210,10 @@ stage_contracts:
       - challenge
       - challenge_response
       - evidence_request
-    required_output_artifacts:
-      - evidence_resolution
+    required_output_artifacts: []
+    output_cardinality:
+      - output_artifact: evidence_resolution
+        count_from_input_artifact: evidence_request
     prompt_template: null
     per_advocate: false
     blind: false
