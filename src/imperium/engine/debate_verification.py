@@ -36,6 +36,7 @@ def verify_actual_debate(
     session: OfflineDeliberationSession,
     *,
     require_both_phases: bool = True,
+    minimum_targeted_members: int = 2,
 ) -> DebateVerificationReport:
     """Require direct cross-member challenges, responses, and later consequences.
 
@@ -43,6 +44,9 @@ def verify_actual_debate(
     challenger articulation, a response from the targeted advocate, and a traceable
     consequence in that advocate's later proposal or revision.
     """
+
+    if minimum_targeted_members < 1:
+        raise ValueError("minimum_targeted_members must be at least one")
 
     failures: list[str] = []
     exchanges = session.debate_exchanges
@@ -108,8 +112,11 @@ def verify_actual_debate(
     targeted_members = tuple(
         sorted({exchange.assignment.target_member_id for exchange in exchanges})
     )
-    if len(targeted_members) < 2:
-        failures.append("debate must confront at least two distinct advocates")
+    if len(targeted_members) < minimum_targeted_members:
+        failures.append(
+            "debate must confront at least "
+            f"{minimum_targeted_members} distinct advocate(s)"
+        )
 
     return DebateVerificationReport(
         passed=not failures,
@@ -125,10 +132,15 @@ def require_actual_debate(
     session: OfflineDeliberationSession,
     *,
     require_both_phases: bool = True,
+    minimum_targeted_members: int = 2,
 ) -> DebateVerificationReport:
     """Return a passing report or reject a panel-only/session-summary substitute."""
 
-    report = verify_actual_debate(session, require_both_phases=require_both_phases)
+    report = verify_actual_debate(
+        session,
+        require_both_phases=require_both_phases,
+        minimum_targeted_members=minimum_targeted_members,
+    )
     if not report.passed:
         raise DebateVerificationError("; ".join(report.failures))
     return report
