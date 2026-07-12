@@ -140,7 +140,7 @@ The fixed advocate set is `steward`, `vanguard`, `architect`, and `castellan`.
 
 ### 2026-07-12 — Minimum deliberation protocol
 
-Version `1.0` of the minimum deliberation protocol is approved.
+Version `1.0` of the minimum deliberation protocol was approved.
 
 - The lifecycle contains twelve controlled transitions from preserved request through actionable plan.
 - Proposal debate has its own explicit evidence-resolution stage before advocate revision.
@@ -159,3 +159,17 @@ Version `1.0` of the minimum deliberation protocol is approved.
 - The protocol trace preserves claim registers, challenge plans, continuation decisions, empty-plan reasons, and issues surviving the safety limit.
 - The authoritative configuration is `config/protocol.yaml`; stage prompt contracts are stored in `prompts/`; the lifecycle and debate rules are documented in `docs/DELIBERATION_LIFECYCLE.md` and `docs/CONSEQUENTIAL_DEBATE.md`.
 - Future protocol changes require explicit user approval, a version increment, regression tests, and migration consideration for saved sessions and frozen experiments.
+
+### 2026-07-12 — Protocol 1.1 advocate-authored challenge turns
+
+Version `1.1` corrects an execution gap in the approved challenge stages without changing the twelve top-level lifecycle transitions, challenge-selection policy, evidence routes, or stopping rules.
+
+- The Seneschal selects and coordinates challenge assignments but may not author an advocate's challenge or response.
+- Every nonempty assignment executes an advocate-owned challenger subturn followed by an advocate-owned target-response subturn.
+- The challenger receives the permitted target claim and source artifact and produces a typed `ChallengeArtifact` using the assignment's identifiers.
+- The target receives that authored challenge and produces a typed `ChallengeResponse` attributed to the assigned target.
+- The Seneschal issues a continuation or stopping decision only after the assigned exchanges are complete.
+- Empty challenge plans remain permitted and do not create synthetic advocate turns.
+- Authored challenges are included in the protocol trace and must match their assignment's phase, round, members, artifact, and claim.
+- The same structure applies to frame and proposal challenge phases.
+- The authoritative machine-readable contract is `config/protocol.yaml`; the amendment is documented in `docs/PROTOCOL_1_1_CHALLENGE_TURNS.md`.

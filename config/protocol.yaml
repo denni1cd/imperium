@@ -1,4 +1,4 @@
-version: "1.0"
+version: "1.1"
 status: approved
 vocabulary_version: "1.0"
 council_version: "1.0"
@@ -82,12 +82,37 @@ stage_contracts:
       - council_snapshot
     required_output_artifacts:
       - challenge_plan
+      - challenge
       - challenge_response
       - continuation_decision
     prompt_template: prompts/challenge_frames.md
     per_advocate: false
     blind: false
     permits_evidence_requests: true
+    challenge_turns:
+      - turn_id: author_frame_challenge
+        speaker_from_assignment: challenger
+        allowed_input_artifacts:
+          - sovereign_request
+          - council_snapshot
+          - interpretation
+          - claim_register
+          - frame_register
+          - challenge_plan
+        required_output_artifact: challenge
+        prompt_template: prompts/author_challenge.md
+      - turn_id: answer_frame_challenge
+        speaker_from_assignment: target
+        allowed_input_artifacts:
+          - sovereign_request
+          - council_snapshot
+          - interpretation
+          - claim_register
+          - frame_register
+          - challenge_plan
+          - challenge
+        required_output_artifact: challenge_response
+        prompt_template: prompts/respond_challenge.md
 
   - stage_id: resolve_frame_evidence
     prerequisite_stage: frame_challenges_complete
@@ -98,6 +123,7 @@ stage_contracts:
       - claim_register
       - frame_register
       - challenge_plan
+      - challenge
       - challenge_response
       - evidence_request
     required_output_artifacts:
@@ -117,6 +143,7 @@ stage_contracts:
       - claim_register
       - frame_register
       - challenge_plan
+      - challenge
       - challenge_response
       - evidence_resolution
     required_output_artifacts:
@@ -139,12 +166,39 @@ stage_contracts:
     required_output_artifacts:
       - claim_register
       - challenge_plan
+      - challenge
       - challenge_response
       - continuation_decision
     prompt_template: prompts/challenge_proposals.md
     per_advocate: false
     blind: false
     permits_evidence_requests: true
+    challenge_turns:
+      - turn_id: author_proposal_challenge
+        speaker_from_assignment: challenger
+        allowed_input_artifacts:
+          - sovereign_request
+          - council_snapshot
+          - frame_register
+          - evidence_resolution
+          - strategy_proposal
+          - claim_register
+          - challenge_plan
+        required_output_artifact: challenge
+        prompt_template: prompts/author_challenge.md
+      - turn_id: answer_proposal_challenge
+        speaker_from_assignment: target
+        allowed_input_artifacts:
+          - sovereign_request
+          - council_snapshot
+          - frame_register
+          - evidence_resolution
+          - strategy_proposal
+          - claim_register
+          - challenge_plan
+          - challenge
+        required_output_artifact: challenge_response
+        prompt_template: prompts/respond_challenge.md
 
   - stage_id: resolve_proposal_evidence
     prerequisite_stage: proposal_challenges_complete
@@ -155,6 +209,7 @@ stage_contracts:
       - claim_register
       - strategy_proposal
       - challenge_plan
+      - challenge
       - challenge_response
       - evidence_request
     required_output_artifacts:
@@ -175,6 +230,7 @@ stage_contracts:
       - strategy_proposal
       - claim_register
       - challenge_plan
+      - challenge
       - challenge_response
       - evidence_resolution
       - continuation_decision
@@ -196,6 +252,7 @@ stage_contracts:
       - frame_register
       - claim_register
       - challenge_plan
+      - challenge
       - challenge_response
       - evidence_resolution
       - strategy_proposal

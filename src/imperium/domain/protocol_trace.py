@@ -6,7 +6,12 @@ from pydantic import Field, model_validator
 
 from imperium.domain.enums import ChallengePhase
 from imperium.domain.models import StrictModel
-from imperium.domain.protocol import ChallengePlan, ClaimRegister, ContinuationDecision
+from imperium.domain.protocol import (
+    ChallengeArtifact,
+    ChallengePlan,
+    ClaimRegister,
+    ContinuationDecision,
+)
 
 
 class ClaimRegisterSnapshot(StrictModel):
@@ -33,6 +38,7 @@ class ProtocolTrace(StrictModel):
 
     claim_register_snapshots: tuple[ClaimRegisterSnapshot, ...] = ()
     challenge_plans: tuple[ChallengePlan, ...] = ()
+    challenges: tuple[ChallengeArtifact, ...] = ()
     continuation_decisions: tuple[ContinuationDecision, ...] = ()
 
     @model_validator(mode="after")
@@ -63,6 +69,42 @@ class ProtocolTrace(StrictModel):
                 "every continuation decision requires a matching challenge plan: "
                 f"{rendered}"
             )
+
+        assignment_by_id = {
+            assignment.challenge_id: assignment
+            for plan in self.challenge_plans
+            for assignment in plan.assignments
+        }
+        challenge_ids = [challenge.challenge_id for challenge in self.challenges]
+        if len(set(challenge_ids)) != len(challenge_ids):
+            raise ValueError("authored challenge identifiers must be unique")
+
+        for challenge in self.challenges:
+            assignment = assignment_by_id.get(challenge.challenge_id)
+            if assignment is None:
+                raise ValueError(
+                    f"authored challenge {challenge.challenge_id!r} has no assignment"
+                )
+            expected = (
+                assignment.phase,
+                assignment.round_number,
+                assignment.challenger_member_id,
+                assignment.target_member_id,
+                assignment.target_artifact_id,
+                assignment.target_claim_id,
+            )
+            actual = (
+                challenge.phase,
+                challenge.round_number,
+                challenge.challenger_member_id,
+                challenge.target_member_id,
+                challenge.target_artifact_id,
+                challenge.target_claim_id,
+            )
+            if actual != expected:
+                raise ValueError(
+                    f"authored challenge {challenge.challenge_id!r} does not match its assignment"
+                )
 
         snapshots_by_phase: dict[ChallengePhase, list[ClaimRegisterSnapshot]] = {}
         for snapshot in self.claim_register_snapshots:

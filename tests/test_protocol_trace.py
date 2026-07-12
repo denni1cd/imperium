@@ -10,6 +10,8 @@ from imperium.domain.enums import (
     StopReason,
 )
 from imperium.domain.protocol import (
+    ChallengeArtifact,
+    ChallengeAssignment,
     ChallengePlan,
     ClaimRegister,
     ContinuationDecision,
@@ -44,6 +46,40 @@ def _initial_snapshot(phase: ChallengePhase) -> ClaimRegisterSnapshot:
     )
 
 
+def _assigned_plan() -> ChallengePlan:
+    assignment = ChallengeAssignment(
+        challenge_id="challenge-proposal-1",
+        phase=ChallengePhase.PROPOSAL,
+        round_number=1,
+        challenger_member_id="vanguard",
+        target_member_id="steward",
+        target_artifact_id="proposal-steward",
+        target_claim_id="claim-proposal-1",
+        materiality=Materiality.HIGH,
+        reason="Demand controls whether the investment is justified.",
+        expected_consequence="Defend, refine, or condition the commitment.",
+    )
+    return ChallengePlan(
+        phase=ChallengePhase.PROPOSAL,
+        round_number=1,
+        assignments=(assignment,),
+    )
+
+
+def _authored_challenge() -> ChallengeArtifact:
+    return ChallengeArtifact(
+        challenge_id="challenge-proposal-1",
+        phase=ChallengePhase.PROPOSAL,
+        round_number=1,
+        challenger_member_id="vanguard",
+        target_member_id="steward",
+        target_artifact_id="proposal-steward",
+        target_claim_id="claim-proposal-1",
+        statement="What committed demand justifies the proposed investment?",
+        failure_consequence="The resources could be committed without sufficient adoption.",
+    )
+
+
 def test_protocol_trace_records_each_phase_and_round_once() -> None:
     plan = ChallengePlan(
         phase=ChallengePhase.FRAME,
@@ -66,6 +102,18 @@ def test_protocol_trace_records_each_phase_and_round_once() -> None:
     )
 
     assert trace.challenge_plans[0].round_number == 1
+
+
+def test_protocol_trace_preserves_authored_challenge_assignment() -> None:
+    trace = ProtocolTrace(
+        challenge_plans=(_assigned_plan(),),
+        challenges=(_authored_challenge(),),
+    )
+    assert trace.challenges[0].challenger_member_id == "vanguard"
+
+    invalid = _authored_challenge().model_copy(update={"target_member_id": "architect"})
+    with pytest.raises(ValidationError, match="does not match its assignment"):
+        ProtocolTrace(challenge_plans=(_assigned_plan(),), challenges=(invalid,))
 
 
 def test_continuation_decision_requires_matching_challenge_plan() -> None:

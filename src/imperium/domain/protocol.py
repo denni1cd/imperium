@@ -134,6 +134,27 @@ class ChallengePlan(StrictModel):
         return self
 
 
+class ChallengeArtifact(StrictModel):
+    """The assigned advocate's own authored challenge to a normalized claim."""
+
+    challenge_id: NonEmptyStr
+    phase: ChallengePhase
+    round_number: int = Field(ge=1)
+    challenger_member_id: NonEmptyStr
+    target_member_id: NonEmptyStr
+    target_artifact_id: NonEmptyStr
+    target_claim_id: NonEmptyStr
+    statement: NonEmptyStr
+    failure_consequence: NonEmptyStr
+    evidence_needed: tuple[NonEmptyStr, ...] = ()
+
+    @model_validator(mode="after")
+    def prevent_self_challenge(self) -> Self:
+        if self.challenger_member_id == self.target_member_id:
+            raise ValueError("an authored challenge must target another advocate")
+        return self
+
+
 class ContinuationDecision(StrictModel):
     """Inspectable decision to continue or stop one debate phase."""
 
@@ -166,6 +187,45 @@ class ContinuationDecision(StrictModel):
         return self
 
 
+class ChallengeTurnContract(StrictModel):
+    """One advocate-owned subturn within a Seneschal-coordinated challenge stage."""
+
+    turn_id: NonEmptyStr
+    speaker_from_assignment: Literal["challenger", "target"]
+    allowed_input_artifacts: tuple[ArtifactKind, ...]
+    required_output_artifact: ArtifactKind
+    prompt_template: NonEmptyStr
+
+    @field_validator("allowed_input_artifacts")
+    @classmethod
+    def reject_duplicate_inputs(
+        cls,
+        artifacts: tuple[ArtifactKind, ...],
+    ) -> tuple[ArtifactKind, ...]:
+        if len(set(artifacts)) != len(artifacts):
+            raise ValueError("challenge-turn input artifact lists must not contain duplicates")
+        return artifacts
+
+    @model_validator(mode="after")
+    def validate_turn_shape(self) -> Self:
+        if self.speaker_from_assignment == "challenger":
+            if self.required_output_artifact is not ArtifactKind.CHALLENGE:
+                raise ValueError("the challenger subturn must produce a challenge artifact")
+            required_inputs = {ArtifactKind.CLAIM_REGISTER, ArtifactKind.CHALLENGE_PLAN}
+        else:
+            if self.required_output_artifact is not ArtifactKind.CHALLENGE_RESPONSE:
+                raise ValueError("the target subturn must produce a challenge response")
+            required_inputs = {ArtifactKind.CHALLENGE, ArtifactKind.CHALLENGE_PLAN}
+
+        missing = required_inputs - set(self.allowed_input_artifacts)
+        if missing:
+            raise ValueError(
+                "challenge subturn is missing required inputs: "
+                f"{sorted(item.value for item in missing)}"
+            )
+        return self
+
+
 class StageContract(StrictModel):
     """Exact information and artifact contract for one lifecycle transition."""
 
@@ -179,6 +239,7 @@ class StageContract(StrictModel):
     per_advocate: bool = False
     blind: bool = False
     permits_evidence_requests: bool = False
+    challenge_turns: tuple[ChallengeTurnContract, ...] = ()
 
     @field_validator("allowed_input_artifacts", "required_output_artifacts")
     @classmethod
@@ -202,6 +263,29 @@ class StageContract(StrictModel):
             raise ValueError("only advocate-owned stages can produce one output per advocate")
         if self.blind and not self.per_advocate:
             raise ValueError("blind execution is only valid for per-advocate stages")
+
+        if self.challenge_turns:
+            if self.actor is not ProtocolActor.SENESCHAL:
+                raise ValueError("challenge subturns require a Seneschal-coordinated stage")
+            speakers = tuple(turn.speaker_from_assignment for turn in self.challenge_turns)
+            if speakers != ("challenger", "target"):
+                raise ValueError(
+                    "challenge stages must execute challenger then target subturns"
+                )
+            required_stage_outputs = {
+                ArtifactKind.CHALLENGE_PLAN,
+                ArtifactKind.CHALLENGE,
+                ArtifactKind.CHALLENGE_RESPONSE,
+                ArtifactKind.CONTINUATION_DECISION,
+            }
+            missing = required_stage_outputs - set(self.required_output_artifacts)
+            if missing:
+                raise ValueError(
+                    "challenge stages are missing required outputs: "
+                    f"{sorted(item.value for item in missing)}"
+                )
+        elif ArtifactKind.CHALLENGE in self.required_output_artifacts:
+            raise ValueError("a stage requiring challenge artifacts must define challenge subturns")
         return self
 
 
@@ -341,6 +425,20 @@ class ProtocolConfiguration(StrictModel):
                 f"{sorted(item.value for item in forbidden_initial_inputs)}"
             )
 
+        challenge_stages = {
+            DeliberationStage.FRAME_CHALLENGES_COMPLETE,
+            DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE,
+        }
+        for contract in self.stage_contracts:
+            if contract.resulting_stage in challenge_stages and not contract.challenge_turns:
+                raise ValueError(
+                    f"challenge stage {contract.stage_id!r} must define advocate subturns"
+                )
+            if contract.resulting_stage not in challenge_stages and contract.challenge_turns:
+                raise ValueError(
+                    f"non-challenge stage {contract.stage_id!r} cannot define challenge subturns"
+                )
+
         final_contract = self.stage_contracts[-1]
         if final_contract.resulting_stage is not DeliberationStage.PLAN_COMPLETE:
             raise ValueError("the protocol must terminate with an actionable plan")
@@ -349,7 +447,7 @@ class ProtocolConfiguration(StrictModel):
         return self
 
     def contract_for(self, resulting_stage: DeliberationStage) -> StageContract:
-        """Return the exact contract that produces a lifecycle stage."""
+        """Return the exact contract that produces one lifecycle stage."""
 
         return next(
             contract for contract in self.stage_contracts if contract.resulting_stage is resulting_stage
