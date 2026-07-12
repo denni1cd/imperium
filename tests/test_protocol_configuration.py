@@ -12,6 +12,7 @@ from imperium.configuration import (
 )
 from imperium.domain.enums import (
     ArtifactKind,
+    ContinuationReason,
     DeliberationStage,
     ProtocolActor,
 )
@@ -38,10 +39,21 @@ def _load_dependencies():
 def test_protocol_loads_and_covers_every_lifecycle_transition() -> None:
     _, _, protocol = _load_dependencies()
 
-    assert protocol.version == "1.2"
+    assert protocol.version == "1.3"
     assert len(protocol.stage_contracts) == len(DeliberationStage) - 1
     assert protocol.stage_contracts[0].prerequisite_stage is DeliberationStage.CREATED
     assert protocol.stage_contracts[-1].resulting_stage is DeliberationStage.PLAN_COMPLETE
+
+
+def test_same_phase_continuation_excludes_unresolved_evidence() -> None:
+    _, _, protocol = _load_dependencies()
+
+    assert set(protocol.stopping_policy.continuation_reasons) == set(ContinuationReason)
+    assert {reason.value for reason in protocol.stopping_policy.continuation_reasons} == {
+        "new_material_frame",
+        "unresolved_material_claim",
+        "adjudication_may_change",
+    }
 
 
 def test_independent_interpretation_is_blind_and_advocate_owned() -> None:

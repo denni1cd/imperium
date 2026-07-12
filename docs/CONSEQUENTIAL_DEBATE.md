@@ -2,9 +2,9 @@
 
 ## Status
 
-**Approved — protocol version 1.2, 2026-07-12.**
+**Approved — protocol version 1.3, 2026-07-12.**
 
-This document defines what debate must change, how the effect is recorded, and when discussion is strategically useless. Protocol 1.1 added advocate-authored challenge turns. Protocol 1.2 clarified conditional challenge artifacts, evidence cardinality, halt behavior, and canonical challenge ownership.
+Protocol 1.1 added advocate-authored challenge turns. Protocol 1.2 clarified conditional challenge artifacts, evidence cardinality, halt behavior, and canonical challenge ownership. Protocol 1.3 clarifies that newly requested evidence is resolved after the current challenge phase and cannot justify another round inside that same phase.
 
 ## Core Rule
 
@@ -14,110 +14,110 @@ Change alone is not success. A concession, revision, hybrid, or retained positio
 
 ## Required Multi-Turn Structure
 
-A challenged claim is not debated merely because the Seneschal describes an objection and summarizes a response.
-
 For each nonempty assignment:
 
-1. the Seneschal selects the bounded target;
+1. the Seneschal selects a bounded target;
 2. the assigned challenger authors its own `ChallengeArtifact`;
 3. the assigned target answers that exact challenge;
-4. the exchange can affect evidence, continuation, revision, adjudication, or the final plan.
+4. the exchange can affect continuation, evidence routing, revision, adjudication, or the final plan.
 
 The Seneschal coordinates but does not impersonate either advocate.
 
-An empty challenge plan remains valid when it explains why no material target exists. It produces no challenge or response artifacts.
+An empty challenge plan is valid when it explains why no material target exists. It produces no challenge or response artifacts.
 
 ## Materiality
 
-Every normalized claim and challenge uses one of four levels:
-
-- **Low:** unlikely to change a meaningful part of the recommendation or plan.
-- **Medium:** could change a tradeoff, mitigation, sequencing choice, or bounded component of the plan.
+- **Low:** unlikely to change a meaningful part of the recommendation.
+- **Medium:** could change a tradeoff, mitigation, sequence, or bounded plan element.
 - **High:** could change the preferred strategy, immediate next action, major commitment, or important condition.
-- **Critical:** could make the strategy violate user authority, become irresponsible, or expose the user to severe or irreversible consequences.
+- **Critical:** could violate user authority or expose the user to severe, irreversible, or irresponsible consequences.
 
-Low claims are not challenged merely to create activity. A second debate round requires at least one unresolved high or critical claim.
+Low claims are not challenged merely to create activity. A second debate round requires an unresolved high or critical issue.
 
 ## Consequential Events
 
-A contribution is consequential when it produces at least one of the following and records its decision impact:
+A contribution is consequential when it records decision impact and produces at least one of:
 
 - a newly recognized material frame;
-- exposure of a hidden or unsupported assumption;
+- an exposed hidden or unsupported assumption;
 - separation of factual, interpretive, and value disagreement;
-- a defense that materially strengthens a claim;
-- refinement or narrowing of a claim;
-- explicit concession or withdrawal;
-- decision-critical evidence routed to a defined outcome;
-- modification of a proposed strategy;
-- creation of a stronger hybrid strategy;
-- preservation of a serious minority objection;
+- a materially strengthened defense;
+- a refined or narrowed claim;
+- a concession or withdrawal;
+- an evidence request routed to a defined outcome;
+- a changed strategy;
+- a stronger hybrid strategy;
+- a preserved serious minority objection;
 - a reasoned confidence change;
-- a more specific, safer, or executable final plan;
+- a safer or more executable plan;
 - a justified decision to retain a challenged position.
 
-## Required Change Record
+## Required Revision Record
 
 Every advocate `Revision` records:
 
-- the original proposal identifier;
-- the complete revised proposal or complete retained proposal;
+- the original proposal ID;
+- the complete revised or retained proposal;
 - changes, which may be empty for justified retention;
-- the challenge, evidence, or reasoning responsible;
-- the expected strategic effect;
-- any new risk, sacrifice, or uncertainty;
-- concessions;
-- unresolved disagreement;
+- reasons and responsible challenge, evidence, or reasoning;
+- expected strategic effect;
+- new risk, sacrifice, or uncertainty;
+- concessions and unresolved disagreement;
 - final confidence.
 
-Revision ownership must remain consistent: the revision member, original proposal owner, and revised proposal member are the same advocate.
+Revision ownership must remain consistent across the revision, original proposal, and revised proposal.
 
-The Seneschal later records whether the change contributed to adjudication. Whether it was beneficial, neutral, or harmful is an experiment judgment and must not be inferred merely from movement.
+Whether a change was beneficial, neutral, or harmful is an experiment judgment and must not be inferred merely from movement.
 
-## Challenge Quality Requirements
+## Challenge Quality
 
-Every authored challenge must:
+Every challenge must:
 
 - match a valid assignment;
 - identify a normalized claim and source artifact;
-- come from the assigned challenger rather than the Seneschal;
-- explain why the claim is material;
-- identify the consequence expected from a useful response;
+- come from the assigned challenger;
+- explain materiality and expected consequence;
 - fit a declared counterweight or explain the override;
-- avoid repeating an answered claim without new evidence or revision.
+- avoid repetition without materially new phase-permitted input.
 
 Every target response must:
 
 - come from the assigned target;
-- answer the actual authored challenge;
+- answer the authored challenge;
 - defend, refine, concede, withdraw, or request evidence;
-- include the revised claim or evidence request required by its disposition.
+- provide any revised claim or evidence request required by its disposition.
 
-## Conditional Debate Cardinality
+## Conditional Cardinality
 
-A challenge stage always contains one plan and one continuation or stopping decision.
+Every challenge stage contains one plan and one continuation or stopping decision.
 
-If the plan contains N assignments, the round contains exactly:
+A plan with N assignments contains exactly:
 
 - N authored challenges;
 - N target responses.
 
-If the plan is empty, both counts are zero. Synthetic artifacts created only to satisfy a schema are invalid.
+An empty plan contains zero of each.
 
-## Evidence Consequences
+Evidence stages contain exactly one resolution per request, including the valid zero-request and zero-resolution case.
 
-Every evidence request terminates in exactly one outcome:
+## Evidence Ordering
 
-- gathered evidence;
-- user clarification required;
-- proceed conditionally;
-- deliberation paused.
+Evidence requests created during a challenge phase are resolved in the following evidence-resolution lifecycle transition.
 
-Zero requests produce zero resolutions. N requests produce N resolutions. Orphan or duplicate resolutions are invalid.
+They do not provide newly resolved evidence to another round inside the phase that created them.
 
-User clarification and pause outcomes halt lifecycle advancement while preserving the session. Conditional planning proceeds only with explicit assumptions, bounds, and reconsideration triggers.
+Another same-phase round may proceed only from:
 
-Stage 4 gathered evidence must identify synthetic fixture or replay provenance. It must not imply that live research occurred.
+- a new material frame exposed by the completed exchange;
+- a materially revised or narrowed claim;
+- another specific follow-up using information already permitted in that phase that could change adjudication.
+
+A decision-critical evidence request ends the challenge phase and informs:
+
+- later strategy development after frame evidence resolution; or
+- later advocate revision after proposal evidence resolution.
+
+Allowed evidence outcomes remain gathered, user clarification, conditional planning, and pause. Waiting and paused outcomes prevent lifecycle advancement.
 
 ## Non-Contributions
 
@@ -126,25 +126,25 @@ The following do not count as meaningful debate by themselves:
 - agreement without new reasoning;
 - paraphrasing another position;
 - generic caution without decision impact;
-- attacks on tone, style, personality, or thematic identity;
-- objections already answered without new input;
-- disagreement that never affects a claim, proposal, uncertainty, or adjudication;
+- attacks on tone or identity;
+- repeated objections without new input;
+- disagreement that affects no claim, proposal, uncertainty, or adjudication;
 - theatrical hostility;
 - revision made only to demonstrate movement;
-- compromise that weakens the plan without resolving a material conflict;
-- evidence requests that do not identify why the evidence matters or what route follows;
-- forced challenges assigned only because the protocol contains a debate stage;
-- confidence changes without stated reasoning.
+- weak compromise presented as synthesis;
+- evidence requests without decision impact or a valid route;
+- forced challenges;
+- confidence changes without reasons.
 
 ## Hybrid Strategy Test
 
-A strategy is a meaningful hybrid only when it:
+A meaningful hybrid:
 
 1. incorporates compatible strengths from more than one proposal;
-2. resolves or explicitly bounds a material conflict between them;
-3. produces a coherent course of action rather than a list of options;
-4. explains which sacrifices and assumptions remain;
-5. can be converted into the actionable-plan contract.
+2. resolves or explicitly bounds a material conflict;
+3. produces one coherent course of action;
+4. explains remaining sacrifices and assumptions;
+5. converts cleanly into the actionable-plan contract.
 
 A summary, average, vote, or compromise is not automatically a hybrid.
 
@@ -152,99 +152,60 @@ Adjudication must either construct a justified hybrid or explain why no hybrid i
 
 ## Minority Objection Preservation
 
-A serious minority objection must remain traceable through:
+A serious minority objection remains traceable through:
 
-- the source interpretation or proposal;
-- any challenge and response;
+- its source interpretation or proposal;
+- related challenges and responses;
 - the advocate's final revision;
-- Seneschal adjudication;
+- adjudication;
 - the user-facing export;
 - relevant plan assumptions, risks, mitigations, triggers, or reconsideration conditions.
 
-Internal preservation alone is insufficient when the objection changes how the user should execute or reconsider the plan.
+Internal preservation alone is insufficient when the objection changes execution or reconsideration.
 
 ## Canonical Records
 
-`ProtocolTrace.challenges` is the sole canonical collection of advocate-authored challenge artifacts.
+`ProtocolTrace.challenges` is the sole canonical collection of advocate-authored challenges. The legacy `DeliberationRecord.challenges` field must remain empty.
 
-The legacy `DeliberationRecord.challenges` field must remain empty. Maintaining two independently writable challenge histories is invalid.
-
-Stage 4 may add execution and context lineage around the strategic artifacts, but the trace must distinguish routing evidence from claims of strategic improvement.
+Stage 4 may add execution and context lineage but must distinguish process traceability from claims of strategic improvement.
 
 ## Automated Measurements
 
-The system can measure reliably:
+The system can measure:
 
-- number and materiality of normalized claims;
-- number of distinct frames and proposals;
+- normalized claims and materiality;
+- distinct frames and proposals;
 - challenge assignments by phase and round;
-- authored challenge and response completion per assignment;
-- defenses, refinements, concessions, withdrawals, and evidence requests;
-- repeated challenges rejected for lack of new input;
-- evidence outcomes and halt status;
-- proposal revisions and recorded reasons;
+- challenge and response completion per assignment;
+- response dispositions;
+- rejected repetitions;
+- evidence requests, outcomes, and halt status;
+- revisions and reasons;
 - continuation and stopping reasons;
-- unresolved objections preserved;
+- preserved objections;
 - model calls, tokens, latency, and retries;
-- completion of required actionable-plan fields.
+- actionable-plan field completion.
 
-These measurements describe the process. They do not prove strategic improvement.
+These measurements describe process. They do not prove strategic improvement.
 
 ## Human or Model-Assisted Evaluation
 
-Blinded evaluation is required for:
+Blinded evaluation is required for whether:
 
-- whether independent perspectives are genuinely distinct;
-- whether a challenge exposed an important issue;
-- whether a revision improved the strategy;
-- whether a hybrid is coherent and stronger;
-- whether the final plan is strategically sound and actionable;
-- whether minority objections were handled responsibly;
-- whether the added deliberation justified its cost.
-
-Automated counts may support evaluation but may not substitute for these judgments.
-
-## Debate-Effect Summary
-
-Each completed session should eventually report:
-
-- claims challenged by materiality;
-- consequential outcomes by disposition;
-- evidence requests and routes;
-- proposals changed or retained;
-- changes judged beneficial, neutral, or harmful;
-- surviving minority objections;
-- rounds continued and stopped, with reasons;
-- plan elements attributed to debate;
-- debate calls and token use;
-- unresolved high or critical issues.
-
-The Stage 3 `ProtocolTrace` preserves the strategic artifacts needed for this report. Stage 4 attaches execution, context, and plan lineage to the complete offline session.
+- perspectives are genuinely distinct;
+- a challenge exposed an important issue;
+- a revision improved the strategy;
+- a hybrid is coherent and stronger;
+- the final plan is strategically sound and actionable;
+- objections were handled responsibly;
+- added deliberation justified its cost.
 
 ## Minimum Success Test
 
-The full debate process must outperform both:
+Full deliberation must outperform both independent profiled advisers without debate and a roughly equivalent-budget single adviser using structured self-critique.
 
-- independent profiled advisers without debate; and
-- a roughly equivalent-budget single adviser using structured self-critique.
-
-It must do so often enough, and by enough strategic value, to justify its additional cost and complexity.
-
-If debate does not improve the output beyond independent collection or self-critique, the protocol must be revised before more architecture is added.
-
-## Failure Signals
-
-The protocol should be reconsidered when testing shows:
-
-- most challenge plans are empty or target only wording differences;
-- advocates repeatedly collapse into generic consensus;
-- second rounds rarely change adjudication;
-- revisions are predominantly neutral or harmful;
-- the Seneschal rewards voting or compromise rather than decisive reasoning;
-- important human or stakeholder consequences are repeatedly missed;
-- the final plan becomes less actionable as deliberation grows;
-- the additional inference cost is not matched by strategic improvement.
+If debate adds ceremony but not strategic value, the protocol must be revised before more architecture is added.
 
 ## Change Control
 
-Changes to debate materiality, assignment, challenge cardinality, evidence cardinality, halt behavior, continuation, stopping, canonical record ownership, or measurement rules require a protocol version increment, regression tests, migration consideration, and explicit user approval.
+Changes to debate materiality, assignment, challenge cardinality, evidence ordering, evidence cardinality, halt behavior, continuation, stopping, canonical record ownership, or measurement require a protocol version increment, regression tests, migration consideration, and explicit user approval.

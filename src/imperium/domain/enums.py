@@ -89,11 +89,10 @@ class ArtifactKind(StrEnum):
 
 
 class ContinuationReason(StrEnum):
-    """Allowed reason for another debate round."""
+    """Allowed reason for another debate round within the same challenge phase."""
 
     NEW_MATERIAL_FRAME = "new_material_frame"
     UNRESOLVED_MATERIAL_CLAIM = "unresolved_material_claim"
-    DECISION_CRITICAL_EVIDENCE = "decision_critical_evidence"
     ADJUDICATION_MAY_CHANGE = "adjudication_may_change"
 
 
