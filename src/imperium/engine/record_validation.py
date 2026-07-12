@@ -23,8 +23,10 @@ def _duplicates(values: list[str]) -> set[str]:
 def validate_deliberation_record(record: DeliberationRecord) -> None:
     """Reject contradictions that would make a saved session unreliable.
 
-    This validates only accepted Phase 0 invariants. Later protocol phases may add
-    stricter stage-specific requirements once those contracts are approved.
+    Protocol 1.2 keeps authored challenge artifacts solely in the attached
+    ``ProtocolTrace``. The legacy ``DeliberationRecord.challenges`` field is a
+    compatibility field and must remain empty so two challenge histories cannot
+    diverge.
     """
 
     snapshot_ids = [member.member_id for member in record.member_snapshots]
@@ -61,6 +63,12 @@ def validate_deliberation_record(record: DeliberationRecord) -> None:
         raise InvalidDeliberationRecord(
             "interpretations may only come from selected council members: "
             f"{sorted(unselected_interpreters)}"
+        )
+
+    if record.challenges:
+        raise InvalidDeliberationRecord(
+            "legacy DeliberationRecord challenges must remain empty; "
+            "protocol 1.2 stores canonical authored challenges in ProtocolTrace"
         )
 
     if record.stage is DeliberationStage.PLAN_COMPLETE:
