@@ -4,10 +4,10 @@
 
 Imperium remains in **design and validation**, but the constitutional and protocol design is now largely explicit.
 
-- **Main branch:** Stages 0–2 complete and merged.
-- **Current work:** Stage 3 exact deliberation protocol on `agent/stage-3-deliberation-protocol`.
-- **Next engineering stage:** Stage 4 offline deliberation engine.
-- **Best next hands-on test:** after Stage 4 completes one end-to-end fake/replay deliberation.
+- **Main branch:** Stages 0–3 complete and merged.
+- **Current work:** preparing Stage 4, the offline deliberation engine.
+- **Next engineering milestone:** one complete, resumable fake/replay deliberation.
+- **Best next hands-on test:** after Stage 4 completes that end-to-end vertical slice.
 
 `MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted decisions. `STRATEGIC_PROJECT_PLAN.md` remains the gated roadmap.
 
@@ -18,7 +18,7 @@ Imperium remains in **design and validation**, but the constitutional and protoc
 | 0 — Governance and provider-neutral foundation | Complete and merged | Manifesto, decisions, roadmap, Pydantic artifacts, lifecycle foundation, context isolation, fake/replay providers, persistence, CI |
 | 1 — Shared strategic value vocabulary | Complete and merged | Nine approved values, versioned YAML, differentiation rules, exact vector validation |
 | 2 — Member profiles and fixed initial council | Complete and merged | Four advocates, one non-advocating Seneschal, versioned profiles, doctrines, counterweights, known coverage risks |
-| 3 — Exact deliberation protocol | Implemented on current branch; awaiting CI and merge | Twelve transitions, claim normalization, challenge assignment, evidence routing, stopping rules, prompt contracts, protocol trace |
+| 3 — Exact deliberation protocol | Complete and merged | Twelve transitions, claim normalization, challenge assignment, evidence routing, stopping rules, prompt contracts, protocol trace |
 | 4 — Complete offline deliberation engine | Next | Wire all stages into one resumable fake/replay run from request to actionable plan |
 | 5 — Codex provider and live vertical slice | Not started | Use ChatGPT-authenticated Codex only after the offline engine works |
 | 6 — Controlled experiment harness | Not started | Conditions A1, A2, B, and C with frozen configurations and metrics |
