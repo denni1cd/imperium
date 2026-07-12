@@ -40,7 +40,7 @@ def _initial_snapshot(phase: ChallengePhase) -> ClaimRegisterSnapshot:
     return ClaimRegisterSnapshot(
         phase=phase,
         round_number=0,
-        register=_register(phase, register_id=f"register-{phase.value}-0"),
+        claim_register=_register(phase, register_id=f"register-{phase.value}-0"),
     )
 
 
@@ -96,7 +96,7 @@ def test_later_claim_register_must_supersede_prior_round() -> None:
     incorrect = ClaimRegisterSnapshot(
         phase=ChallengePhase.FRAME,
         round_number=1,
-        register=_register(ChallengePhase.FRAME, register_id="register-frame-1"),
+        claim_register=_register(ChallengePhase.FRAME, register_id="register-frame-1"),
         supersedes_register_id="wrong-register",
     )
 
@@ -104,7 +104,7 @@ def test_later_claim_register_must_supersede_prior_round() -> None:
         ProtocolTrace(claim_register_snapshots=(initial, incorrect))
 
     correct = incorrect.model_copy(
-        update={"supersedes_register_id": initial.register.register_id}
+        update={"supersedes_register_id": initial.claim_register.register_id}
     )
     trace = ProtocolTrace(claim_register_snapshots=(initial, correct))
     assert trace.claim_register_snapshots[-1].round_number == 1
