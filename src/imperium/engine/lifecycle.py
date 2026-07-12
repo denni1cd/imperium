@@ -20,7 +20,10 @@ _NEXT_STAGE: dict[DeliberationStage, DeliberationStage] = {
     DeliberationStage.FRAME_CHALLENGES_COMPLETE: DeliberationStage.EVIDENCE_RESOLVED,
     DeliberationStage.EVIDENCE_RESOLVED: DeliberationStage.STRATEGIES_COMPLETE,
     DeliberationStage.STRATEGIES_COMPLETE: DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE,
-    DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE: DeliberationStage.REVISIONS_COMPLETE,
+    DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE: (
+        DeliberationStage.PROPOSAL_EVIDENCE_RESOLVED
+    ),
+    DeliberationStage.PROPOSAL_EVIDENCE_RESOLVED: DeliberationStage.REVISIONS_COMPLETE,
     DeliberationStage.REVISIONS_COMPLETE: DeliberationStage.ADJUDICATED,
     DeliberationStage.ADJUDICATED: DeliberationStage.PLAN_COMPLETE,
 }

@@ -130,3 +130,25 @@ The fixed advocate set is `steward`, `vanguard`, `architect`, and `castellan`.
 - No advocate has Human Sustainability as its dominant value. This remains an explicit coverage risk to test rather than a reason to add another member without evidence.
 - The authoritative configuration is `config/council.yaml`; the profile and roster rules are documented in `docs/COUNCIL_MEMBER_PROFILE.md` and `docs/INITIAL_COUNCIL.md`.
 - Future profile or roster changes require explicit user approval, version increments, updated differentiation claims, vocabulary validation, and migration consideration for saved deliberations and frozen experiments.
+
+### 2026-07-12 — Minimum deliberation protocol
+
+Version `1.0` of the minimum deliberation protocol is approved.
+
+- The lifecycle contains twelve controlled transitions from preserved request through actionable plan.
+- Proposal debate has its own explicit evidence-resolution stage before advocate revision.
+- Every transition declares its prerequisite stage, resulting stage, owner, allowed input artifacts, required outputs, prompt contract, and evidence-request permission.
+- Independent interpretation is blind and may receive only the sovereign request and the advocate's own profile snapshot.
+- Claims are normalized into one decision-relevant proposition each while preserving source wording, conditions, confidence, dependencies, and minority formulations.
+- Claims are classified as facts, assumptions, interpretations, value judgments, forecasts, proposed actions, tradeoffs, or risks.
+- Challenge assignment prioritizes authority conflicts, materiality, controlling unsupported premises, severe downside, irreversibility, breadth of disagreement, and declared counterweights.
+- A challenge must target a normalized claim; generic or theatrical objections do not qualify.
+- Empty challenge plans are permitted only when they explain why no material challenge exists.
+- One additional debate round is allowed only for a high or critical unresolved issue with a specific next action.
+- The minimum protocol allows at most two rounds per challenge phase. Reaching the safety limit preserves unresolved issues and requires a pause or explicit conditional planning rather than silent truncation.
+- Repeated challenges require new evidence or a revised claim.
+- Evidence is routed to user clarification, external research, conditional planning, or pause according to decision impact and reversibility.
+- The abbreviated path is disabled for the initial controlled experiments.
+- The protocol trace preserves claim registers, challenge plans, continuation decisions, empty-plan reasons, and issues surviving the safety limit.
+- The authoritative configuration is `config/protocol.yaml`; stage prompt contracts are stored in `prompts/`; the lifecycle and debate rules are documented in `docs/DELIBERATION_LIFECYCLE.md` and `docs/CONSEQUENTIAL_DEBATE.md`.
+- Future protocol changes require explicit user approval, a version increment, regression tests, and migration consideration for saved sessions and frozen experiments.

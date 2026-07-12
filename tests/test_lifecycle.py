@@ -15,6 +15,7 @@ EXPECTED_STAGES = (
     DeliberationStage.EVIDENCE_RESOLVED,
     DeliberationStage.STRATEGIES_COMPLETE,
     DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE,
+    DeliberationStage.PROPOSAL_EVIDENCE_RESOLVED,
     DeliberationStage.REVISIONS_COMPLETE,
     DeliberationStage.ADJUDICATED,
     DeliberationStage.PLAN_COMPLETE,
@@ -39,6 +40,15 @@ def test_lifecycle_rejects_skipped_stage() -> None:
     state = LifecycleState()
     with pytest.raises(InvalidTransition, match="expected request_preserved"):
         state.advance(DeliberationStage.COUNCIL_SELECTED)
+
+
+def test_lifecycle_requires_proposal_evidence_resolution_before_revision() -> None:
+    state = LifecycleState()
+    for stage in EXPECTED_STAGES[:8]:
+        state = state.advance(stage)
+
+    with pytest.raises(InvalidTransition, match="expected proposal_evidence_resolved"):
+        state.advance(DeliberationStage.REVISIONS_COMPLETE)
 
 
 def test_lifecycle_rejects_fabricated_history() -> None:

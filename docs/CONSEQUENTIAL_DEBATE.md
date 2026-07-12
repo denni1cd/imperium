@@ -2,110 +2,175 @@
 
 ## Status
 
-**Open design item.** This document defines how Imperium will distinguish strategic disagreement from debate-shaped theater.
+**Approved — protocol version 1.0, 2026-07-12.**
+
+This document defines what debate must change, how the effect is recorded, and when discussion is considered strategically useless.
 
 ## Core Rule
 
-A debate contribution is useful only when it changes the decision state, clarifies a material uncertainty, or improves the resulting plan.
+A debate contribution is useful only when it changes the decision state, clarifies a material uncertainty, strengthens a justified position, or improves the resulting actionable plan.
 
-Change alone is not success. A revision, concession, or hybrid strategy counts only when the reasoning for the change is explicit and the change is judged to improve the decision or make its uncertainty more honest.
+Change alone is not success. A concession, revision, or hybrid counts only when its reason is explicit and the result improves the decision or represents uncertainty more honestly.
+
+## Materiality
+
+Every normalized claim and challenge uses one of four levels:
+
+- **Low:** unlikely to change a meaningful part of the recommendation or plan.
+- **Medium:** could change a tradeoff, mitigation, sequencing choice, or bounded component of the plan.
+- **High:** could change the preferred strategy, immediate next action, major commitment, or important condition.
+- **Critical:** could make the strategy violate user authority, become irresponsible, or expose the user to severe or irreversible consequences.
+
+Low claims are not challenged in the minimum protocol merely to create activity. A second debate round requires at least one unresolved high or critical claim.
 
 ## Consequential Events
 
-A challenge or response is consequential when it produces at least one of the following:
+A contribution is consequential when it produces at least one of the following and records its decision impact:
 
-- a newly recognized interpretation of the problem;
+- a newly recognized material frame;
 - exposure of a hidden or unsupported assumption;
-- clarification of a factual, interpretive, or value disagreement;
-- defense that materially strengthens a claim;
+- separation of factual, interpretive, and value disagreement;
+- a defense that materially strengthens a claim;
 - refinement or narrowing of a claim;
 - explicit concession or withdrawal;
-- a request for evidence that identifies a decision-critical uncertainty and leads to a defined resolution path;
+- decision-critical evidence routed to a defined outcome;
 - modification of a proposed strategy;
 - creation of a stronger hybrid strategy;
 - preservation of a serious minority objection;
-- a change in confidence supported by reasoning;
-- a more concrete or executable final plan.
+- a reasoned confidence change;
+- a more specific, safer, or executable final plan;
+- a justified decision to retain a challenged position.
 
 ## Required Change Record
 
-Every material change must record:
+Every advocate revision records:
 
 - the original position or claim;
-- the revised position or claim;
-- the challenge, evidence, or reasoning that caused the change;
-- the expected strategic benefit of the change;
-- any new risk, sacrifice, or uncertainty introduced;
-- whether the Seneschal judged the change beneficial, neutral, or harmful.
+- the revised position or explicit decision to retain it;
+- the challenge, evidence, or reasoning responsible;
+- the expected strategic benefit;
+- any new risk, sacrifice, or uncertainty;
+- concessions;
+- unresolved disagreement;
+- final confidence.
 
-Members are not required to change their positions when the challenge does not justify it. A well-defended unchanged position may be more valuable than a performative concession.
+The Seneschal then records whether the change was beneficial, neutral, or harmful to adjudication. This judgment is part of experiment analysis and must not be inferred merely from the fact that a revision occurred.
+
+## Challenge Quality Requirements
+
+Every challenge must:
+
+- identify a normalized claim and source artifact;
+- explain why the claim is material;
+- identify the consequence expected from a useful response;
+- come from another advocate;
+- fit a declared counterweight or explain the override;
+- avoid repeating an answered claim without new evidence or revision.
+
+An empty challenge plan is valid when no material target exists and the reason is recorded.
 
 ## Non-Contributions
 
 The following do not count as meaningful debate by themselves:
 
-- agreement without additional reasoning;
-- paraphrasing another member's position;
-- generic cautions that have no consequence;
-- attacks on tone, style, or personality;
-- repeated objections that have already been answered;
-- disagreement that never affects a claim, proposal, or adjudication;
-- theatrical hostility without strategic content;
+- agreement without new reasoning;
+- paraphrasing another position;
+- generic caution without decision impact;
+- attacks on tone, style, personality, or thematic identity;
+- objections already answered without new input;
+- disagreement that never affects a claim, proposal, uncertainty, or adjudication;
+- theatrical hostility;
 - revision made only to demonstrate movement;
 - compromise that weakens the plan without resolving a material conflict;
-- requests for evidence that do not identify why the evidence matters or what happens next.
+- evidence requests that do not identify why the evidence matters or what route follows;
+- forced challenges assigned only because the protocol contains a debate stage;
+- confidence changes without stated reasoning.
 
-## Candidate Measurements
+## Hybrid Strategy Test
 
-### Diversity Before Debate
+A strategy is a meaningful hybrid only when it:
 
-- number of materially distinct frames;
-- number of materially distinct proposed strategies;
-- degree of value-vector separation among selected members;
-- evidence that member differences correspond to their profiles rather than presentation style.
+1. incorporates compatible strengths from more than one proposal;
+2. resolves or explicitly bounds a material conflict between them;
+3. produces a coherent course of action rather than a list of options;
+4. explains which sacrifices and assumptions remain;
+5. can be converted into the actionable-plan contract.
 
-### Debate Effects
+A summary, average, or compromise is not automatically a hybrid.
 
-- assumptions exposed;
-- claims defended, refined, conceded, or withdrawn;
-- evidence requests resolved;
-- strategies revised;
-- hybrid strategies created;
-- confidence changes with stated reasons;
+## Automated Measurements
+
+The system can measure reliably:
+
+- number and materiality of normalized claims;
+- number of distinct frames and proposals;
+- challenge assignments by phase and round;
+- defenses, refinements, concessions, withdrawals, and evidence requests;
+- repeated challenges rejected for lack of new input;
+- evidence outcomes;
+- proposal revisions and recorded reasons;
+- continuation and stopping reasons;
 - unresolved objections preserved;
-- material changes judged beneficial, neutral, or harmful.
+- model calls, tokens, latency, and retries;
+- completion of required actionable-plan fields.
 
-### Plan Improvement
+These measurements describe the process. They do not prove strategic improvement.
 
-- added specificity;
-- clearer sequencing and ownership;
-- identified dependencies and decision triggers;
-- stronger risk mitigation;
-- clearer exit or reconsideration conditions;
-- improved alignment with the user's stated objective;
-- human-rated actionability and strategic quality.
+## Human or Model-Assisted Evaluation
 
-### Efficiency
+Blinded evaluation is required for:
 
-- model calls and tokens used;
-- debate contributions that produced no measurable change or clarification;
-- improvement relative to the independent-panel baseline;
-- improvement relative to an equivalent-budget single adviser.
+- whether independent perspectives are genuinely distinct;
+- whether a challenge exposed an important issue;
+- whether a revision improved the strategy;
+- whether a hybrid is coherent and stronger;
+- whether the final plan is strategically sound and actionable;
+- whether minority objections were handled responsibly;
+- whether the added deliberation justified its cost.
 
-Efficiency is a constraint and diagnostic, not the primary measure of success.
+Automated counts may support evaluation but may not substitute for these judgments.
+
+## Debate-Effect Summary
+
+Each completed session should eventually report:
+
+- claims challenged by materiality;
+- consequential outcomes by disposition;
+- evidence requests and routes;
+- proposals changed or retained;
+- changes judged beneficial, neutral, or harmful;
+- surviving minority objections;
+- rounds continued and stopped, with reasons;
+- plan improvements attributed to debate;
+- debate calls and token use;
+- unresolved high or critical issues.
+
+The Stage 3 `ProtocolTrace` preserves the typed inputs needed for this report. Stage 4 will attach the trace to the complete offline session.
 
 ## Minimum Success Test
 
-The full debate process should outperform both an independent panel and an equivalent-budget single adviser often enough, and by enough strategic value, to justify its additional cost and complexity.
+The full debate process must outperform both:
 
-If debate does not improve the output beyond collecting independent opinions or structured self-critique, the debate protocol must be revised before additional architecture is added.
+- independent profiled advisers without debate; and
+- a roughly equivalent-budget single adviser using structured self-critique.
 
-## Open Questions
+It must do so often enough, and by enough strategic value, to justify its additional cost and complexity.
 
-- Which measurements can be automated reliably?
-- Which require blinded human judgment?
-- How should hybrid strategies be distinguished from simple summaries?
-- What threshold defines a material revision?
-- How should valid but unchanged minority objections be scored?
-- How should harmful or pressure-driven revisions be detected?
-- How many test cases are needed before the protocol is considered promising?
+If debate does not improve the output beyond independent collection or self-critique, the protocol must be revised before more architecture is added.
+
+## Failure Signals
+
+Stage 3 should be reconsidered when testing shows:
+
+- most challenge plans are empty or target only medium-impact wording differences;
+- advocates repeatedly collapse into generic consensus;
+- second rounds rarely change adjudication;
+- revisions are predominantly neutral or harmful;
+- the Seneschal rewards compromise rather than decisive reasoning;
+- important human or stakeholder consequences are repeatedly missed;
+- the final plan becomes less actionable as deliberation grows;
+- the additional inference cost is not matched by strategic improvement.
+
+## Change Control
+
+Changes to debate materiality, assignment, continuation, stopping, or measurement rules require a protocol version increment, regression tests, experiment migration consideration, and explicit user approval.
