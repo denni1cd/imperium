@@ -22,13 +22,14 @@ This document records accepted project decisions that should persist across conv
 
 - Council members may use Warhammer 40,000-inspired names for identity and presentation.
 - Thematic names do not define a member's strategic perspective and may not substitute for a distinct value matrix, doctrine, or reasoning pattern.
-- Roboute Guilliman is the current candidate presentation identity for the Seneschal.
-- The rest of the roster and all substantive profiles remain unapproved until the value vocabulary and profile design are completed.
+- Presentation metadata must be removable for blinded profile-fidelity tests.
+- The stable office IDs and strategic profiles remain authoritative when all thematic metadata is removed.
 
 ### 2026-07-10 — Independent interpretation
 
-- Each selected member interprets the original user request independently before seeing another member's interpretation.
+- Each selected advocate interprets the original user request independently before seeing another advocate's interpretation.
 - The Seneschal may preserve facts and constraints but must not pre-frame the strategic problem for the council.
+- The Seneschal does not submit an independent strategy proposal.
 
 ### 2026-07-10 — Deliberative authority
 
@@ -107,3 +108,25 @@ Version `1.0` of the shared strategic value vocabulary is approved with nine dim
 - Risk tolerance, innovation, consensus, evidence quality, legality, and user alignment are not separate weighted values.
 - The authoritative machine-readable vocabulary is `config/values.yaml`; its intended meaning is documented in `docs/VALUE_VOCABULARY.md`.
 - Future vocabulary changes require explicit user approval, a version increment, differentiation testing, and migration consideration for saved profiles and deliberations.
+
+### 2026-07-11 — Member profile contract and fixed initial council
+
+Version `1.0` of the council profile contract and fixed initial roster is approved.
+
+The first experimental registry contains:
+
+- `seneschal` — procedural coordinator and adjudicator, presentation label **Roboute Guilliman**;
+- `steward` — resource discipline, presentation label **Munitorum**;
+- `vanguard` — decisive opportunity capture, presentation label **Macharius**;
+- `architect` — leverage and reusable capability, presentation label **Belisarius Cawl**;
+- `castellan` — resilience and downside protection, presentation label **Rogal Dorn**.
+
+The fixed advocate set is `steward`, `vanguard`, `architect`, and `castellan`.
+
+- The Seneschal has an inspectable value vector but does not participate as an advocate or submit an independent strategy.
+- Every approved profile includes doctrine, jurisdiction, vigilance, accepted sacrifices, evidence requirements, revision triggers, operating constraints, and a differentiation claim.
+- Every advocate identifies at least one strategic counterweight.
+- Thematic labels are optional metadata and must be removed during blinded profile-fidelity tests.
+- No advocate has Human Sustainability as its dominant value. This remains an explicit coverage risk to test rather than a reason to add another member without evidence.
+- The authoritative configuration is `config/council.yaml`; the profile and roster rules are documented in `docs/COUNCIL_MEMBER_PROFILE.md` and `docs/INITIAL_COUNCIL.md`.
+- Future profile or roster changes require explicit user approval, version increments, updated differentiation claims, vocabulary validation, and migration consideration for saved deliberations and frozen experiments.

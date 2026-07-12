@@ -2,20 +2,17 @@
 
 ## Status
 
-**Open design item.** This document defines the minimum information needed to create a persistent strategic perspective.
+**Approved — version 1.0, 2026-07-11.**
 
-## Profile Goals
+The machine-readable profiles are stored in [`../config/council.yaml`](../config/council.yaml). This document defines the minimum contract every approved profile must satisfy.
 
-A council member profile must:
+## Purpose
 
-- produce a stable strategic identity across different decisions;
-- influence reasoning rather than merely voice or presentation;
-- remain inspectable and comparable with other members;
-- preserve meaningful differences without turning members into caricatures;
-- allow the member to revise a position when evidence defeats it;
-- remain subordinate to the user's explicit constraints and objectives.
+A council profile creates a persistent strategic perspective. It must influence what a member notices, prioritizes, opposes, sacrifices, investigates, and recommends across different decisions.
 
-## Authority Limit
+A profile is not a character prompt. Thematic labels and tone may support recognition, but the strategic identity must remain distinguishable when those presentation fields are removed.
+
+## Authority Boundary
 
 A profile defines how a member evaluates strategy. It does not grant authority to override the user.
 
@@ -26,56 +23,136 @@ Member values and doctrines operate beneath:
 3. verified facts and evidence;
 4. explicit assumptions and acknowledged uncertainty.
 
-A member may challenge whether the user's chosen means will achieve the intended outcome, but it must make that challenge explicit rather than silently substituting its own priorities.
+A member may explicitly challenge whether the user's chosen means will achieve the intended outcome. It may not silently substitute its own objective.
 
-## Draft Profile Structure
+## Approved Profile Contract
+
+### Version and Status
+
+Each profile contains:
+
+- a profile version;
+- an approval status;
+- a stable member identifier.
+
+Versioning ensures that saved deliberations can identify the exact profile used. Profile changes must not silently reinterpret earlier records.
+
+### Procedural Role
+
+Each profile has one of two roles:
+
+- **Advocate:** independently interprets the request, proposes strategy, responds to challenges, and revises its position.
+- **Seneschal:** protects the process, assigns or coordinates challenges, adjudicates the record, and produces the actionable plan.
+
+The Seneschal must not participate as an independent advocate. This prevents the procedural coordinator from framing the problem before the council has produced blind interpretations.
 
 ### Identity
 
-- stable identifier;
-- office or title;
-- concise strategic purpose.
+Each profile includes:
+
+- a stable identifier;
+- a unique office or title;
+- a concise strategic purpose.
+
+The identifier and office remain functional even when thematic presentation is removed.
 
 ### Value Matrix
 
-- uses the shared strategic vocabulary;
-- each value is scored from `0.0` to `1.0`;
-- all values sum to exactly `1.0`;
-- weights remain persistent unless intentionally revised;
-- weights express relative strategic attention, not permission to violate higher authority.
+Every profile:
+
+- uses all nine approved strategic values exactly once;
+- assigns each value a score from `0.0` to `1.0`;
+- uses weights totaling exactly `1.0`;
+- remains on the approved vocabulary version;
+- preserves its vector across deliberations unless an explicit profile revision is approved.
+
+Weights represent relative strategic attention. They do not authorize violations of higher authority.
 
 ### Doctrine
 
-A short explanation of how the member interprets and applies its highest-weighted values.
+Every approved profile contains at least two doctrine statements explaining how it applies its values.
+
+Doctrine must:
+
+- convert the value vector into recognizable strategic judgment;
+- state how the member evaluates tradeoffs;
+- remain general enough to operate across several problem domains;
+- avoid fictional imitation or communication-style instructions.
 
 ### Jurisdiction
 
-The types of decisions or strategic dimensions for which the member is especially relevant.
+Jurisdiction identifies the strategic dimensions where the member is especially relevant. It does not grant exclusive control over those dimensions.
 
 ### Vigilance
 
-The opportunities, risks, assumptions, and failure modes the member is expected to notice.
+Vigilance identifies the opportunities, risks, assumptions, and failure modes the member is expected to notice early.
 
 ### Accepted Sacrifices
 
-The outcomes the member is comparatively willing to trade away in service of its dominant values, subject to the user's explicit constraints.
+Accepted sacrifices state which desirable outcomes the member is comparatively willing to trade away in service of its dominant priorities, subject to user constraints.
 
-### Evidence and Revision
+This field is required because strategic identity is not meaningful unless it changes what a member will give up.
 
-- what evidence the member normally demands;
-- what would cause it to revise or abandon a recommendation;
-- how uncertainty should affect its confidence;
-- how the member distinguishes weak evidence from a value disagreement.
+### Evidence Requirements
 
-### Hard Constraints
+Every profile states the evidence it normally demands before supporting its characteristic recommendations.
 
-Optional member-specific boundaries may exist when they support a legitimate strategic office, but they must not conflict with user authority or the project manifesto.
+Evidence requirements must distinguish:
 
-Hard constraints must be rare and explicit. They must not be used to disguise preferences that belong in the weighted value matrix.
+- a factual uncertainty that could change the recommendation;
+- a value disagreement that evidence alone cannot settle.
+
+### Revision Triggers
+
+Every profile states what would cause it to refine, abandon, or reverse a recommendation.
+
+A member that cannot change its mind when evidence defeats its position is a caricature, not a strategic adviser.
+
+### Operating Constraints
+
+Each profile includes explicit constraints preventing predictable misuse of its perspective.
+
+Examples include:
+
+- Urgency may not bypass evidence or authorization.
+- Economy may not remove required safeguards merely to reduce cost.
+- Resilience may not block action merely because uncertainty exists.
+- Leverage may not default to platforms or multi-agent systems without demonstrated reuse.
+
+Operating constraints are not substitutes for weighted values. They define boundaries necessary to keep a strategic office coherent and subordinate to the manifesto.
 
 ### Presentation
 
-Optional thematic identity, tone, and style. Presentation may reinforce recognition but must not define the member's strategic difference.
+Presentation is optional metadata limited to:
+
+- `label`;
+- `tone`.
+
+Presentation must not contain strategic instructions. Blinded profile-fidelity tests must remove presentation metadata.
+
+## Fixed-Roster Contract
+
+The first experimental council configuration must contain:
+
+- exactly one Seneschal;
+- at least two independent advocates;
+- an explicit ordered advocate list;
+- unique member identifiers, titles, and presentation labels;
+- non-identical value vectors;
+- one differentiation claim for every profile;
+- at least one identified strategic counterweight for every advocate;
+- known coverage risks that remain visible rather than being solved through speculative roster growth.
+
+## Differentiation Claim
+
+Every profile must document:
+
+- the distinctive question it brings to a decision;
+- its expected strategic contribution;
+- its likely failure mode;
+- the members most likely to counterweight it.
+
+These claims are hypotheses to test. They are not proof that the profiles are genuinely different.
 
 ## Profile Validation
 
@@ -84,32 +161,33 @@ A profile is valid only if it can answer:
 - What will this member notice that another member may miss?
 - Which tradeoff will it evaluate differently?
 - What strategy is it more likely to support or oppose?
+- What is it willing to sacrifice?
 - What evidence could change its mind?
 - Is its reasoning distinguishable without relying on its name or tone?
 - Does it remain consistent across different problems without becoming rigid?
-- Do changes to its value weights predictably affect its interpretation or recommendation?
-- Does it preserve user constraints even when its own values favor another outcome?
+- Does it preserve user constraints even when its values favor another outcome?
 
 ## Profile Fidelity Tests
 
-The first experiments must test profiles separately from final plan quality.
-
-A profile should demonstrate:
+The validation experiment must separately measure:
 
 - within-member consistency across varied decisions;
 - between-member differentiation on the same decision;
 - correspondence between dominant values and observed reasoning;
 - evidence-responsive revision;
 - resistance to collapsing into generic consensus;
-- no reliance on theatrical language for distinguishability.
+- no reliance on thematic language for distinguishability;
+- whether known coverage risks become actual systematic omissions.
 
 Profiles that repeatedly produce strategically redundant reasoning should be revised, combined, or removed.
 
-## Open Questions
+## Change Control
 
-- Which fields are required in the first experiment?
-- Should doctrines be free text, structured rules, or both?
-- How much persistence should exist between deliberations?
-- Which member-specific hard constraints, if any, are legitimate?
-- How should the system detect two profiles that are strategically redundant?
-- What profile-fidelity threshold is sufficient for the first validation experiment?
+Future profile or roster changes require:
+
+1. a documented strategic reason;
+2. a profile or council version increment;
+3. validation against the approved vocabulary;
+4. updated differentiation and counterweight claims;
+5. migration consideration for saved deliberations and experiment configurations;
+6. explicit user approval recorded in `DECISIONS.md`.
