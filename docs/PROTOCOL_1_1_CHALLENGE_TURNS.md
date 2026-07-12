@@ -2,9 +2,11 @@
 
 ## Status
 
-**Approved correction, 2026-07-12.**
+**Approved correction, 2026-07-12; incorporated into current protocol 1.2.**
 
-This amendment resolves an execution gap discovered before Stage 4 implementation. It does not alter `MANIFESTO.md`, the fixed council, value matrices, the twelve top-level lifecycle transitions, challenge-selection thresholds, evidence routes, or stopping rules.
+This amendment resolved the advocate-authorship gap discovered before Stage 4 implementation. Protocol 1.2 later clarified conditional challenge outputs, evidence cardinality, halt behavior, and canonical challenge storage. See [`PROTOCOL_1_2_CARDINALITY_AND_HALTS.md`](PROTOCOL_1_2_CARDINALITY_AND_HALTS.md).
+
+Protocol 1.1 did not alter `MANIFESTO.md`, the fixed council, value matrices, the twelve top-level lifecycle transitions, challenge-selection thresholds, evidence routes, or stopping rules.
 
 ## The Gap
 
@@ -14,7 +16,7 @@ That ambiguity could allow the Seneschal or orchestration layer to paraphrase or
 
 ## Corrected Internal Sequence
 
-Each nonempty frame or proposal challenge round now executes inside the existing top-level challenge transition:
+Each nonempty frame or proposal challenge round executes inside the existing top-level challenge transition:
 
 1. **Selection — Seneschal**
    - normalize the relevant claims;
@@ -62,17 +64,17 @@ Neither advocate receives an unrestricted accumulated council transcript.
 
 An empty `ChallengePlan` remains valid when it records why no material challenge exists. No challenger or target subturn is created for an empty plan.
 
-This preserves the prohibition against performative disagreement.
+Protocol 1.2 makes that conditional cardinality explicit in the stage contract so empty plans no longer conflict with required stage outputs.
 
 ## Round Repetition
 
-Protocol 1.1 does not loosen the anti-repetition rule. A later round may not repeat the same targeted challenge unless new evidence or a revised claim creates materially new input.
+Protocol 1.1 did not loosen the anti-repetition rule. A later round may not repeat the same targeted challenge unless new evidence or a revised claim creates materially new input.
 
 The later claim register must preserve the supersession relationship so the engine can demonstrate what changed between rounds.
 
 ## Trace Requirements
 
-The `ProtocolTrace` now preserves authored challenge artifacts in addition to claim-register snapshots, challenge plans, and continuation decisions.
+The `ProtocolTrace` preserves authored challenge artifacts in addition to claim-register snapshots, challenge plans, and continuation decisions.
 
 Every authored challenge must match its assignment on:
 
@@ -88,4 +90,4 @@ Stage 4 will add execution and context lineage around these approved strategic a
 
 ## Compatibility
 
-Protocol 1.1 keeps the same twelve lifecycle stages and configuration dependencies. Saved or replayed protocol 1.0 sessions require explicit migration or must remain associated with protocol version 1.0; they must not be silently interpreted as 1.1 sessions.
+Protocol 1.1 keeps the same twelve lifecycle stages and configuration dependencies. Saved or replayed protocol 1.0 or 1.1 sessions require explicit migration or must remain associated with their original protocol version; they must not be silently interpreted as current protocol sessions.
