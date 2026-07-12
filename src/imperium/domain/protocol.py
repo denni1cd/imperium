@@ -226,6 +226,19 @@ class ChallengeTurnContract(StrictModel):
         return self
 
 
+class OutputCardinalityRule(StrictModel):
+    """Require one output artifact for each matching input artifact, including zero."""
+
+    output_artifact: ArtifactKind
+    count_from_input_artifact: ArtifactKind
+
+    @model_validator(mode="after")
+    def reject_identity_mapping(self) -> Self:
+        if self.output_artifact is self.count_from_input_artifact:
+            raise ValueError("output cardinality must map between different artifact kinds")
+        return self
+
+
 class StageContract(StrictModel):
     """Exact information and artifact contract for one lifecycle transition."""
 
@@ -240,6 +253,7 @@ class StageContract(StrictModel):
     blind: bool = False
     permits_evidence_requests: bool = False
     challenge_turns: tuple[ChallengeTurnContract, ...] = ()
+    output_cardinality: tuple[OutputCardinalityRule, ...] = ()
 
     @field_validator("allowed_input_artifacts", "required_output_artifacts")
     @classmethod
@@ -264,6 +278,26 @@ class StageContract(StrictModel):
         if self.blind and not self.per_advocate:
             raise ValueError("blind execution is only valid for per-advocate stages")
 
+        cardinality_outputs = [rule.output_artifact for rule in self.output_cardinality]
+        if len(set(cardinality_outputs)) != len(cardinality_outputs):
+            raise ValueError("stage output-cardinality targets must be unique")
+        overlap = set(cardinality_outputs) & set(self.required_output_artifacts)
+        if overlap:
+            raise ValueError(
+                "conditionally counted outputs cannot also be unconditional outputs: "
+                f"{sorted(item.value for item in overlap)}"
+            )
+        missing_cardinality_inputs = {
+            rule.count_from_input_artifact
+            for rule in self.output_cardinality
+            if rule.count_from_input_artifact not in self.allowed_input_artifacts
+        }
+        if missing_cardinality_inputs:
+            raise ValueError(
+                "output cardinality references forbidden input artifacts: "
+                f"{sorted(item.value for item in missing_cardinality_inputs)}"
+            )
+
         if self.challenge_turns:
             if self.actor is not ProtocolActor.SENESCHAL:
                 raise ValueError("challenge subturns require a Seneschal-coordinated stage")
@@ -274,15 +308,24 @@ class StageContract(StrictModel):
                 )
             required_stage_outputs = {
                 ArtifactKind.CHALLENGE_PLAN,
-                ArtifactKind.CHALLENGE,
-                ArtifactKind.CHALLENGE_RESPONSE,
                 ArtifactKind.CONTINUATION_DECISION,
             }
             missing = required_stage_outputs - set(self.required_output_artifacts)
             if missing:
                 raise ValueError(
-                    "challenge stages are missing required outputs: "
+                    "challenge stages are missing unconditional outputs: "
                     f"{sorted(item.value for item in missing)}"
+                )
+            conditional_turn_outputs = {
+                turn.required_output_artifact for turn in self.challenge_turns
+            }
+            illegal_unconditional = conditional_turn_outputs & set(
+                self.required_output_artifacts
+            )
+            if illegal_unconditional:
+                raise ValueError(
+                    "challenge subturn outputs must remain conditional on assignments: "
+                    f"{sorted(item.value for item in illegal_unconditional)}"
                 )
         elif ArtifactKind.CHALLENGE in self.required_output_artifacts:
             raise ValueError("a stage requiring challenge artifacts must define challenge subturns")
@@ -429,6 +472,10 @@ class ProtocolConfiguration(StrictModel):
             DeliberationStage.FRAME_CHALLENGES_COMPLETE,
             DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE,
         }
+        evidence_stages = {
+            DeliberationStage.EVIDENCE_RESOLVED,
+            DeliberationStage.PROPOSAL_EVIDENCE_RESOLVED,
+        }
         for contract in self.stage_contracts:
             if contract.resulting_stage in challenge_stages and not contract.challenge_turns:
                 raise ValueError(
@@ -437,6 +484,19 @@ class ProtocolConfiguration(StrictModel):
             if contract.resulting_stage not in challenge_stages and contract.challenge_turns:
                 raise ValueError(
                     f"non-challenge stage {contract.stage_id!r} cannot define challenge subturns"
+                )
+            if contract.resulting_stage in evidence_stages:
+                expected_rule = OutputCardinalityRule(
+                    output_artifact=ArtifactKind.EVIDENCE_RESOLUTION,
+                    count_from_input_artifact=ArtifactKind.EVIDENCE_REQUEST,
+                )
+                if contract.output_cardinality != (expected_rule,):
+                    raise ValueError(
+                        f"evidence stage {contract.stage_id!r} must resolve each evidence request exactly once"
+                    )
+            elif contract.output_cardinality:
+                raise ValueError(
+                    f"non-evidence stage {contract.stage_id!r} cannot define output cardinality"
                 )
 
         final_contract = self.stage_contracts[-1]
