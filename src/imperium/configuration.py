@@ -68,11 +68,20 @@ def load_protocol_configuration(
         )
 
     project_root = source.parent.parent
-    missing_prompts = sorted(
+    prompt_paths = {
         contract.prompt_template
         for contract in protocol.stage_contracts
         if contract.prompt_template
-        and not (project_root / contract.prompt_template).is_file()
+    }
+    prompt_paths.update(
+        turn.prompt_template
+        for contract in protocol.stage_contracts
+        for turn in contract.challenge_turns
+    )
+    missing_prompts = sorted(
+        prompt_path
+        for prompt_path in prompt_paths
+        if not (project_root / prompt_path).is_file()
     )
     if missing_prompts:
         raise ValueError(f"protocol references missing prompt templates: {missing_prompts}")
