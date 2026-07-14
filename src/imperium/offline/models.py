@@ -23,6 +23,7 @@ from imperium.domain.models import (
     EvidenceResolution,
     FrameRegister,
     Interpretation,
+    MemberProfile,
     NonEmptyStr,
     Revision,
     SovereignRequest,
@@ -303,10 +304,20 @@ class OfflineSession(StrictModel):
     def _validate_frozen_replay_artifacts(self) -> None:
         """Reject checkpoints whose accepted replay outputs diverge from the frozen case."""
 
-        if self.record.member_snapshots and (
-            self.record.member_snapshots != self.runtime.council.members
-        ):
-            raise ValueError("member snapshots do not match the frozen council")
+        if self.record.member_snapshots:
+            if len(self.record.member_snapshots) != len(self.runtime.council.members):
+                raise ValueError("member snapshots do not match the frozen council")
+            base_fields = tuple(MemberProfile.model_fields)
+            for actual, expected in zip(
+                self.record.member_snapshots,
+                self.runtime.council.members,
+                strict=True,
+            ):
+                if any(
+                    getattr(actual, field) != getattr(expected, field)
+                    for field in base_fields
+                ):
+                    raise ValueError("member snapshots do not match the frozen council")
         if self.record.selected_member_ids and (
             self.record.selected_member_ids != self.runtime.council.advocate_member_ids
         ):
@@ -405,16 +416,27 @@ class OfflineSession(StrictModel):
             lambda item: item.evidence_request_id,
             "evidence request",
         )
-        expected_resolutions = (
-            *self.scenario.frame_evidence_resolutions,
-            *self.scenario.proposal_evidence_resolutions,
-        )
-        require_expected(
-            self.record.evidence_resolutions,
-            expected_resolutions,
-            lambda item: item.evidence_request_id,
-            "evidence resolution",
-        )
+        expected_resolutions = {
+            item.evidence_request_id: item
+            for item in (
+                *self.scenario.frame_evidence_resolutions,
+                *self.scenario.proposal_evidence_resolutions,
+            )
+        }
+        for resolution in self.record.evidence_resolutions:
+            expected = expected_resolutions.get(resolution.evidence_request_id)
+            if resolution == expected:
+                continue
+            historical = any(
+                event.evidence_request_id == resolution.evidence_request_id
+                and event.outcome is resolution.outcome
+                for event in self.evidence_history
+            )
+            if not historical:
+                raise ValueError(
+                    "persisted evidence resolution does not match the current or historical "
+                    f"scenario disposition: {resolution.evidence_request_id!r}"
+                )
 
         if self.record.adjudication is not None and (
             self.record.adjudication != self.scenario.adjudication
