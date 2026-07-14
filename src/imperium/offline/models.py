@@ -265,12 +265,18 @@ class OfflineSession(StrictModel):
             raise ValueError("turn trace call keys must be unique")
         if set(turn_keys) != set(self.completed_call_keys):
             raise ValueError("turn trace and completed call keys must describe the same calls")
+        call_ids = [call.call_id for call in self.record.model_calls]
+        if len(set(call_ids)) != len(call_ids):
+            raise ValueError("model call records must have unique call identifiers")
+        if set(call_ids) != set(self.completed_call_keys):
+            raise ValueError("model call records and completed call keys must match")
         if self.pending_call_key in set(self.completed_call_keys):
             raise ValueError("a completed call cannot remain pending")
         if self.record.status is SessionStatus.COMPLETE:
             if self.record.stage is not DeliberationStage.PLAN_COMPLETE:
                 raise ValueError("complete sessions must be at plan_complete")
 
+        self._validate_frozen_replay_artifacts()
         artifact_kinds = self._artifact_kind_index()
         profiles = {member.member_id: member for member in self.runtime.council.members}
         enriched: list[TurnTrace] = []
@@ -293,6 +299,134 @@ class OfflineSession(StrictModel):
             )
         object.__setattr__(self, "turns", tuple(enriched))
         return self
+
+    def _validate_frozen_replay_artifacts(self) -> None:
+        """Reject checkpoints whose accepted replay outputs diverge from the frozen case."""
+
+        if self.record.member_snapshots and (
+            self.record.member_snapshots != self.runtime.council.members
+        ):
+            raise ValueError("member snapshots do not match the frozen council")
+        if self.record.selected_member_ids and (
+            self.record.selected_member_ids != self.runtime.council.advocate_member_ids
+        ):
+            raise ValueError("selected members do not match the frozen council")
+
+        def require_expected(actual_items, expected_items, key, label: str) -> None:
+            expected = {key(item): item for item in expected_items}
+            for item in actual_items:
+                identity = key(item)
+                if identity not in expected or item != expected[identity]:
+                    raise ValueError(
+                        f"persisted {label} {identity!r} does not match the frozen scenario"
+                    )
+
+        require_expected(
+            self.record.interpretations,
+            self.scenario.interpretations,
+            lambda item: item.member_id,
+            "interpretation",
+        )
+        if self.record.frame_register is not None and (
+            self.record.frame_register != self.scenario.frame_register
+        ):
+            raise ValueError("persisted frame register does not match the frozen scenario")
+        require_expected(
+            self.record.proposals,
+            self.scenario.proposals,
+            lambda item: item.member_id,
+            "proposal",
+        )
+        require_expected(
+            self.record.revisions,
+            self.scenario.revisions,
+            lambda item: item.member_id,
+            "revision",
+        )
+
+        rounds = (*self.scenario.frame_rounds, *self.scenario.proposal_rounds)
+        expected_snapshots = {
+            (round_fixture.phase, round_fixture.claim_snapshot_round): round_fixture
+            for round_fixture in rounds
+        }
+        for snapshot in self.protocol_trace.claim_register_snapshots:
+            key = (snapshot.phase, snapshot.round_number)
+            expected = expected_snapshots.get(key)
+            if (
+                expected is None
+                or snapshot.claim_register != expected.claim_register
+                or snapshot.supersedes_register_id != expected.supersedes_register_id
+            ):
+                raise ValueError(
+                    f"persisted claim snapshot {key!r} does not match the frozen scenario"
+                )
+        require_expected(
+            self.protocol_trace.challenge_plans,
+            tuple(round_fixture.plan for round_fixture in rounds),
+            lambda item: (item.phase, item.round_number),
+            "challenge plan",
+        )
+        require_expected(
+            self.protocol_trace.challenges,
+            tuple(
+                challenge
+                for round_fixture in rounds
+                for challenge in round_fixture.challenges
+            ),
+            lambda item: item.challenge_id,
+            "challenge",
+        )
+        require_expected(
+            self.record.challenge_responses,
+            tuple(
+                response
+                for round_fixture in rounds
+                for response in round_fixture.responses
+            ),
+            lambda item: item.challenge_id,
+            "challenge response",
+        )
+        require_expected(
+            self.protocol_trace.continuation_decisions,
+            tuple(round_fixture.continuation for round_fixture in rounds),
+            lambda item: (item.phase, item.completed_round),
+            "continuation decision",
+        )
+
+        expected_requests = tuple(
+            response.evidence_request
+            for round_fixture in rounds
+            for response in round_fixture.responses
+            if response.evidence_request is not None
+        )
+        require_expected(
+            self.record.evidence_requests,
+            expected_requests,
+            lambda item: item.evidence_request_id,
+            "evidence request",
+        )
+        expected_resolutions = (
+            *self.scenario.frame_evidence_resolutions,
+            *self.scenario.proposal_evidence_resolutions,
+        )
+        require_expected(
+            self.record.evidence_resolutions,
+            expected_resolutions,
+            lambda item: item.evidence_request_id,
+            "evidence resolution",
+        )
+
+        if self.record.adjudication is not None and (
+            self.record.adjudication != self.scenario.adjudication
+        ):
+            raise ValueError("persisted adjudication does not match the frozen scenario")
+        if self.record.minority_objections and self.record.adjudication is not None and (
+            self.record.minority_objections
+            != self.record.adjudication.minority_objections
+        ):
+            raise ValueError("record minority objections must match adjudication")
+        if self.record.plan is not None and self.record.plan != self.scenario.plan:
+            raise ValueError("persisted actionable plan does not match the frozen scenario")
 
     def _artifact_kind_index(self) -> dict[str, str]:
         index: dict[str, str] = {"frame-register": ArtifactKind.FRAME_REGISTER.value}
