@@ -10,7 +10,11 @@ from imperium.engine.context import ContextBuilder
 from imperium.live.models import CodexSmokeReport
 from imperium.offline.runtime import freeze_runtime
 from imperium.providers.base import CallMetadata, ProviderError
-from imperium.providers.codex_cli import DEFAULT_CODEX_MODEL, CodexCliProvider
+from imperium.providers.codex_cli import (
+    DEFAULT_CODEX_MODEL,
+    DEFAULT_CODEX_REASONING_EFFORT,
+    CodexCliProvider,
+)
 
 
 async def run_codex_smoke(
@@ -91,6 +95,7 @@ async def run_codex_smoke(
         member_id=member.member_id,
         provider=result.provider,
         model=result.model,
+        reasoning_effort=DEFAULT_CODEX_REASONING_EFFORT,
         response_id=result.response_id,
         input_tokens=result.input_tokens,
         output_tokens=result.output_tokens,
