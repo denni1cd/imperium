@@ -130,9 +130,9 @@ async def test_codex_provider_builds_isolated_terra_low_no_tools_command(
     assert "--skip-git-repo-check" in command
     assert command[command.index("--model") + 1] == DEFAULT_CODEX_MODEL
     assert _config_values(command) == {
-        f'model_reasoning_effort="{DEFAULT_CODEX_REASONING_EFFORT}"',
+        f"model_reasoning_effort={DEFAULT_CODEX_REASONING_EFFORT}",
         "features.shell_tool=false",
-        'web_search="disabled"',
+        "web_search=disabled",
     }
     assert command[-1] == "-"
     assert "Do not inspect files" in str(observed["input"])
@@ -224,11 +224,23 @@ def test_windows_cmd_launcher_uses_command_processor(monkeypatch: pytest.MonkeyP
     monkeypatch.setenv("COMSPEC", r"C:\Windows\System32\cmd.exe")
 
     wrapped = codex_cli._windows_wrapped_command(
-        [r"C:\Users\Zero\AppData\Roaming\npm\codex.cmd", "exec", "-"]
+        [
+            r"C:\Users\Zero\AppData\Roaming\npm\codex.cmd",
+            "--config",
+            "model_reasoning_effort=low",
+            "--config",
+            "web_search=disabled",
+            "exec",
+            "-",
+        ]
     )
 
     assert wrapped[:4] == [r"C:\Windows\System32\cmd.exe", "/d", "/s", "/c"]
     assert "codex.cmd" in wrapped[4]
+    assert "model_reasoning_effort=low" in wrapped[4]
+    assert "web_search=disabled" in wrapped[4]
+    assert '\\"disabled\\"' not in wrapped[4]
+    assert '\\"low\\"' not in wrapped[4]
     assert "exec" in wrapped[4]
 
 
