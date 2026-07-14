@@ -1,0 +1,57 @@
+name: Stage 4 offline fixture
+
+on:
+  pull_request:
+    paths:
+      - "src/imperium/offline/**"
+      - "tests/integration/**"
+      - "config/**"
+      - "prompts/**"
+      - ".github/workflows/stage4-offline.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-fixture:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install project
+        run: python -m pip install -e ".[dev]"
+
+      - name: Run Stage 4 integration tests
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m pytest tests/integration/test_offline_vertical_slice.py -vv | tee stage4-pytest.log
+
+      - name: Generate challenged synthetic session
+        run: |
+          python -m imperium.offline run \
+            --scenario challenged \
+            --output-dir stage4-artifacts/challenged
+
+      - name: Upload synthetic review artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage4-offline-review
+          if-no-files-found: warn
+          path: |
+            stage4-artifacts/challenged/session.json
+            stage4-artifacts/challenged/record.json
+            stage4-artifacts/challenged/protocol_trace.json
+            stage4-artifacts/challenged/manifest.json
+            stage4-artifacts/challenged/lineage.json
+            stage4-artifacts/challenged/transcript.md
+            stage4-artifacts/challenged/plan.json
+            stage4-pytest.log
