@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from hashlib import sha256
 from typing import Self
 
 from pydantic import Field, field_validator, model_validator
 
 from imperium.domain.council import CouncilConfiguration
 from imperium.domain.enums import (
+    ArtifactKind,
     ChallengePhase,
     DeliberationStage,
     EvidenceOutcome,
@@ -39,12 +41,22 @@ from imperium.domain.vocabulary import ValueVocabulary
 from imperium.engine.lifecycle import LifecycleState
 
 
+def _text_digest(content: str) -> str:
+    return sha256(content.encode("utf-8")).hexdigest()
+
+
 class FrozenTextArtifact(StrictModel):
     """Exact UTF-8 configuration or prompt content frozen for deterministic resume."""
 
     path: NonEmptyStr
     sha256: NonEmptyStr
     content: str
+
+    @model_validator(mode="after")
+    def validate_digest(self) -> Self:
+        if self.sha256 != _text_digest(self.content):
+            raise ValueError(f"frozen source digest does not match content for {self.path!r}")
+        return self
 
 
 class FrozenRuntime(StrictModel):
@@ -163,12 +175,22 @@ class TurnTrace(StrictModel):
     prompt_path: NonEmptyStr
     prompt_sha256: NonEmptyStr
     visible_artifact_ids: tuple[NonEmptyStr, ...] = ()
+    visible_artifact_kinds: tuple[NonEmptyStr, ...] = ()
     profile_member_id: str | None = None
+    profile_sha256: str | None = None
     input_sha256: NonEmptyStr
     output_artifact_id: NonEmptyStr
     output_type: NonEmptyStr
     provider: NonEmptyStr
     model: NonEmptyStr
+
+    @model_validator(mode="after")
+    def validate_visible_artifact_metadata(self) -> Self:
+        if self.visible_artifact_kinds and (
+            len(self.visible_artifact_kinds) != len(self.visible_artifact_ids)
+        ):
+            raise ValueError("visible artifact IDs and kinds must have equal cardinality")
+        return self
 
 
 class EvidenceDispositionEvent(StrictModel):
@@ -193,6 +215,7 @@ class OfflineSession(StrictModel):
 
     session_id: NonEmptyStr
     scenario: OfflineScenario
+    scenario_sha256: str | None = None
     runtime: FrozenRuntime
     record: DeliberationRecord
     protocol_trace: ProtocolTrace = Field(default_factory=ProtocolTrace)
@@ -208,6 +231,11 @@ class OfflineSession(StrictModel):
     @model_validator(mode="after")
     def validate_session(self) -> Self:
         LifecycleState(stage=self.record.stage, history=self.lifecycle_history)
+        expected_scenario_digest = _text_digest(self.scenario.model_dump_json())
+        if self.scenario_sha256 is None:
+            object.__setattr__(self, "scenario_sha256", expected_scenario_digest)
+        elif self.scenario_sha256 != expected_scenario_digest:
+            raise ValueError("frozen scenario digest does not match scenario content")
         if self.record.session_id != self.session_id:
             raise ValueError("offline session and deliberation record IDs must match")
         if self.record.request != self.scenario.request:
@@ -224,7 +252,91 @@ class OfflineSession(StrictModel):
         if self.record.status is SessionStatus.COMPLETE:
             if self.record.stage is not DeliberationStage.PLAN_COMPLETE:
                 raise ValueError("complete sessions must be at plan_complete")
+
+        artifact_kinds = self._artifact_kind_index()
+        profiles = {member.member_id: member for member in self.runtime.council.members}
+        enriched: list[TurnTrace] = []
+        for turn in self.turns:
+            kinds = turn.visible_artifact_kinds or tuple(
+                artifact_kinds.get(artifact_id, "unknown")
+                for artifact_id in turn.visible_artifact_ids
+            )
+            profile_digest = turn.profile_sha256
+            if profile_digest is None and turn.profile_member_id is not None:
+                profile = profiles[turn.profile_member_id]
+                profile_digest = _text_digest(profile.model_dump_json())
+            enriched.append(
+                turn.model_copy(
+                    update={
+                        "visible_artifact_kinds": kinds,
+                        "profile_sha256": profile_digest,
+                    }
+                )
+            )
+        object.__setattr__(self, "turns", tuple(enriched))
         return self
+
+    def _artifact_kind_index(self) -> dict[str, str]:
+        index: dict[str, str] = {"frame-register": ArtifactKind.FRAME_REGISTER.value}
+        index.update(
+            {
+                item.interpretation_id: ArtifactKind.INTERPRETATION.value
+                for item in self.record.interpretations
+            }
+        )
+        index.update(
+            {
+                item.proposal_id: ArtifactKind.STRATEGY_PROPOSAL.value
+                for item in self.record.proposals
+            }
+        )
+        index.update(
+            {
+                item.revision_id: ArtifactKind.REVISION.value
+                for item in self.record.revisions
+            }
+        )
+        index.update(
+            {
+                item.challenge_id: ArtifactKind.CHALLENGE.value
+                for item in self.protocol_trace.challenges
+            }
+        )
+        index.update(
+            {
+                f"{item.challenge_id}:response": ArtifactKind.CHALLENGE_RESPONSE.value
+                for item in self.record.challenge_responses
+            }
+        )
+        index.update(
+            {
+                item.claim_register.register_id: ArtifactKind.CLAIM_REGISTER.value
+                for item in self.protocol_trace.claim_register_snapshots
+            }
+        )
+        index.update(
+            {
+                item.plan_id: ArtifactKind.CHALLENGE_PLAN.value
+                for item in self.protocol_trace.challenge_plans
+            }
+        )
+        index.update(
+            {
+                item.decision_id: ArtifactKind.CONTINUATION_DECISION.value
+                for item in self.protocol_trace.continuation_decisions
+            }
+        )
+        index.update(
+            {
+                f"{item.evidence_request_id}:resolution": ArtifactKind.EVIDENCE_RESOLUTION.value
+                for item in self.record.evidence_resolutions
+            }
+        )
+        if self.record.adjudication is not None:
+            index[self.record.adjudication.adjudication_id] = ArtifactKind.ADJUDICATION.value
+        if self.record.plan is not None:
+            index["actionable-plan"] = ArtifactKind.ACTIONABLE_PLAN.value
+        return index
 
     @property
     def status(self) -> SessionStatus:
