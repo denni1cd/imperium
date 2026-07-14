@@ -9,6 +9,8 @@ import pytest
 from pydantic import BaseModel
 
 from imperium.domain.enums import DeliberationStage
+from imperium.domain.models import DeliberationRecord
+from imperium.offline.engine import OfflineDeliberationEngine
 from imperium.offline.fixtures import build_challenged_scenario
 from imperium.offline.provider_engine import ProviderBoundDeliberationEngine
 from imperium.offline.replay_script import build_replay_records
@@ -17,6 +19,13 @@ from imperium.providers.replay import ReplayProvider
 
 ROOT = Path(__file__).resolve().parents[1]
 OutputT = TypeVar("OutputT", bound=BaseModel)
+
+
+def _deterministic_record(record: DeliberationRecord) -> dict[str, object]:
+    payload = record.model_dump(mode="json")
+    for call in payload["model_calls"]:
+        call.pop("created_at", None)
+    return payload
 
 
 class RecordingProvider:
@@ -66,16 +75,20 @@ class FailingIfCalledProvider:
 
 
 @pytest.mark.asyncio
-async def test_default_replay_provider_is_constructed_once_for_complete_session(
+async def test_default_replay_provider_preserves_complete_stage4_result(
     tmp_path: Path,
 ) -> None:
     scenario = build_challenged_scenario()
+    baseline = await OfflineDeliberationEngine(model="gate2-default-replay").run(
+        scenario,
+        project_root=ROOT,
+        output_dir=tmp_path / "baseline",
+    )
     engine = ProviderBoundDeliberationEngine(model="gate2-default-replay")
-
     session = await engine.run(
         scenario,
         project_root=ROOT,
-        output_dir=tmp_path / "default",
+        output_dir=tmp_path / "provider-bound",
     )
 
     assert session.record.stage is DeliberationStage.PLAN_COMPLETE
@@ -84,6 +97,15 @@ async def test_default_replay_provider_is_constructed_once_for_complete_session(
     assert tuple(call.call_key for call in engine.session_provider.calls) == (
         session.completed_call_keys
     )
+    assert _deterministic_record(session.record) == _deterministic_record(
+        baseline.record
+    )
+    assert session.protocol_trace == baseline.protocol_trace
+    assert session.lifecycle_history == baseline.lifecycle_history
+    assert session.completed_call_keys == baseline.completed_call_keys
+    assert session.evidence_history == baseline.evidence_history
+    assert session.lineage == baseline.lineage
+    assert session.turns == baseline.turns
 
 
 @pytest.mark.asyncio
