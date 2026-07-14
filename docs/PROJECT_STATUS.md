@@ -4,24 +4,25 @@
 
 Imperium remains in **design and validation**.
 
-- **Main branch:** Stages 0–3 are merged through protocol 1.3.
-- **Stage 4 branch:** the complete offline fake/replay engine is implemented in draft PR #8.
-- **Validation:** 95 repository tests pass; all six Stage 4 integration paths pass.
-- **Generated review artifact:** one complete synthetic council session has been produced and inspected.
-- **Merge status:** Stage 4 is not merged and live-provider work is not authorized.
+- **Stages 0–4:** complete and merged.
+- **Stage 4 merge:** PR #8, squash commit `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
+- **Offline validation:** 95 repository tests and six Stage 4 integration paths passed before merge.
+- **Local review:** the generated challenged replay session was accepted.
+- **Stage 5:** started on branch `stage-5-codex-provider` with a one-call Codex CLI smoke gate.
+- **Live council status:** not yet run.
 
-`MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted durable decisions. `docs/STAGE_4_IMPLEMENTATION_PLAN.md` remains the implementation and acceptance contract.
+`MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted durable decisions. `docs/STAGE_5_IMPLEMENTATION_PLAN.md` defines the current live-provider gate.
 
 ## Stage Summary
 
 | Stage | Status | Result |
 |---|---|---|
-| 0 — Governance and provider-neutral foundation | Complete and merged | Manifesto, decisions, domain contracts, lifecycle foundation, context isolation, providers, persistence, CI |
-| 1 — Shared strategic vocabulary | Complete and merged | Nine approved values, versioned configuration, differentiation and vector validation |
+| 0 — Governance and provider-neutral foundation | Complete and merged | Manifesto, decisions, domain contracts, lifecycle foundation, providers, persistence, CI |
+| 1 — Shared strategic vocabulary | Complete and merged | Nine approved values and normalized vector validation |
 | 2 — Profiles and fixed council | Complete and merged | Seneschal plus Accountant, Gazgul, Overmind, and Castellan with persistent profiles and counterweights |
-| 3 — Exact deliberation protocol | Complete and merged | Protocol 1.3 with blind interpretation, direct challenge turns, evidence ordering/cardinality, halt behavior, bounded rounds, and protocol trace |
-| 4 — Offline deliberation engine | Implemented in draft PR #8 | Complete credential-free fake/replay session, halt paths, persistence, resume, exports, CLI, and CI artifacts |
-| 5 — Codex provider and live slice | Not started | First isolated live provider only after explicit Stage 4 acceptance |
+| 3 — Exact deliberation protocol | Complete and merged | Protocol 1.3 with blind interpretation, direct debate, evidence ordering/cardinality, halt behavior, and bounded rounds |
+| 4 — Offline deliberation engine | Complete and merged | Full replay orchestration, halt paths, checkpoints, resume, exports, CLI, and synthetic review artifacts |
+| 5 — Codex provider and live slice | Provider smoke in progress | One isolated schema-valid live Interpretation before any full council run |
 | 6 — Experiment harness | Not started | Conditions A1, A2, B, and C with frozen controls |
 | 7 — Pilot validation | Not started | Repeated blinded evaluation |
 | 8 — Investment gate | Not started | Proceed, revise and retest, or stop |
@@ -31,15 +32,7 @@ Imperium remains in **design and validation**.
 
 ### Values 1.0
 
-- Ambition
-- Urgency
-- Economy
-- Simplicity
-- Resilience
-- Optionality
-- Leverage
-- Adaptability
-- Human Sustainability
+Ambition, Urgency, Economy, Simplicity, Resilience, Optionality, Leverage, Adaptability, and Human Sustainability.
 
 ### Council 1.0
 
@@ -49,124 +42,121 @@ Imperium remains in **design and validation**.
 - Overmind (`architect`) — leverage and reusable capability
 - Castellan (`castellan`) — resilience and downside protection
 
-The four advocates and Seneschal retain versioned profiles, normalized vectors, doctrines, vigilance, accepted sacrifices, evidence requirements, revision triggers, operating constraints, and declared counterweights. Human Sustainability remains a known roster-coverage risk for later experiments.
+### Protocol 1.3
 
-## Stage 4 Implementation
+The approved protocol contains twelve ordered transitions, blind interpretation, claim-specific direct debate, evidence resolution after the originating challenge phase, reasoned revision or retention, minority-objection preservation, non-voting adjudication, and actionable-plan generation.
 
-The draft implementation now provides:
+## Stage 4 Accepted Result
 
-- all twelve ordered protocol 1.3 transitions;
-- exact preservation of the sovereign request;
-- four blind independent interpretations;
-- four independent proposals;
-- one direct frame challenge;
-- a four-member counterweighted proposal round;
-- a second proposal round based on a materially revised claim;
-- evidence resolution after the challenge phase that created the request;
-- gathered, conditional, waiting-for-user, and paused evidence behavior;
-- four revisions or reasoned retentions;
-- Seneschal hybrid adjudication;
-- a preserved Castellan minority objection;
-- one complete actionable plan;
-- frozen value, council, protocol, prompt, profile, and scenario-structure digests;
-- complete own-profile serialization in every advocate context;
-- stable call keys and separate provider-call traces;
-- atomic pending and completed checkpoints;
-- deterministic interruption and resume for the fake/replay provider;
-- malformed-checkpoint, frozen-content, scenario-structure, and accepted-artifact tamper rejection;
-- session, record, protocol trace, manifest, lineage, transcript, and plan exports;
-- a credential-free CLI;
-- synthetic-only GitHub Actions artifact publication.
+The merged replay engine demonstrates:
 
-## Validated Paths
-
-The Stage 4 integration suite proves:
-
-1. **Challenged complete session** — reaches `plan_complete` with four interpretations, four proposals, six direct challenge exchanges, four revisions, hybrid adjudication, minority objection, and actionable plan.
-2. **No-material-challenge session** — completes with valid empty plans and no fabricated challenge, response, evidence request, or resolution artifacts.
-3. **Conditional session** — proceeds only with explicit conditions and remaining uncertainty.
-4. **Waiting session** — stops at `waiting_for_user`, accepts explicit replacement evidence, records disposition history, and resumes.
-5. **Paused session** — stops at `paused` and performs no revision, adjudication, or plan work.
-6. **Interrupted session** — reloads a committed checkpoint without duplicate accepted calls and matches the uninterrupted strategic result.
-
-## Generated Review Session
-
-The current synthetic challenged session contains:
-
-- protocol version `1.3`;
-- final stage `plan_complete`;
-- final status `complete`;
-- 36 separately traced replay-provider turns;
-- complete profile digests for every advocate turn;
-- no unknown disclosed artifact kinds;
-- three challenge plans;
-- six authored challenges and six target responses;
-- one gathered evidence resolution after proposal debate;
+- exact protocol execution;
+- four isolated blind interpretations;
+- four proposals;
+- direct advocate-authored challenge and response turns;
+- one revised-claim second proposal round;
+- gathered, conditional, waiting, paused, and interrupted paths;
 - four final advocate positions;
-- one preserved minority objection;
-- one three-step actionable plan.
+- hybrid adjudication;
+- a preserved Castellan minority objection;
+- actionable plan output;
+- frozen inputs, context tracing, atomic checkpoints, tamper rejection, resume, and replay;
+- credential-free local CLI and synthetic-only CI artifacts.
 
-The preserved objection is that deterministic replay does not prove live-provider interruption safety. This must remain visible at the Stage 5 gate.
+Stage 4 proves execution and inspectability. It does not prove genuine live cognitive diversity or an advantage over a single adviser.
 
-## Local Hands-On Test
+## Stage 5 Gate 1
 
-Install and run the complete suite:
+The central unproven assumption is that one fresh ChatGPT-authenticated Codex CLI process can receive an isolated Imperium prompt and context and return one schema-valid domain artifact.
 
-```bash
-python -m venv .venv
-python -m pip install -e ".[dev]"
-pytest
+The current branch implements:
+
+- `CodexCliProvider` satisfying the existing provider protocol;
+- one fresh `codex exec` process per call;
+- empty temporary workspace;
+- read-only sandbox;
+- ephemeral session;
+- ignored project rules and user configuration while preserving Codex authentication;
+- JSON Schema-constrained final output;
+- prompt delivery through stdin;
+- Windows `.cmd` launcher handling;
+- timeout, nonzero-exit, missing-output, and schema-failure handling;
+- zero automatic retries;
+- available model, response identifier, token, latency, and retry metadata;
+- local JSONL event log and credential-safe smoke report;
+- simulated CI tests that never invoke Codex.
+
+## Local Smoke Command
+
+Prerequisites:
+
+```powershell
+codex --version
+codex
 ```
 
-Generate the primary synthetic review session:
+Use the second command once to sign in with ChatGPT if necessary, then exit Codex.
 
-```bash
-python -m imperium.offline run \
-  --scenario challenged \
-  --output-dir stage4-output/challenged
+Run exactly one live Accountant interpretation:
+
+```powershell
+python -m imperium.live smoke `
+  --output-dir stage5-output\smoke
 ```
 
-Inspect:
+Optional explicit model:
 
-- `stage4-output/challenged/transcript.md`
-- `stage4-output/challenged/plan.json`
-- `stage4-output/challenged/lineage.json`
-- `stage4-output/challenged/manifest.json`
-- `stage4-output/challenged/session.json`
+```powershell
+python -m imperium.live smoke `
+  --model <codex-model> `
+  --output-dir stage5-output\smoke
+```
 
-Additional scenarios are `empty`, `conditional`, `waiting`, and `paused`.
+Review:
 
-## Remaining Before Stage 4 Merge
+- `stage5-output/smoke/smoke-report.json`
+- `stage5-output/smoke/events/stage5-smoke_interpretation_steward.jsonl`
 
-- [x] Complete offline orchestration
-- [x] Freeze configuration, prompts, profiles, and fixture structure
-- [x] Enforce context and own-profile boundaries
-- [x] Execute direct multi-turn advocate debate
-- [x] Exercise revised-claim second round
-- [x] Exercise gathered, conditional, waiting, and paused evidence paths
-- [x] Implement atomic checkpoint and deterministic fake/replay resume
-- [x] Reject tampered accepted replay artifacts
-- [x] Publish synthetic review artifacts in CI
-- [x] Inspect the generated challenged session
-- [ ] Complete final PR review for implementation quality and scope
-- [ ] Receive explicit user authorization to merge PR #8
+## Gate 1 Success Criteria
 
-## Remaining Before Live Model Use
+- Codex runs non-interactively under the existing ChatGPT sign-in.
+- The process exits without an approval prompt.
+- The final artifact validates as `Interpretation`.
+- The output retains `member_id=steward`.
+- The run uses no repository workspace or inherited council transcript.
+- Available usage and duration are recorded.
+- No retry occurs.
 
-- [ ] Accept and merge Stage 4
-- [ ] Define the isolated Stage 5 provider boundary
-- [ ] Decide how a live provider handles non-idempotent or side-effecting calls
-- [ ] Add one bounded live case without experiment infrastructure
-- [ ] Review the actual live transcript before any broader integration
+## Gate 1 Stop Conditions
+
+Stop before a complete live deliberation if:
+
+- authentication cannot be used non-interactively;
+- structured output fails;
+- the CLI requires write access or inherited repository context;
+- timeout and failure state cannot be bounded;
+- one accepted result cannot later be replayed;
+- usage is too opaque to estimate a full run.
+
+## Remaining Before the First Live Council
+
+- [ ] Pass repository CI for the provider smoke implementation
+- [ ] Run the one-call smoke locally
+- [ ] Inspect the live Interpretation and metadata
+- [ ] Confirm the result can be saved and replayed
+- [ ] Refactor Stage 4 orchestration to accept an injected provider
+- [ ] Freeze one bounded live strategic case and explicit model
+- [ ] Run one complete live deliberation sequentially with no automatic retries
+- [ ] Review transcript, profile fidelity, disagreement, usage, and minority objection
 
 ## Current Validation Risks
 
-- Scripted artifacts demonstrate execution, not genuine cognitive diversity.
-- Numeric profiles have not yet been proven to produce persistent live reasoning differences.
-- Human Sustainability may be underrepresented by the fixed roster.
-- The two-round rule may prove too permissive or restrictive with live reasoning.
-- The Seneschal may still bias synthesis despite formal non-advocacy.
-- Full deliberation may not outperform direct advice, equivalent-budget self-critique, or independent advisers.
-- Fake/replay resume safety does not establish live-provider exactly-once behavior.
+- Numeric profiles may not produce persistent live reasoning differences.
+- The first live call may inherit unexpected Codex behavior despite an empty workspace.
+- Codex JSONL may not expose complete token metadata on every installation or model.
+- A live timeout or process failure is not safely equivalent to a replay interruption.
+- Human Sustainability may remain underrepresented.
+- The Seneschal may still bias synthesis.
+- Full deliberation may not outperform simpler baselines.
 
-These risks are now ready for later live and controlled validation. They are not reasons to add more Stage 4 architecture.
+These risks are now being tested in increasing order of cost rather than answered with additional architecture.
