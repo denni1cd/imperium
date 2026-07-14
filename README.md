@@ -16,6 +16,8 @@ Stages 0–4 are complete and merged. Stage 5 draft PR #12 contains the bounded 
 
 All Stage 5 live tests are locked to **GPT-5.6 Terra with low reasoning effort**, the Codex CLI equivalent of Terra Light. The live command exposes no model override, and the provider rejects any other model or reasoning effort before launching Codex. Shell execution and web search are also explicitly disabled.
 
+The original successful smoke used the user's then-current default Codex configuration. Before PR #12 is merged, one additional bounded local smoke must confirm that the installed CLI accepts the explicit Terra-low no-tools command.
+
 For the current status and next gate, see [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
 
 ## Repository Map
