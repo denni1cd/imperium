@@ -64,7 +64,7 @@ This means Stage 5 will not run:
 
 - GPT-5.6 Sol;
 - GPT-5.6 Luna;
-- another model family;
+- GPT-5.5, GPT-5.4, or other model families;
 - minimal, medium, high, or xhigh reasoning effort.
 
 A quality-based increase requires an explicit reviewed code change and user approval. No runtime flag may silently escalate capability or usage.
@@ -79,15 +79,17 @@ Each call uses:
 - no approval prompts;
 - an ephemeral session;
 - ignored repository rules and user configuration while preserving Codex authentication;
-- explicit `gpt-5.6-terra` and `model_reasoning_effort="low"` overrides;
+- explicit `gpt-5.6-terra` and `model_reasoning_effort=low` overrides;
 - shell tool disabled through `features.shell_tool=false`;
-- web search disabled through `web_search="disabled"`;
+- web search disabled through `web_search=disabled`;
 - prompt input through stdin;
 - a strict output schema;
 - final output written to a temporary file;
 - no automatic retries.
 
 Tool prohibition is enforced by command configuration rather than relying only on prompt instructions.
+
+Codex enum overrides use bare `key=value` arguments. Quoted values are avoided because Windows `cmd.exe` can preserve quote characters and cause the CLI to reject otherwise valid enum values.
 
 ## Structured Output Compatibility
 
@@ -105,26 +107,27 @@ The provider applies a reversible wire-schema adapter:
 - duplicate map keys or malformed entries fail closed;
 - final Pydantic validation remains authoritative for constraints removed from the wire schema.
 
-The first two local attempts were preserved as evidence: Codex CLI 0.142.5 rejected `propertyNames`, then rejected Pydantic's Decimal regex lookaround. Both failures are covered by regression tests.
+The first two local attempts were preserved as evidence: Codex CLI 0.142.5 rejected `propertyNames`, then rejected Pydantic's Decimal regex lookaround. A later locked-command attempt exposed Windows quote preservation in `web_search="disabled"`. All three boundary failures are now covered by regression tests.
 
 ## Gate 1 Success Criteria
 
 - [x] Codex authentication works through the installed CLI.
-- [x] The command completes with exit code zero.
+- [x] The command completes with exit code zero under the original default configuration.
 - [x] The output validates as `Interpretation` after reversible wire decoding.
 - [x] `member_id` is `steward`.
 - [x] The artifact contains substantive core decision, desired outcome, inclination, value influence, and calibrated confidence.
 - [x] The event log and report expose enough provider metadata to estimate later usage.
-- [x] No file, command, web-search, or unrelated repository context was needed by the model turn.
+- [x] No file, command, or unrelated repository context was needed by the model turn.
+- [ ] The explicit Terra-low, shell-disabled, web-disabled command completes on the installed Windows CLI.
 
 ## Gate 2 — Provider Injection
 
-Gate 2 is unlocked.
+Gate 2 is unlocked for implementation, but Gate 3 remains blocked.
 
 - Inject `ModelProvider` into the merged Stage 4 orchestration rather than creating a second engine.
 - Keep replay as the default regression provider.
 - Preserve one fresh process and isolated context per model turn.
-- Preserve the Terra-low and no-tools safety lock for every live turn.
+- Preserve the Terra-low safety lock for every live turn.
 - Persist each accepted live artifact before the next call.
 - Preserve failed and pending calls without silently retrying them.
 - Save successful live artifacts as replay fixtures.
@@ -138,7 +141,6 @@ Unlocked only after provider injection and token/context controls pass simulated
 - Use one fixed synthetic strategic request.
 - Use the existing fixed council.
 - Execute the complete protocol once using Terra low only.
-- Keep shell and web tools disabled for every call.
 - Stop for user review after the exported transcript and plan.
 - Do not add experiment conditions, repetitions, dynamic selection, model routing, or model escalation.
 
@@ -160,10 +162,9 @@ Stage 5 does not:
 
 - modify the manifesto, council, value matrices, or protocol;
 - perform network research;
-- allow shell-command execution;
 - use API-key billing;
 - add local-model or multi-model routing;
-- use a non-Terra model or reasoning effort other than low during current tests;
+- use Sol, high, xhigh, Max, or Ultra for tests;
 - implement A1, A2, B, or C experiments;
 - automate consequential actions;
 - claim one successful live session proves strategic improvement.
@@ -177,9 +178,10 @@ Coverage includes:
 - all Stage 4 regression and integration paths;
 - Codex command isolation and Windows launcher handling;
 - explicit Terra model and low-reasoning command construction;
-- explicit shell-tool and web-search disabling;
+- bare Windows-safe enum overrides for reasoning and web-search mode;
 - rejection of non-Terra models and non-low reasoning effort before launch;
 - output-schema adaptation and reversible dictionary decoding;
+- every prospective live council output schema;
 - the exact `propertyNames` and Decimal-regex regressions;
 - duplicate map-key rejection;
 - provider failure and invalid-output handling;
