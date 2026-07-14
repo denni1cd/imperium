@@ -51,11 +51,12 @@ def test_advocate_context_serializes_complete_approved_profile() -> None:
     member = runtime.council.advocates[0]
     scenario = build_challenged_scenario()
     context = ContextBuilder.independent_interpretation(scenario.request, member)
-    payload = json.loads(context.model_dump_json(serialize_as_any=True))
+    payload = json.loads(context.model_dump_json())
 
     assert payload["member"]["member_id"] == member.member_id
     assert payload["member"]["operating_constraints"] == list(member.operating_constraints)
     assert payload["member"]["role"] == member.role.value
+    assert payload["member"]["profile_version"] == member.profile_version
 
 
 def test_load_session_rejects_malformed_checkpoint(tmp_path: Path) -> None:
