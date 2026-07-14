@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from imperium.domain.enums import DeliberationStage, EvidenceOutcome, SessionStatus
-from imperium.domain.models import EvidenceResolution
+from imperium.domain.models import DeliberationRecord, EvidenceResolution
 from imperium.offline.engine import OfflineDeliberationEngine, OfflineInterrupted
 from imperium.offline.fixtures import (
     build_challenged_scenario,
@@ -17,6 +17,15 @@ from imperium.offline.persistence import load_session
 
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def _deterministic_record(record: DeliberationRecord) -> dict[str, object]:
+    """Remove honest wall-clock metadata while preserving stable call identities and outputs."""
+
+    payload = record.model_dump(mode="json")
+    for call in payload["model_calls"]:
+        call.pop("created_at", None)
+    return payload
 
 
 @pytest.mark.asyncio
@@ -193,7 +202,9 @@ async def test_interrupted_session_resumes_to_same_structured_result(
     assert saved.record.stage is DeliberationStage.STRATEGIES_COMPLETE
 
     resumed = await engine.resume(checkpoint)
-    assert resumed.record == uninterrupted.record
+    assert _deterministic_record(resumed.record) == _deterministic_record(
+        uninterrupted.record
+    )
     assert resumed.protocol_trace == uninterrupted.protocol_trace
     assert resumed.lifecycle_history == uninterrupted.lifecycle_history
     assert resumed.completed_call_keys == uninterrupted.completed_call_keys
