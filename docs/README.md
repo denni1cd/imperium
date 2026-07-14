@@ -17,6 +17,11 @@ These documents define the minimum viable deliberation protocol and the evidence
 5. [`CONSEQUENTIAL_DEBATE.md`](CONSEQUENTIAL_DEBATE.md) — **approved protocol 1.3:** materiality, challenge quality, round ordering, change records, cardinality, minority preservation, and debate-effect measurement.
 6. [`EXPERIMENT_PLAN.md`](EXPERIMENT_PLAN.md) — validation against direct advice, equivalent-budget self-critique, and independent perspectives; detailed cases and thresholds remain open.
 
+## Implementation Contracts
+
+- [`STAGE_4_IMPLEMENTATION_PLAN.md`](STAGE_4_IMPLEMENTATION_PLAN.md) — accepted and merged offline orchestration contract.
+- [`STAGE_5_CODEX_PROVIDER_PLAN.md`](STAGE_5_CODEX_PROVIDER_PLAN.md) — sole current Stage 5 contract: bounded Codex CLI gates, Terra-low no-tools policy, structured-output compatibility, and live-run stop conditions.
+
 ## Protocol Amendments
 
 - [`PROTOCOL_1_1_CHALLENGE_TURNS.md`](PROTOCOL_1_1_CHALLENGE_TURNS.md) — advocate-authored challenger and target-response subturns.
@@ -30,4 +35,4 @@ These documents define the minimum viable deliberation protocol and the evidence
 - [`../config/protocol.yaml`](../config/protocol.yaml) — minimum deliberation protocol version 1.3
 - [`../prompts/`](../prompts/) — stage-specific prompt contracts referenced by the protocol
 
-The next implementation target is the Stage 4 offline vertical slice using fake and replay providers. No live provider is required until that workflow completes reliably.
+The current engineering gate is one local verification of the locked Terra-low no-tools command, followed by provider injection under simulated tests. A complete live council remains blocked.

@@ -141,17 +141,56 @@ See `docs/PROTOCOL_1_2_CARDINALITY_AND_HALTS.md`.
 
 ## 2026-07-12 — Protocol 1.3 evidence and debate-round ordering
 
-Protocol 1.3 removes `decision_critical_evidence` as a reason for another round inside the same challenge phase.
-
 - Newly requested frame evidence is resolved only after frame challenge completes and informs strategy development.
 - Newly requested proposal evidence is resolved only after proposal challenge completes and informs advocate revision.
-- A same-phase second round must use a newly material frame, a materially revised or narrowed claim, or another specific adjudication-relevant follow-up based on information already permitted in that phase.
+- A same-phase second round uses a newly material frame, a materially revised or narrowed claim, or another adjudication-relevant follow-up based on already permitted information.
 - An evidence request ends the current challenge phase and routes to the following evidence-resolution transition.
 - No lifecycle transition, evidence outcome, materiality threshold, or two-round safety limit changed.
-- Protocol 1.0, 1.1, and 1.2 sessions remain version-bound unless explicitly migrated.
 
-The authoritative configuration is `config/protocol.yaml`. See `docs/PROTOCOL_1_3_EVIDENCE_ROUND_ORDERING.md`.
+See `docs/PROTOCOL_1_3_EVIDENCE_ROUND_ORDERING.md`.
+
+## 2026-07-14 — Stage 4 acceptance and merge
+
+- The complete credential-free fake/replay engine satisfied the reviewed Stage 4 contract.
+- The local challenged scenario was inspected and accepted.
+- PR #8 was squash-merged as `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
+- Stage 4 proves protocol execution, information isolation, challenge routing, evidence ordering, halt paths, persistence, deterministic replay resume, minority-objection preservation, adjudication, and actionable-plan generation.
+- Stage 4 does not prove live profile fidelity, strategic improvement, or exactly-once live model execution.
+
+## 2026-07-14 — Stage 5 bounded Codex provider gate
+
+- Stage 5 begins with one isolated Accountant `Interpretation`, not a complete live council.
+- Each Codex call uses a fresh process, empty temporary workspace, read-only sandbox, ephemeral session, explicit context, structured output, and zero automatic retries.
+- GitHub Actions simulates subprocesses and never consumes Codex tokens.
+- A failed live call is preserved and corrected before another token-consuming attempt.
+- The corrected Gate 1 call completed successfully and produced a profile-faithful, domain-valid Accountant interpretation.
+- One interpretation used 13,006 input tokens, so a complete live run remains blocked until provider injection and context/token controls are implemented and reviewed.
+
+### Structured Outputs compatibility
+
+The first live attempts on Codex CLI 0.142.5 exposed unsupported Pydantic `propertyNames` and Decimal regex lookaround constructs.
+
+The accepted provider boundary is:
+
+- Pydantic domain models remain unchanged;
+- an internal reversible wire-schema adapter removes unsupported annotations and patterns;
+- every wire object lists every property as required and sets `additionalProperties: false`;
+- arbitrary dictionaries are encoded as arrays of unique `{key, value}` entries;
+- wire output is restored before the original Pydantic model validates it;
+- duplicate keys, malformed entries, and domain-invalid output fail closed.
+
+This adaptation is provider infrastructure, not a protocol or domain-model change.
+
+## 2026-07-14 — Stage 5 Terra Light and no-tools safety lock
+
+- All Stage 5 live tests use `gpt-5.6-terra` with CLI reasoning effort `low`, the CLI equivalent of Terra Light.
+- The user-facing live command exposes no model or reasoning-effort override.
+- The Codex provider rejects any non-Terra model or any effort other than `low` before launching the executable.
+- Shell execution is disabled with `features.shell_tool=false`.
+- Web search is disabled with `web_search="disabled"`.
+- Sol, Luna, other model families, medium, high, and xhigh are prohibited during current testing.
+- Any quality-driven escalation or tool enablement requires explicit user approval and a reviewed code change; it cannot occur through a runtime flag or local configuration default.
 
 ## Change Control
 
-Changes to the manifesto require direct user approval. Changes to values, council profiles, roster, lifecycle, visibility, debate rules, evidence ordering, stopping, or canonical record ownership require explicit approval, versioning, regression tests, and migration consideration.
+Changes to the manifesto require direct user approval. Changes to values, council profiles, roster, lifecycle, visibility, debate rules, evidence ordering, stopping, canonical record ownership, or the Stage 5 model/tool safety lock require explicit approval, versioning where applicable, regression tests, and migration consideration.
