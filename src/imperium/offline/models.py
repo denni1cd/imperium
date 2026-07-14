@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from hashlib import sha256
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
@@ -230,11 +230,12 @@ class LineageLink(StrictModel):
 
 
 class OfflineSession(StrictModel):
-    """Authoritative resumable envelope for one Stage 4 run."""
+    """Authoritative resumable envelope for one Stage 4 or Gate 2 run."""
 
     session_id: NonEmptyStr
     scenario: OfflineScenario
     scenario_sha256: str | None = None
+    artifact_authority: Literal["scenario", "provider"] = "scenario"
     runtime: FrozenRuntime
     record: DeliberationRecord
     protocol_trace: ProtocolTrace = Field(default_factory=ProtocolTrace)
@@ -277,7 +278,12 @@ class OfflineSession(StrictModel):
             if self.record.stage is not DeliberationStage.PLAN_COMPLETE:
                 raise ValueError("complete sessions must be at plan_complete")
 
-        self._validate_frozen_replay_artifacts()
+        self._validate_council_snapshot()
+        if self.artifact_authority == "scenario":
+            self._validate_frozen_replay_artifacts()
+        else:
+            self._validate_provider_artifacts()
+
         artifact_kinds = self._artifact_kind_index()
         profiles = {member.member_id: member for member in self.runtime.council.members}
         enriched: list[TurnTrace] = []
@@ -301,9 +307,7 @@ class OfflineSession(StrictModel):
         object.__setattr__(self, "turns", tuple(enriched))
         return self
 
-    def _validate_frozen_replay_artifacts(self) -> None:
-        """Reject checkpoints whose accepted replay outputs diverge from the frozen case."""
-
+    def _validate_council_snapshot(self) -> None:
         if self.record.member_snapshots:
             if len(self.record.member_snapshots) != len(self.runtime.council.members):
                 raise ValueError("member snapshots do not match the frozen council")
@@ -322,6 +326,40 @@ class OfflineSession(StrictModel):
             self.record.selected_member_ids != self.runtime.council.advocate_member_ids
         ):
             raise ValueError("selected members do not match the frozen council")
+
+    def _validate_provider_artifacts(self) -> None:
+        """Validate provider-owned checkpoints without comparing them to replay fixtures."""
+
+        challenge_ids = {item.challenge_id for item in self.protocol_trace.challenges}
+        orphaned_responses = {
+            item.challenge_id
+            for item in self.record.challenge_responses
+            if item.challenge_id not in challenge_ids
+        }
+        if orphaned_responses:
+            raise ValueError(
+                "provider checkpoint contains responses without accepted challenges: "
+                f"{sorted(orphaned_responses)}"
+            )
+        request_ids = {item.evidence_request_id for item in self.record.evidence_requests}
+        orphaned_resolutions = {
+            item.evidence_request_id
+            for item in self.record.evidence_resolutions
+            if item.evidence_request_id not in request_ids
+        }
+        if orphaned_resolutions:
+            raise ValueError(
+                "provider checkpoint contains resolutions without evidence requests: "
+                f"{sorted(orphaned_resolutions)}"
+            )
+        if self.record.minority_objections and self.record.adjudication is not None and (
+            self.record.minority_objections
+            != self.record.adjudication.minority_objections
+        ):
+            raise ValueError("record minority objections must match adjudication")
+
+    def _validate_frozen_replay_artifacts(self) -> None:
+        """Reject checkpoints whose accepted replay outputs diverge from the frozen case."""
 
         def require_expected(actual_items, expected_items, key, label: str) -> None:
             expected = {key(item): item for item in expected_items}
