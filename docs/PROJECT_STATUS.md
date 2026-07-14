@@ -6,11 +6,11 @@ Imperium remains in **design and validation**.
 
 - **Stages 0–4:** complete and merged.
 - **Stage 4 merge:** PR #8, squash commit `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
-- **Stage 5:** draft PR #12 implements Gate 1, one isolated live Codex interpretation.
-- **Validation:** 102 tests pass on the Stage 5 branch; GitHub Actions uses no live model calls.
-- **Current gate:** rerun exactly one local smoke call after the structured-output schema correction.
+- **Stage 5:** draft PR #12 contains the successful Gate 1 Codex provider and one-call live smoke.
+- **Live model policy:** all Stage 5 tests are locked to `gpt-5.6-terra` with `low` reasoning effort.
+- **Current gate:** full PR review before Gate 2 provider injection continues.
 
-`MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted durable decisions. `docs/STAGE_5_CODEX_PROVIDER_PLAN.md` defines the current live-provider gate.
+`MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted durable decisions. `docs/STAGE_5_CODEX_PROVIDER_PLAN.md` defines the current live-provider gates.
 
 ## Stage Summary
 
@@ -21,7 +21,7 @@ Imperium remains in **design and validation**.
 | 2 — Profiles and fixed council | Complete and merged | Seneschal plus Accountant, Gazgul, Overmind, and Castellan with persistent profiles and counterweights |
 | 3 — Exact deliberation protocol | Complete and merged | Protocol 1.3 with blind interpretation, direct debate, evidence ordering/cardinality, halt behavior, and bounded rounds |
 | 4 — Offline deliberation engine | Complete and merged | Full replay orchestration, halt paths, checkpoints, resume, exports, CLI, and synthetic review artifacts |
-| 5 — Codex provider and live slice | Gate 1 under review in PR #12 | Isolated Codex provider and one-call live smoke command |
+| 5 — Codex provider and live slice | Gate 1 passed; Gate 2 pending review | Isolated Codex provider, live smoke evidence, Terra-low safety lock |
 | 6 — Experiment harness | Not started | Conditions A1, A2, B, and C with frozen controls |
 | 7 — Pilot validation | Not started | Repeated blinded evaluation |
 | 8 — Investment gate | Not started | Proceed, revise and retest, or stop |
@@ -64,14 +64,31 @@ The merged replay engine demonstrates:
 
 Stage 4 proves execution and inspectability. It does not prove genuine live cognitive diversity or an advantage over a single adviser.
 
-## Stage 5 Gate 1
+## Stage 5 Gate 1 Result
 
-The central unproven assumption is that one fresh ChatGPT-authenticated Codex CLI process can receive an isolated Imperium prompt and context and return one schema-valid domain artifact.
+The central assumption was proven for one isolated call: a fresh ChatGPT-authenticated Codex CLI process received only an explicit Imperium prompt and Accountant context and returned a schema-valid domain artifact.
+
+Accepted result:
+
+- correct `steward` identity;
+- profile-faithful economy, simplicity, optionality, burden, and bounded-commitment reasoning;
+- 13,006 input tokens;
+- 524 output tokens;
+- 40,875 ms latency;
+- zero retries;
+- no file, shell, or unrelated-context events.
+
+The usage level blocks a naive 36-call run until Gate 2 adds provider injection and context/token ceilings.
+
+## Stage 5 Provider Boundary
 
 The current branch implements:
 
 - `CodexCliProvider` satisfying the existing provider protocol;
 - one fresh `codex exec` process per call;
+- explicit `gpt-5.6-terra` model selection;
+- explicit `model_reasoning_effort="low"` override;
+- rejection of every other model and reasoning effort before process launch;
 - empty temporary workspace;
 - read-only sandbox;
 - ephemeral session;
@@ -81,88 +98,64 @@ The current branch implements:
 - Windows `.cmd` launcher handling;
 - timeout, nonzero-exit, missing-output, and schema-failure handling;
 - zero automatic retries;
-- available model, response identifier, token, latency, and retry metadata;
+- provider, thread/response identifier, token, latency, and retry metadata;
 - local JSONL event log and smoke report;
 - simulated CI tests that never invoke Codex.
 
-## First Live Failure and Correction
+## Structured Outputs Corrections
 
-The first local call reached Codex successfully but Codex CLI 0.142.5 rejected Pydantic's generated `propertyNames` keyword inside `Interpretation.value_influence`.
+The first local attempts reached Codex but exposed unsupported Pydantic schema constructs: `propertyNames` and Decimal regex lookaround.
 
-The branch now uses a reversible Structured Outputs adapter:
+The reversible adapter:
 
-- unsupported Pydantic annotations such as `title`, `default`, `minLength`, and `propertyNames` are removed;
-- every object field is required;
-- every object sets `additionalProperties: false`;
-- arbitrary dictionaries are represented as arrays of unique key/value entries on the wire;
-- wire entries are restored to dictionaries before the original Pydantic model validates them;
-- malformed entries and duplicate keys fail closed.
+- removes unsupported annotations and generated patterns;
+- requires every object field;
+- sets `additionalProperties: false`;
+- represents arbitrary dictionaries as unique key/value entry arrays;
+- restores entries before original Pydantic validation;
+- rejects malformed entries, duplicate keys, and domain-invalid output.
 
-The exact failure is covered by regression tests. No live call was made by CI.
+## Terra Light Safety Policy
+
+All current Stage 5 tests use:
+
+- model: `gpt-5.6-terra`;
+- CLI reasoning effort: `low`.
+
+The live CLI exposes no override. Sol, Luna, other model families, medium, high, and xhigh are rejected. Any escalation requires explicit user approval and a reviewed code change.
 
 ## Local Smoke Command
-
-Pull the corrected branch:
-
-```powershell
-git pull
-python -m pip install -e ".[dev]"
-pytest
-```
-
-Then run exactly one live Accountant interpretation:
 
 ```powershell
 python -m imperium.live smoke --output-dir stage5-output\smoke
 ```
 
-Review:
-
-- `stage5-output/smoke/smoke-report.json`
-- `stage5-output/smoke/events/stage5-smoke_interpretation_steward.jsonl`
-
-## Gate 1 Success Criteria
-
-- Codex runs non-interactively under the existing ChatGPT sign-in.
-- The process exits without an approval prompt.
-- The wire output restores and validates as `Interpretation`.
-- The output retains `member_id=steward`.
-- The run uses no repository workspace or inherited council transcript.
-- Available usage and duration are recorded.
-- No retry occurs.
-
-## Gate 1 Stop Conditions
-
-Stop before a complete live deliberation if:
-
-- authentication cannot be used non-interactively;
-- the corrected schema is rejected;
-- wire decoding or domain validation fails;
-- the CLI requires write access or inherited repository context;
-- timeout and failure state cannot be bounded;
-- one accepted result cannot later be replayed;
-- usage is too opaque to estimate a full run.
+The command now explicitly launches Terra with low reasoning and does not inherit a higher local model default.
 
 ## Remaining Before the First Live Council
 
 - [x] Pass repository CI for the provider smoke implementation
-- [x] Preserve and diagnose the first structured-output failure
-- [x] Add reversible schema adaptation and exact regression coverage
-- [ ] Pull the correction locally
-- [ ] Run the one-call smoke locally
-- [ ] Inspect the live Interpretation and metadata
-- [ ] Confirm the result can be saved and replayed
-- [ ] Inject the provider into Stage 4 orchestration
-- [ ] Freeze one bounded live strategic case and explicit model
-- [ ] Run one complete live deliberation sequentially with no automatic retries
-- [ ] Review transcript, profile fidelity, disagreement, usage, and minority objection
+- [x] Preserve and diagnose structured-output failures
+- [x] Add reversible schema adaptation and regression coverage
+- [x] Complete and review one valid live Accountant interpretation
+- [x] Lock all live tests to Terra low
+- [ ] Complete full PR #12 code review
+- [ ] Inject `ModelProvider` into Stage 4 orchestration
+- [ ] Preserve replay as the default provider
+- [ ] Add per-turn context and token ceilings
+- [ ] Add explicit live failed/pending/retry state
+- [ ] Save accepted live artifacts as replay fixtures
+- [ ] Pass Gate 2 simulated tests
+- [ ] Review estimated full-session usage
+- [ ] Authorize one sequential complete live deliberation
 
 ## Current Validation Risks
 
 - Numeric profiles may not produce persistent live reasoning differences.
-- The first live call may reveal another unsupported schema construct.
-- Codex JSONL may not expose complete token metadata on every installation or model.
-- A live timeout or process failure is not safely equivalent to a replay interruption.
+- Later artifact schemas may reveal additional Structured Outputs incompatibilities.
+- Codex JSONL may not expose complete token metadata on every turn.
+- A live timeout or process failure is not safely equivalent to replay interruption.
+- Live context growth may make a complete session impractically expensive.
 - Human Sustainability may remain underrepresented.
 - The Seneschal may still bias synthesis.
 - Full deliberation may not outperform simpler baselines.
