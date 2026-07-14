@@ -163,22 +163,32 @@ See `docs/PROTOCOL_1_3_EVIDENCE_ROUND_ORDERING.md`.
 - Each Codex call uses a fresh process, empty temporary workspace, read-only sandbox, ephemeral session, explicit context, structured output, and zero automatic retries.
 - GitHub Actions simulates subprocesses and never consumes Codex tokens.
 - A failed live call is preserved and corrected before another token-consuming attempt.
+- The corrected Gate 1 call completed successfully and produced a profile-faithful, domain-valid Accountant interpretation.
+- One interpretation used 13,006 input tokens, so a complete live run remains blocked until provider injection and context/token controls are implemented and reviewed.
 
 ### Structured Outputs compatibility
 
-The first live call on Codex CLI 0.142.5 exposed that Pydantic's schema for `Interpretation.value_influence` used the unsupported `propertyNames` keyword.
+The first live attempts on Codex CLI 0.142.5 exposed unsupported Pydantic `propertyNames` and Decimal regex lookaround constructs.
 
 The accepted provider boundary is:
 
 - Pydantic domain models remain unchanged;
-- an internal reversible wire-schema adapter removes unsupported annotations;
+- an internal reversible wire-schema adapter removes unsupported annotations and patterns;
 - every wire object lists every property as required and sets `additionalProperties: false`;
 - arbitrary dictionaries are encoded as arrays of unique `{key, value}` entries;
 - wire output is restored before the original Pydantic model validates it;
 - duplicate keys, malformed entries, and domain-invalid output fail closed.
 
-This adaptation is provider infrastructure, not a protocol or domain-model change. One corrected live smoke result must still be reviewed before provider injection into the Stage 4 engine.
+This adaptation is provider infrastructure, not a protocol or domain-model change.
+
+## 2026-07-14 — Stage 5 Terra Light safety lock
+
+- All Stage 5 live tests use `gpt-5.6-terra` with CLI reasoning effort `low`, the CLI equivalent of Terra Light.
+- The user-facing live command exposes no model or reasoning-effort override.
+- The Codex provider rejects any non-Terra model or any effort other than `low` before launching the executable.
+- Sol, Luna, other model families, medium, high, and xhigh are prohibited during current testing.
+- Any quality-driven escalation requires explicit user approval and a reviewed code change; it cannot occur through a runtime flag or local configuration default.
 
 ## Change Control
 
-Changes to the manifesto require direct user approval. Changes to values, council profiles, roster, lifecycle, visibility, debate rules, evidence ordering, stopping, or canonical record ownership require explicit approval, versioning, regression tests, and migration consideration.
+Changes to the manifesto require direct user approval. Changes to values, council profiles, roster, lifecycle, visibility, debate rules, evidence ordering, stopping, canonical record ownership, or the Stage 5 model safety lock require explicit approval, versioning where applicable, regression tests, and migration consideration.
