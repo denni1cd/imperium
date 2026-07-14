@@ -64,7 +64,7 @@ This means Stage 5 will not run:
 
 - GPT-5.6 Sol;
 - GPT-5.6 Luna;
-- GPT-5.5, GPT-5.4, or other model families;
+- another model family;
 - minimal, medium, high, or xhigh reasoning effort.
 
 A quality-based increase requires an explicit reviewed code change and user approval. No runtime flag may silently escalate capability or usage.
@@ -79,11 +79,15 @@ Each call uses:
 - no approval prompts;
 - an ephemeral session;
 - ignored repository rules and user configuration while preserving Codex authentication;
-- explicit Terra model and low-reasoning overrides;
+- explicit `gpt-5.6-terra` and `model_reasoning_effort="low"` overrides;
+- shell tool disabled through `features.shell_tool=false`;
+- web search disabled through `web_search="disabled"`;
 - prompt input through stdin;
 - a strict output schema;
 - final output written to a temporary file;
 - no automatic retries.
+
+Tool prohibition is enforced by command configuration rather than relying only on prompt instructions.
 
 ## Structured Output Compatibility
 
@@ -111,7 +115,7 @@ The first two local attempts were preserved as evidence: Codex CLI 0.142.5 rejec
 - [x] `member_id` is `steward`.
 - [x] The artifact contains substantive core decision, desired outcome, inclination, value influence, and calibrated confidence.
 - [x] The event log and report expose enough provider metadata to estimate later usage.
-- [x] No file, command, or unrelated repository context was needed by the model turn.
+- [x] No file, command, web-search, or unrelated repository context was needed by the model turn.
 
 ## Gate 2 — Provider Injection
 
@@ -120,7 +124,7 @@ Gate 2 is unlocked.
 - Inject `ModelProvider` into the merged Stage 4 orchestration rather than creating a second engine.
 - Keep replay as the default regression provider.
 - Preserve one fresh process and isolated context per model turn.
-- Preserve the Terra-low safety lock for every live turn.
+- Preserve the Terra-low and no-tools safety lock for every live turn.
 - Persist each accepted live artifact before the next call.
 - Preserve failed and pending calls without silently retrying them.
 - Save successful live artifacts as replay fixtures.
@@ -134,6 +138,7 @@ Unlocked only after provider injection and token/context controls pass simulated
 - Use one fixed synthetic strategic request.
 - Use the existing fixed council.
 - Execute the complete protocol once using Terra low only.
+- Keep shell and web tools disabled for every call.
 - Stop for user review after the exported transcript and plan.
 - Do not add experiment conditions, repetitions, dynamic selection, model routing, or model escalation.
 
@@ -155,9 +160,10 @@ Stage 5 does not:
 
 - modify the manifesto, council, value matrices, or protocol;
 - perform network research;
+- allow shell-command execution;
 - use API-key billing;
 - add local-model or multi-model routing;
-- use Sol, high, xhigh, Max, or Ultra for tests;
+- use a non-Terra model or reasoning effort other than low during current tests;
 - implement A1, A2, B, or C experiments;
 - automate consequential actions;
 - claim one successful live session proves strategic improvement.
@@ -171,6 +177,7 @@ Coverage includes:
 - all Stage 4 regression and integration paths;
 - Codex command isolation and Windows launcher handling;
 - explicit Terra model and low-reasoning command construction;
+- explicit shell-tool and web-search disabling;
 - rejection of non-Terra models and non-low reasoning effort before launch;
 - output-schema adaptation and reversible dictionary decoding;
 - the exact `propertyNames` and Decimal-regex regressions;
