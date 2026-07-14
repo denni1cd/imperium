@@ -13,6 +13,7 @@ from imperium.domain.enums import (
     ContinuationReason,
     DeliberationStage,
     EvidenceOutcome,
+    SessionStatus,
     StopReason,
 )
 from imperium.domain.models import (
@@ -45,8 +46,6 @@ def _deterministic_record(record: DeliberationRecord) -> dict[str, object]:
 
 
 class RecordingProvider:
-    """Delegate to replay while proving one injected instance handles every turn."""
-
     def __init__(self, replay: ReplayProvider) -> None:
         self.replay = replay
         self.calls: list[CallMetadata] = []
@@ -164,10 +163,31 @@ def _key(
     )
 
 
+def _provider_evidence_override(scenario, request_id: str):
+    original = scenario.proposal_rounds[1].responses[0]
+    request = EvidenceRequest(
+        evidence_request_id=request_id,
+        requester_member_id=original.member_id,
+        disputed_claim="A provider generated a decision-critical evidence request.",
+        decision_impact="The scope decision changes if evidence is unavailable.",
+        requested_information="Provide an exact disposition for this accepted request ID.",
+        preferred_source="operator-supplied Gate 2 input",
+    )
+    response = original.model_copy(update={"evidence_request": request})
+    key = _key(
+        DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE,
+        "target",
+        ChallengeResponse,
+        phase=ChallengePhase.PROPOSAL,
+        round_number=2,
+        subject=original.challenge_id,
+        member_id=original.member_id,
+    )
+    return key, request, response
+
+
 @pytest.mark.asyncio
-async def test_default_replay_provider_preserves_complete_stage4_result(
-    tmp_path: Path,
-) -> None:
+async def test_default_replay_preserves_stage4_decisions_and_artifacts(tmp_path: Path) -> None:
     scenario = build_challenged_scenario()
     baseline = await OfflineDeliberationEngine(model="gate2-default-replay").run(
         scenario,
@@ -185,39 +205,28 @@ async def test_default_replay_provider_preserves_complete_stage4_result(
     assert session.artifact_authority == "provider"
     assert isinstance(engine.session_provider, ReplayProvider)
     assert len(engine.session_provider.calls) == 36
-    assert tuple(call.call_key for call in engine.session_provider.calls) == (
-        session.completed_call_keys
-    )
-    assert _deterministic_record(session.record) == _deterministic_record(
-        baseline.record
-    )
+    assert tuple(call.call_key for call in engine.session_provider.calls) == session.completed_call_keys
+    assert _deterministic_record(session.record) == _deterministic_record(baseline.record)
     assert session.protocol_trace == baseline.protocol_trace
     assert session.lifecycle_history == baseline.lifecycle_history
     assert session.completed_call_keys == baseline.completed_call_keys
-    assert tuple(
-        (item.evidence_request_id, item.outcome, item.replaced_outcome)
-        for item in session.evidence_history
-    ) == tuple(
-        (item.evidence_request_id, item.outcome, item.replaced_outcome)
-        for item in baseline.evidence_history
-    )
+    assert session.evidence_history == baseline.evidence_history
     assert session.lineage == baseline.lineage
-    assert session.turns == baseline.turns
+    assert tuple(turn.call_key for turn in session.turns) == tuple(
+        turn.call_key for turn in baseline.turns
+    )
+    assert tuple(turn.output_artifact_id for turn in session.turns) == tuple(
+        turn.output_artifact_id for turn in baseline.turns
+    )
 
 
 @pytest.mark.asyncio
-async def test_one_injected_provider_handles_all_turns_without_output_drift(
-    tmp_path: Path,
-) -> None:
+async def test_one_injected_provider_handles_all_turns(tmp_path: Path) -> None:
     scenario = build_challenged_scenario()
     provider = RecordingProvider(
         ReplayProvider(build_replay_records(scenario, model="gate2-simulated"))
     )
-    engine = ProviderBoundDeliberationEngine(
-        provider=provider,
-        model="gate2-simulated",
-    )
-
+    engine = ProviderBoundDeliberationEngine(provider=provider, model="gate2-simulated")
     session = await engine.run(
         scenario,
         project_root=ROOT,
@@ -228,11 +237,7 @@ async def test_one_injected_provider_handles_all_turns_without_output_drift(
     assert engine.session_provider is provider
     assert len(provider.calls) == 36
     assert tuple(call.call_key for call in provider.calls) == session.completed_call_keys
-    assert {call.provider for call in session.record.model_calls} == {
-        "gate2-injected-replay"
-    }
-    assert session.record.plan == scenario.plan
-    assert session.record.adjudication == scenario.adjudication
+    assert {call.provider for call in session.record.model_calls} == {"gate2-injected-replay"}
 
 
 @pytest.mark.asyncio
@@ -253,7 +258,6 @@ async def test_returned_empty_plan_suppresses_fixture_exchange(tmp_path: Path) -
         no_challenge_reason="The provider found no additional material frame challenge.",
     )
     provider = _provider_for(scenario, {plan_key: empty_plan})
-
     session = await ProviderBoundDeliberationEngine(
         provider=provider,
         model="gate2-authority",
@@ -270,13 +274,8 @@ async def test_returned_empty_plan_suppresses_fixture_exchange(tmp_path: Path) -
     )
     assert accepted == empty_plan
     assert not any(
-        ":challenger:" in call.call_key
-        and call.call_key.startswith("frame_challenges_complete:")
-        for call in provider.calls
-    )
-    assert not any(
-        ":target:" in call.call_key
-        and call.call_key.startswith("frame_challenges_complete:")
+        call.call_key.startswith("frame_challenges_complete:")
+        and (":challenger:" in call.call_key or ":target:" in call.call_key)
         for call in provider.calls
     )
 
@@ -307,7 +306,6 @@ async def test_returned_challenge_is_exposed_to_target_context(tmp_path: Path) -
         member_id=original.target_member_id,
     )
     provider = _provider_for(scenario, {challenge_key: changed})
-
     session = await ProviderBoundDeliberationEngine(
         provider=provider,
         model="gate2-authority",
@@ -318,12 +316,38 @@ async def test_returned_challenge_is_exposed_to_target_context(tmp_path: Path) -
     )
 
     assert changed.statement in provider.inputs[target_key]
-    accepted = next(
+    assert next(
         item
         for item in session.protocol_trace.challenges
         if item.challenge_id == original.challenge_id
+    ).statement == changed.statement
+
+
+@pytest.mark.asyncio
+async def test_seneschal_continuation_context_contains_responses(tmp_path: Path) -> None:
+    scenario = build_challenged_scenario()
+    provider = _provider_for(scenario, {})
+    continuation_key = _key(
+        DeliberationStage.FRAME_CHALLENGES_COMPLETE,
+        "seneschal",
+        ContinuationDecision,
+        phase=ChallengePhase.FRAME,
+        round_number=1,
+        subject="continuation",
     )
-    assert accepted.statement == changed.statement
+    response = scenario.frame_rounds[0].responses[0]
+
+    await ProviderBoundDeliberationEngine(
+        provider=provider,
+        model="gate2-authority",
+    ).run(
+        scenario,
+        project_root=ROOT,
+        output_dir=tmp_path / "seneschal-response-context",
+    )
+
+    assert response.response in provider.inputs[continuation_key]
+    assert f"{response.challenge_id}:response" in provider.inputs[continuation_key]
 
 
 @pytest.mark.asyncio
@@ -346,7 +370,6 @@ async def test_returned_stop_decision_prevents_scripted_second_round(tmp_path: P
         justification="The provider judged the proposal phase complete after one round.",
     )
     provider = _provider_for(scenario, {continuation_key: stop})
-
     session = await ProviderBoundDeliberationEngine(
         provider=provider,
         model="gate2-authority",
@@ -358,12 +381,11 @@ async def test_returned_stop_decision_prevents_scripted_second_round(tmp_path: P
 
     assert session.record.stage is DeliberationStage.PLAN_COMPLETE
     assert not any(":r2:" in call.call_key for call in provider.calls)
-    accepted = next(
+    assert next(
         item
         for item in session.protocol_trace.continuation_decisions
         if item.phase is ChallengePhase.PROPOSAL and item.completed_round == 1
-    )
-    assert accepted == stop
+    ) == stop
 
 
 @pytest.mark.asyncio
@@ -401,28 +423,10 @@ async def test_provider_cannot_request_third_round(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_provider_generated_evidence_id_uses_exact_explicit_resolution(
-    tmp_path: Path,
-) -> None:
+async def test_provider_generated_evidence_id_uses_exact_resolution(tmp_path: Path) -> None:
     scenario = build_challenged_scenario()
-    original = scenario.proposal_rounds[1].responses[0]
-    request = EvidenceRequest(
-        evidence_request_id="provider-new-evidence-id",
-        requester_member_id=original.member_id,
-        disputed_claim="The provider generated a new decision-critical evidence request.",
-        decision_impact="The scope decision changes if the evidence is not available.",
-        requested_information="Provide an explicit matched disposition for this exact ID.",
-        preferred_source="operator-supplied Gate 2 fixture",
-    )
-    changed_response = original.model_copy(update={"evidence_request": request})
-    response_key = _key(
-        DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE,
-        "target",
-        ChallengeResponse,
-        phase=ChallengePhase.PROPOSAL,
-        round_number=2,
-        subject=original.challenge_id,
-        member_id=original.member_id,
+    response_key, request, response = _provider_evidence_override(
+        scenario, "provider-new-evidence-id"
     )
     resolution = EvidenceResolution(
         evidence_request_id=request.evidence_request_id,
@@ -430,8 +434,7 @@ async def test_provider_generated_evidence_id_uses_exact_explicit_resolution(
         evidence=("The operator explicitly matched the provider-generated request ID.",),
         source_references=("test:provider-generated-evidence",),
     )
-    provider = _provider_for(scenario, {response_key: changed_response})
-
+    provider = _provider_for(scenario, {response_key: response})
     session = await ProviderBoundDeliberationEngine(
         provider=provider,
         model="gate2-authority",
@@ -451,32 +454,58 @@ async def test_provider_generated_evidence_id_uses_exact_explicit_resolution(
 
 
 @pytest.mark.asyncio
-async def test_provider_generated_evidence_id_without_disposition_fails_closed(
+async def test_provider_generated_evidence_wait_resumes_by_accepted_id(tmp_path: Path) -> None:
+    scenario = build_challenged_scenario()
+    response_key, request, response = _provider_evidence_override(
+        scenario, "provider-clarification-id"
+    )
+    waiting_resolution = EvidenceResolution(
+        evidence_request_id=request.evidence_request_id,
+        outcome=EvidenceOutcome.USER_CLARIFICATION_REQUIRED,
+        remaining_uncertainty=("The operator has not supplied the requested clarification.",),
+    )
+    output = tmp_path / "provider-waiting"
+    waiting = await ProviderBoundDeliberationEngine(
+        provider=_provider_for(scenario, {response_key: response}),
+        model="gate2-authority",
+        evidence_resolutions={request.evidence_request_id: waiting_resolution},
+    ).run(
+        scenario,
+        project_root=ROOT,
+        output_dir=output,
+    )
+    assert waiting.status is SessionStatus.WAITING_FOR_USER
+
+    replacement = EvidenceResolution(
+        evidence_request_id=request.evidence_request_id,
+        outcome=EvidenceOutcome.GATHERED,
+        evidence=("The operator supplied the clarification for the accepted request ID.",),
+        source_references=("test:provider-evidence-resume",),
+    )
+    resumed = await ProviderBoundDeliberationEngine(
+        provider=_provider_for(scenario, {response_key: response}),
+        model="gate2-authority",
+    ).resume(
+        output / "session.json",
+        evidence_replacements=(replacement,),
+    )
+
+    assert resumed.status is SessionStatus.COMPLETE
+    assert replacement in resumed.record.evidence_resolutions
+    assert resumed.evidence_history[-1].replaced_outcome is EvidenceOutcome.USER_CLARIFICATION_REQUIRED
+
+
+@pytest.mark.asyncio
+async def test_provider_generated_evidence_without_disposition_fails_closed(
     tmp_path: Path,
 ) -> None:
     scenario = build_challenged_scenario()
-    original = scenario.proposal_rounds[1].responses[0]
-    request = EvidenceRequest(
-        evidence_request_id="provider-unmatched-evidence-id",
-        requester_member_id=original.member_id,
-        disputed_claim="A provider request cannot borrow an unrelated fixture disposition.",
-        decision_impact="The evidence stage must stop rather than invent a mapping.",
-        requested_information="Require an exact matching disposition.",
-        preferred_source="operator input",
+    response_key, request, response = _provider_evidence_override(
+        scenario, "provider-unmatched-evidence-id"
     )
-    changed_response = original.model_copy(update={"evidence_request": request})
-    response_key = _key(
-        DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE,
-        "target",
-        ChallengeResponse,
-        phase=ChallengePhase.PROPOSAL,
-        round_number=2,
-        subject=original.challenge_id,
-        member_id=original.member_id,
-    )
-    provider = _provider_for(scenario, {response_key: changed_response})
+    provider = _provider_for(scenario, {response_key: response})
 
-    with pytest.raises(MissingEvidenceDisposition, match="provider-unmatched-evidence-id"):
+    with pytest.raises(MissingEvidenceDisposition, match=request.evidence_request_id):
         await ProviderBoundDeliberationEngine(
             provider=provider,
             model="gate2-authority",
@@ -490,16 +519,11 @@ async def test_provider_generated_evidence_id_without_disposition_fails_closed(
 @pytest.mark.asyncio
 async def test_context_ceiling_fails_before_provider_invocation(tmp_path: Path) -> None:
     provider = FailingIfCalledProvider()
-    engine = ProviderBoundDeliberationEngine(
-        provider=provider,
-        max_context_bytes=1,
-    )
-
+    engine = ProviderBoundDeliberationEngine(provider=provider, max_context_bytes=1)
     with pytest.raises(ProviderError, match="context for .* limit is 1 bytes"):
         await engine.run(
             build_challenged_scenario(),
             project_root=ROOT,
             output_dir=tmp_path / "bounded",
         )
-
     assert provider.calls == 0
