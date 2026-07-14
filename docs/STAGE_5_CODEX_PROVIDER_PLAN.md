@@ -133,7 +133,9 @@ Stage 5 does not:
 
 GitHub Actions uses simulated subprocesses only and never invokes Codex.
 
-The current branch passes **102 tests**, including:
+The schema-adapter implementation passed **102 tests** before the final documentation-only commits. The latest branch CI must remain green before the corrected local rerun.
+
+Coverage includes:
 
 - all Stage 4 regression and integration paths;
 - Codex command isolation and Windows launcher handling;
