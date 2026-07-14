@@ -158,18 +158,44 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
         evidence_replacements: Iterable[EvidenceResolution] = (),
         interrupt_after: str | None = None,
     ) -> OfflineSession:
-        """Recreate replay state or reuse the injected provider before resume."""
+        """Resume provider state without mapping accepted request IDs through fixtures."""
 
-        saved = load_session(checkpoint)
+        source = Path(checkpoint)
+        session = load_session(source)
+        destination = Path(output_dir) if output_dir is not None else source.parent
         replacements = tuple(evidence_replacements)
-        self._prepare_provider(saved.scenario)
-        self._session_evidence_resolutions.update(
-            {item.evidence_request_id: item for item in replacements}
-        )
-        return await super().resume(
-            checkpoint,
-            output_dir=output_dir,
-            evidence_replacements=replacements,
+        self._prepare_provider(session.scenario)
+        if replacements:
+            accepted_request_ids = {
+                item.evidence_request_id for item in session.record.evidence_requests
+            }
+            unknown = {
+                item.evidence_request_id
+                for item in replacements
+                if item.evidence_request_id not in accepted_request_ids
+            }
+            if unknown:
+                raise ValueError(
+                    "evidence replacements reference requests not accepted in the session: "
+                    f"{sorted(unknown)}"
+                )
+            self._session_evidence_resolutions.update(
+                {item.evidence_request_id: item for item in replacements}
+            )
+            record = _update_record(session.record, status=SessionStatus.ACTIVE)
+            session = _replace_session(
+                session,
+                record=record,
+                failure_reason=None,
+                pending_call_key=None,
+                checkpoint_sequence=session.checkpoint_sequence + 1,
+            )
+            write_checkpoint(session, destination)
+        elif session.status in {SessionStatus.WAITING_FOR_USER, SessionStatus.PAUSED}:
+            raise ValueError("waiting or paused sessions require explicit evidence replacements")
+        return await self._execute(
+            session,
+            output_dir=destination,
             interrupt_after=interrupt_after,
         )
 
@@ -816,6 +842,24 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
 
         return self._advance(session, resulting_stage, output_dir)
 
+    def _seneschal_debate_refs(
+        self,
+        session: OfflineSession,
+        phase: ChallengePhase,
+    ) -> tuple:
+        refs = list(super()._seneschal_debate_refs(session, phase))
+        challenge_phase = {
+            item.challenge_id: item.phase for item in session.protocol_trace.challenges
+        }
+        existing = {item.artifact_id for item in refs}
+        for response in session.record.challenge_responses:
+            if challenge_phase.get(response.challenge_id) is phase:
+                reference = _reference(response, ArtifactKind.CHALLENGE_RESPONSE)
+                if reference.artifact_id not in existing:
+                    refs.append(reference)
+                    existing.add(reference.artifact_id)
+        return tuple(refs)
+
     def _phase_requests(
         self,
         session: OfflineSession,
@@ -893,7 +937,7 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
                     note=(
                         "Replaced prior evidence disposition during explicit resume."
                         if previous
-                        else "Recorded explicit disposition for a provider-generated request."
+                        else "Recorded evidence disposition for the current stage."
                     ),
                 )
             )
