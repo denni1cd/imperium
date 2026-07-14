@@ -20,8 +20,8 @@ These documents define the minimum viable deliberation protocol and the evidence
 ## Implementation Contracts
 
 - [`STAGE_4_IMPLEMENTATION_PLAN.md`](STAGE_4_IMPLEMENTATION_PLAN.md) — accepted and merged offline orchestration contract.
-- [`STAGE_5_CODEX_PROVIDER_PLAN.md`](STAGE_5_CODEX_PROVIDER_PLAN.md) — accepted Gate 1 provider boundary, Terra-low no-tools policy, structured-output compatibility, and live-run stop conditions.
-- [`STAGE_5_GATE_2_PROVIDER_INJECTION.md`](STAGE_5_GATE_2_PROVIDER_INJECTION.md) — current Gate 2 contract: extract replay control, make provider outputs authoritative, bound dynamic rounds, and add live-state and usage gates before a full council.
+- [`STAGE_5_CODEX_PROVIDER_PLAN.md`](STAGE_5_CODEX_PROVIDER_PLAN.md) — accepted Gate 1 Codex CLI boundary, Terra-low no-tools policy, and structured-output compatibility.
+- [`STAGE_5_GATE_2_PROVIDER_INJECTION.md`](STAGE_5_GATE_2_PROVIDER_INJECTION.md) — current Gate 2 contract: replay extraction, session provider injection, provider-authoritative routing, dynamic rounds, evidence disposition, and usage controls.
 
 ## Protocol Amendments
 
@@ -36,4 +36,4 @@ These documents define the minimum viable deliberation protocol and the evidence
 - [`../config/protocol.yaml`](../config/protocol.yaml) — minimum deliberation protocol version 1.3
 - [`../prompts/`](../prompts/) — stage-specific prompt contracts referenced by the protocol
 
-The current engineering gate is provider-authoritative orchestration under simulated tests. A complete live council remains blocked.
+The current engineering gate is provider-authoritative debate routing under simulated providers. A complete live council remains blocked.
