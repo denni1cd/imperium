@@ -17,6 +17,11 @@ from typing import Any, TypeVar
 from pydantic import BaseModel, ValidationError
 
 from imperium.providers.base import CallMetadata, ModelResult, ProviderError
+from imperium.providers.openai_schema import (
+    StructuredSchemaError,
+    adapt_pydantic_schema,
+    restore_pydantic_payload,
+)
 
 OutputT = TypeVar("OutputT", bound=BaseModel)
 
@@ -213,12 +218,14 @@ class CodexCliProvider:
 
         executable = self._resolve_executable()
         started = perf_counter()
+        original_schema = output_type.model_json_schema()
+        wire_schema = adapt_pydantic_schema(original_schema)
         with tempfile.TemporaryDirectory(prefix="imperium-codex-") as temporary:
             workspace = Path(temporary).resolve()
             schema_path = workspace / "output-schema.json"
             output_path = workspace / "final-output.json"
             schema_path.write_text(
-                json.dumps(output_type.model_json_schema(), indent=2, sort_keys=True),
+                json.dumps(wire_schema, indent=2, sort_keys=True),
                 encoding="utf-8",
             )
             command = self._build_command(
@@ -231,7 +238,8 @@ class CodexCliProvider:
             prompt = (
                 f"{instructions.strip()}\n\n"
                 "Return only the requested structured artifact. Do not inspect files, "
-                "run commands, or infer context not present below.\n\n"
+                "run commands, or infer context not present below. Fields described as "
+                "mapping entry arrays must contain unique key/value objects.\n\n"
                 f"Imperium stage context:\n{input_text}"
             )
             process_result = await self._run_process(command, input_text=prompt)
@@ -250,8 +258,10 @@ class CodexCliProvider:
                 raise ProviderError("Codex CLI completed without writing the final structured output")
             raw_output = output_path.read_text(encoding="utf-8")
             try:
-                output = output_type.model_validate_json(raw_output)
-            except ValidationError as exc:
+                wire_payload = json.loads(raw_output)
+                restored_payload = restore_pydantic_payload(wire_payload, original_schema)
+                output = output_type.model_validate(restored_payload)
+            except (json.JSONDecodeError, StructuredSchemaError, ValidationError) as exc:
                 raise ProviderError(
                     f"Codex CLI output does not match {output_type.__name__}"
                 ) from exc
