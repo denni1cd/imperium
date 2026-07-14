@@ -1,10 +1,12 @@
 """Reversible adaptation from Pydantic JSON Schema to OpenAI Structured Outputs.
 
 OpenAI supports a strict subset of JSON Schema. In particular, object fields must
-be required, objects must reject additional properties, and arbitrary-key maps
-cannot be represented directly. This module converts maps into arrays of
-``{"key": ..., "value": ...}`` entries for the wire format and restores them
-before domain-model validation.
+be required, objects must reject additional properties, arbitrary-key maps cannot
+be represented directly, and generated regular-expression constraints may use
+unsupported syntax. This module converts maps into arrays of ``{"key": ...,
+"value": ...}`` entries for the wire format, removes constraints that remain
+authoritative in final Pydantic validation, and restores maps before domain-model
+validation.
 """
 
 from __future__ import annotations
@@ -17,11 +19,14 @@ class StructuredSchemaError(ValueError):
     """Raised when adapted structured output cannot be restored safely."""
 
 
+# Keep only constraints known to be accepted by the Structured Outputs boundary.
+# Pydantic remains the authoritative validator after the wire payload is decoded.
+# ``pattern`` is deliberately excluded because Pydantic's Decimal schema contains
+# regex lookaround, which the Codex/OpenAI schema compiler rejects.
 _SCALAR_KEYS = {
     "type",
     "description",
     "enum",
-    "pattern",
     "format",
     "multipleOf",
     "maximum",
@@ -45,7 +50,7 @@ def _is_dynamic_map(schema: Mapping[str, Any]) -> bool:
 def _adapt_key_schema(schema: object) -> dict[str, Any]:
     adapted: dict[str, Any] = {"type": "string"}
     if isinstance(schema, Mapping):
-        for key in ("description", "pattern", "format"):
+        for key in ("description", "format"):
             value = schema.get(key)
             if value is not None:
                 adapted[key] = deepcopy(value)
