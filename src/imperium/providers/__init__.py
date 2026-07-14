@@ -8,6 +8,7 @@ from imperium.providers.base import (
 )
 from imperium.providers.codex_cli import CodexCliProvider
 from imperium.providers.fake import FakeProvider
+from imperium.providers.openai_schema import StructuredSchemaError
 from imperium.providers.replay import ReplayProvider
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "ModelResult",
     "ProviderError",
     "ReplayProvider",
+    "StructuredSchemaError",
 ]
