@@ -10,18 +10,18 @@ from imperium.engine.context import ContextBuilder
 from imperium.live.models import CodexSmokeReport
 from imperium.offline.runtime import freeze_runtime
 from imperium.providers.base import CallMetadata, ProviderError
-from imperium.providers.codex_cli import CodexCliProvider
+from imperium.providers.codex_cli import DEFAULT_CODEX_MODEL, CodexCliProvider
 
 
 async def run_codex_smoke(
     *,
     project_root: str | Path,
     output_dir: str | Path,
-    model: str = "",
+    model: str = DEFAULT_CODEX_MODEL,
     executable: str = "codex",
     timeout_seconds: float = 300.0,
 ) -> CodexSmokeReport:
-    """Run one live Accountant interpretation and persist a credential-safe report."""
+    """Run one Terra-low Accountant interpretation and persist a safe report."""
 
     root = Path(project_root).resolve()
     destination = Path(output_dir).resolve()
