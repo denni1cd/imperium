@@ -2,7 +2,7 @@
 
 ## Status
 
-**Gate 1 passed locally on 2026-07-14; Gate 2 provider injection is now unlocked.**
+**Gate 1 passed locally on 2026-07-14; Gate 2 provider injection is unlocked but not yet complete.**
 
 Stage 4 is accepted and merged. Protocol 1.3, council 1.0, and the manifesto remain unchanged.
 
@@ -31,7 +31,7 @@ The test used the approved Accountant profile and the Stage 4 independent-interp
 ### Accepted live evidence
 
 - provider: `codex-cli`;
-- model label: `codex-config-default`;
+- model label emitted by the original default-config run: `codex-config-default`;
 - member: `steward`;
 - response/thread ID: `019f6198-7529-7c13-8917-67c5c9fba7bd`;
 - input tokens: `13,006`;
@@ -47,9 +47,27 @@ The interpretation is substantively consistent with the Accountant profile: it p
 
 ### Gate 1 limitations
 
-- `codex-config-default` does not identify the actual underlying configured model in the emitted events.
+- The original `codex-config-default` label did not identify the underlying configured model.
 - The recorded `response_id` is currently the Codex thread ID because no more specific response identifier was emitted.
-- One interpretation consumed 13,006 input tokens. A naive 36-call extrapolation would exceed 468,000 input tokens before accounting for larger later-stage contexts. The complete live session must therefore remain blocked until Gate 2 measures and controls per-turn context.
+- One interpretation consumed 13,006 input tokens. A naive 36-call extrapolation would exceed 468,000 input tokens before accounting for larger later-stage contexts. The complete live session must remain blocked until Gate 2 measures and controls per-turn context.
+
+## Live Model Safety Lock
+
+All subsequent Stage 5 live tests are locked to:
+
+- model: `gpt-5.6-terra`;
+- reasoning effort: `low`, the Codex CLI equivalent of Light.
+
+The user-facing live command exposes no model or reasoning override. The provider fails before resolving or launching the Codex executable when any other model or effort is requested.
+
+This means Stage 5 will not run:
+
+- GPT-5.6 Sol;
+- GPT-5.6 Luna;
+- GPT-5.5, GPT-5.4, or other model families;
+- minimal, medium, high, or xhigh reasoning effort.
+
+A quality-based increase requires an explicit reviewed code change and user approval. No runtime flag may silently escalate capability or usage.
 
 ## Codex Process Boundary
 
@@ -61,6 +79,7 @@ Each call uses:
 - no approval prompts;
 - an ephemeral session;
 - ignored repository rules and user configuration while preserving Codex authentication;
+- explicit Terra model and low-reasoning overrides;
 - prompt input through stdin;
 - a strict output schema;
 - final output written to a temporary file;
@@ -82,7 +101,7 @@ The provider applies a reversible wire-schema adapter:
 - duplicate map keys or malformed entries fail closed;
 - final Pydantic validation remains authoritative for constraints removed from the wire schema.
 
-The first two local attempts were preserved as evidence: Codex CLI 0.142.5 rejected `propertyNames`, then rejected Pydantic's Decimal regex lookaround. Both failures are now covered by regression tests.
+The first two local attempts were preserved as evidence: Codex CLI 0.142.5 rejected `propertyNames`, then rejected Pydantic's Decimal regex lookaround. Both failures are covered by regression tests.
 
 ## Gate 1 Success Criteria
 
@@ -96,11 +115,12 @@ The first two local attempts were preserved as evidence: Codex CLI 0.142.5 rejec
 
 ## Gate 2 — Provider Injection
 
-Gate 2 is now unlocked.
+Gate 2 is unlocked.
 
 - Inject `ModelProvider` into the merged Stage 4 orchestration rather than creating a second engine.
 - Keep replay as the default regression provider.
 - Preserve one fresh process and isolated context per model turn.
+- Preserve the Terra-low safety lock for every live turn.
 - Persist each accepted live artifact before the next call.
 - Preserve failed and pending calls without silently retrying them.
 - Save successful live artifacts as replay fixtures.
@@ -113,9 +133,9 @@ Unlocked only after provider injection and token/context controls pass simulated
 
 - Use one fixed synthetic strategic request.
 - Use the existing fixed council.
-- Execute the complete protocol once.
+- Execute the complete protocol once using Terra low only.
 - Stop for user review after the exported transcript and plan.
-- Do not add experiment conditions, repetitions, dynamic selection, or model routing.
+- Do not add experiment conditions, repetitions, dynamic selection, model routing, or model escalation.
 
 ## Live Resume Boundary
 
@@ -137,6 +157,7 @@ Stage 5 does not:
 - perform network research;
 - use API-key billing;
 - add local-model or multi-model routing;
+- use Sol, high, xhigh, Max, or Ultra for tests;
 - implement A1, A2, B, or C experiments;
 - automate consequential actions;
 - claim one successful live session proves strategic improvement.
@@ -145,12 +166,12 @@ Stage 5 does not:
 
 GitHub Actions uses simulated subprocesses only and never invokes Codex.
 
-The corrected schema adapter passed **104 tests** before this documentation update. The latest branch CI must remain green.
-
 Coverage includes:
 
 - all Stage 4 regression and integration paths;
 - Codex command isolation and Windows launcher handling;
+- explicit Terra model and low-reasoning command construction;
+- rejection of non-Terra models and non-low reasoning effort before launch;
 - output-schema adaptation and reversible dictionary decoding;
 - the exact `propertyNames` and Decimal-regex regressions;
 - duplicate map-key rejection;
