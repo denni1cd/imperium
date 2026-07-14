@@ -31,6 +31,27 @@ def _interpretation_payload() -> dict[str, object]:
     }
 
 
+def _interpretation_wire_payload() -> dict[str, object]:
+    payload = _interpretation_payload()
+    payload["value_influence"] = [
+        {
+            "key": "economy",
+            "value": "Limit spending until the provider boundary works.",
+        }
+    ]
+    return payload
+
+
+def _walk_json(value: object):
+    yield value
+    if isinstance(value, dict):
+        for nested in value.values():
+            yield from _walk_json(nested)
+    elif isinstance(value, list):
+        for nested in value:
+            yield from _walk_json(nested)
+
+
 @pytest.mark.asyncio
 async def test_codex_provider_builds_isolated_command_and_validates_output(
     tmp_path: Path,
@@ -46,8 +67,18 @@ async def test_codex_provider_builds_isolated_command_and_validates_output(
         schema_path = Path(command[command.index("--output-schema") + 1])
         output_path = Path(command[command.index("--output-last-message") + 1])
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
-        assert schema["title"] == "Interpretation"
-        output_path.write_text(json.dumps(_interpretation_payload()), encoding="utf-8")
+        assert set(schema["required"]) == set(schema["properties"])
+        influence_schema = schema["properties"]["value_influence"]
+        assert influence_schema["type"] == "array"
+        assert influence_schema["items"]["additionalProperties"] is False
+        assert influence_schema["items"]["required"] == ["key", "value"]
+        for node in _walk_json(schema):
+            if isinstance(node, dict):
+                assert "propertyNames" not in node
+                assert "default" not in node
+                assert "minLength" not in node
+                assert "title" not in node
+        output_path.write_text(json.dumps(_interpretation_wire_payload()), encoding="utf-8")
         return _ProcessResult(
             returncode=0,
             stdout=(
@@ -81,7 +112,11 @@ async def test_codex_provider_builds_isolated_command_and_validates_output(
     assert "--skip-git-repo-check" in command
     assert command[-1] == "-"
     assert "Do not inspect files" in str(observed["input"])
+    assert "mapping entry arrays" in str(observed["input"])
     assert result.output.member_id == "steward"
+    assert result.output.value_influence == {
+        "economy": "Limit spending until the provider boundary works."
+    }
     assert result.provider == "codex-cli"
     assert result.model == "gpt-test"
     assert result.response_id == "thread-123"
