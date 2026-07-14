@@ -108,12 +108,10 @@ def _windows_wrapped_command(command: list[str]) -> list[str]:
 class CodexCliProvider:
     """Invoke one fresh schema-constrained Codex process per model call.
 
-    Stage 5 live tests are intentionally locked to GPT-5.6 Terra with low
-    reasoning effort, the CLI equivalent of Terra Light. Any model or effort
-    escalation requires an explicit reviewed code change rather than a runtime
-    flag. The provider also uses an empty temporary workspace, read-only
-    sandboxing, ephemeral sessions, no project rules, and no automatic retries.
-    Authentication remains owned by the user's existing Codex installation.
+    Stage 5 live tests are locked to GPT-5.6 Terra with low reasoning effort,
+    the CLI equivalent of Terra Light. The shell tool and web search are also
+    disabled by explicit command-line configuration. Any model, effort, or tool
+    escalation requires a reviewed code change rather than a runtime flag.
     """
 
     def __init__(
@@ -171,6 +169,10 @@ class CodexCliProvider:
             "never",
             "--config",
             f'model_reasoning_effort="{self.reasoning_effort}"',
+            "--config",
+            "features.shell_tool=false",
+            "--config",
+            'web_search="disabled"',
             "exec",
             "--ephemeral",
             "--ignore-rules",
@@ -267,8 +269,8 @@ class CodexCliProvider:
             prompt = (
                 f"{instructions.strip()}\n\n"
                 "Return only the requested structured artifact. Do not inspect files, "
-                "run commands, or infer context not present below. Fields described as "
-                "mapping entry arrays must contain unique key/value objects.\n\n"
+                "run commands, search the web, or infer context not present below. Fields "
+                "described as mapping entry arrays must contain unique key/value objects.\n\n"
                 f"Imperium stage context:\n{input_text}"
             )
             process_result = await self._run_process(command, input_text=prompt)
