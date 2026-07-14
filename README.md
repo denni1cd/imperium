@@ -14,7 +14,7 @@ Imperium remains in **design and validation**.
 
 Stages 0–4 are complete and merged. Stage 5 draft PR #12 contains the bounded Codex CLI provider and the successful one-call live Accountant interpretation. Gate 2 provider injection remains the next implementation step; a complete live council is still blocked.
 
-All Stage 5 live tests are locked to **GPT-5.6 Terra with low reasoning effort**, the Codex CLI equivalent of Terra Light. The live command exposes no model override, and the provider rejects any other model or reasoning effort before launching Codex.
+All Stage 5 live tests are locked to **GPT-5.6 Terra with low reasoning effort**, the Codex CLI equivalent of Terra Light. The live command exposes no model override, and the provider rejects any other model or reasoning effort before launching Codex. Shell execution and web search are also explicitly disabled.
 
 For the current status and next gate, see [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
 
@@ -31,7 +31,7 @@ For the current status and next gate, see [`docs/PROJECT_STATUS.md`](docs/PROJEC
 - [`config/protocol.yaml`](config/protocol.yaml) — approved protocol 1.3
 - [`prompts/`](prompts/) — stage-specific prompt contracts
 - [`src/imperium/offline/`](src/imperium/offline/) — merged Stage 4 orchestration
-- [`src/imperium/providers/codex_cli.py`](src/imperium/providers/codex_cli.py) — bounded Terra-low Codex process adapter
+- [`src/imperium/providers/codex_cli.py`](src/imperium/providers/codex_cli.py) — bounded Terra-low no-tools Codex process adapter
 - [`src/imperium/providers/openai_schema.py`](src/imperium/providers/openai_schema.py) — reversible Structured Outputs schema adapter
 - [`src/imperium/live/`](src/imperium/live/) — one-call live smoke command
 - [`docs/EXPERIMENT_PLAN.md`](docs/EXPERIMENT_PLAN.md) — later controlled validation
@@ -63,6 +63,8 @@ The live provider uses:
 - one fresh `codex exec` process;
 - an empty temporary workspace;
 - read-only sandboxing;
+- shell tool disabled;
+- web search disabled;
 - no approval prompts;
 - an ephemeral session;
 - ignored repository rules and user configuration;
