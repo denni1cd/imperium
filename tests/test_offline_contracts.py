@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from imperium.engine.context import ContextBuilder
+from imperium.offline.engine import OfflineDeliberationEngine
 from imperium.offline.fixtures import build_challenged_scenario
 from imperium.offline.models import FrozenTextArtifact, OfflineSession
 from imperium.offline.persistence import load_session
@@ -65,3 +66,19 @@ def test_load_session_rejects_malformed_checkpoint(tmp_path: Path) -> None:
 
     with pytest.raises(ValidationError):
         load_session(checkpoint)
+
+
+@pytest.mark.asyncio
+async def test_checkpoint_rejects_tampered_accepted_replay_artifact(
+    tmp_path: Path,
+) -> None:
+    session = await OfflineDeliberationEngine().run(
+        build_challenged_scenario(),
+        project_root=ROOT,
+        output_dir=tmp_path / "session",
+    )
+    payload = session.model_dump(mode="json")
+    payload["record"]["interpretations"][0]["core_decision"] = "tampered result"
+
+    with pytest.raises(ValidationError, match="frozen scenario"):
+        OfflineSession.model_validate(payload)
