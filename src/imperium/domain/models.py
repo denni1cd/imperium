@@ -7,7 +7,14 @@ from decimal import Decimal
 from typing import Annotated, Any, Self
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializeAsAny,
+    field_validator,
+    model_validator,
+)
 
 from imperium.domain.enums import (
     ChallengeDisposition,
@@ -330,7 +337,7 @@ class StageContext(StrictModel):
 
     stage: DeliberationStage
     request: SovereignRequest
-    member: MemberProfile | None = None
+    member: SerializeAsAny[MemberProfile] | None = None
     shared_facts: tuple[NonEmptyStr, ...] = ()
     visible_artifacts: tuple[ArtifactReference, ...] = ()
 
