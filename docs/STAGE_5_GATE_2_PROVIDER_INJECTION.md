@@ -2,7 +2,7 @@
 
 ## Status
 
-**Implementation started on a separate branch after Gate 1 merged.**
+**Replay extraction and session-level provider injection are complete and green. Provider-authoritative routing is next.**
 
 Gate 1 was squash-merged as `bd16c0a4dcbc4f7174743029611b950d233abfa7` after a successful locked Terra-low local smoke. Gate 2 does not authorize a complete live council.
 
@@ -29,9 +29,9 @@ Fixtures may populate `ReplayProvider` records. They may not independently contr
 
 This is required by the manifesto's inspectability, consequential-debate, controlled-information-sharing, and genuine-cognitive-diversity rules.
 
-## First Slice — Extract Replay Control
+## Slice 1 — Extract Replay Control — Complete
 
-The first implementation step extracts every scripted provider result into one explicit replay record set:
+Every scripted provider result is now represented in one explicit replay record set:
 
 - stable call keys are preserved;
 - the challenged fixture produces 36 records;
@@ -40,21 +40,33 @@ The first implementation step extracts every scripted provider result into one e
 - duplicate call keys fail closed;
 - tests compare the extracted ordered keys with the current engine's completed call keys.
 
-This slice does not change runtime behavior. It establishes the parity baseline required to remove per-call fixture construction safely.
+This established the parity baseline required to remove per-call fixture construction safely.
+
+## Slice 2A — Inject One Session Provider — Complete
+
+`ProviderBoundDeliberationEngine` now:
+
+- constructs one complete `ReplayProvider` at session start when no provider is supplied;
+- accepts one injected `ModelProvider` for simulated Gate 2 tests;
+- routes every model turn through that same provider instance;
+- preserves replay as the default behavior;
+- exposes no live full-session CLI command;
+- enforces a serialized-context byte ceiling before provider invocation;
+- preserves prompt hashes, context hashes, call keys, checkpoints, turns, and exports.
+
+Acceptance evidence:
+
+- the default provider-bound challenged run makes exactly 36 calls through one `ReplayProvider`;
+- an injected simulated provider handles all 36 calls through one instance;
+- the provider-bound run matches the original engine across the complete deterministic record, protocol trace, lifecycle history, completed call keys, evidence history, lineage, and turn traces;
+- the context ceiling fails before a provider is invoked;
+- the full Python suite and Stage 4 artifact workflow remain green.
+
+This slice proves the provider seam only. It does not make live debate safe because fixture-driven routing still exists.
 
 ## Required Refactor Sequence
 
-### Slice 2A — Inject one session provider
-
-- Construct one `ReplayProvider` from the extracted script at session start.
-- Pass a `ModelProvider` into the existing Stage 4 orchestration boundary.
-- Keep replay as the default provider for the offline CLI and all current regressions.
-- Do not expose a live full-session CLI command.
-- Preserve prompt hashes, context hashes, call keys, checkpoints, turns, and exports.
-
-Success criterion: all Stage 4 records and artifacts remain deterministically identical after removing per-call `ReplayProvider` construction.
-
-### Slice 2B — Make returned artifacts authoritative
+### Slice 2B — Make Returned Artifacts Authoritative — Next
 
 - Replace fixture plan usage with the committed/generated `ChallengePlan`.
 - Iterate assignments from that returned plan.
@@ -66,7 +78,7 @@ Success criterion: all Stage 4 records and artifacts remain deterministically id
 
 Success criterion: a simulated provider may change a valid challenge assignment or return an empty plan, and all downstream routing follows that result without reading a competing fixture decision.
 
-### Slice 2C — Bound dynamic rounds
+### Slice 2C — Bound Dynamic Rounds
 
 - Keep the protocol maximum of two rounds per challenge phase.
 - Require a valid continuation decision after each round.
@@ -76,7 +88,7 @@ Success criterion: a simulated provider may change a valid challenge assignment 
 
 Success criterion: simulated continue, stop, empty, and invalid-third-round paths all fail or advance exactly as protocol 1.3 requires.
 
-### Slice 2D — Resolve evidence without fixture authority
+### Slice 2D — Resolve Evidence Without Fixture Authority
 
 - Introduce a narrow evidence-disposition input boundary.
 - Match resolutions to provider-generated evidence request IDs.
@@ -85,13 +97,12 @@ Success criterion: simulated continue, stop, empty, and invalid-third-round path
 
 Success criterion: provider-generated evidence requests halt or resume through explicit matching resolutions.
 
-### Slice 2E — Add live call accounting and failure state
+### Slice 2E — Add Live Call Accounting and Failure State
 
 - Persist pending input digest and attempt identity before each call.
 - Persist accepted artifact and provider metadata atomically.
 - Preserve ambiguous failures without automatic retry.
 - Record explicit abandoned and retried attempts separately.
-- Add per-turn serialized-context ceilings.
 - Add cumulative input, cached-input, and output usage budgets.
 - Stop before launching a call that would exceed the configured context or call-count limit.
 
