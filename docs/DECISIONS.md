@@ -141,36 +141,43 @@ See `docs/PROTOCOL_1_2_CARDINALITY_AND_HALTS.md`.
 
 ## 2026-07-12 — Protocol 1.3 evidence and debate-round ordering
 
-Protocol 1.3 removes `decision_critical_evidence` as a reason for another round inside the same challenge phase.
-
 - Newly requested frame evidence is resolved only after frame challenge completes and informs strategy development.
 - Newly requested proposal evidence is resolved only after proposal challenge completes and informs advocate revision.
-- A same-phase second round must use a newly material frame, a materially revised or narrowed claim, or another specific adjudication-relevant follow-up based on information already permitted in that phase.
+- A same-phase second round uses a newly material frame, a materially revised or narrowed claim, or another adjudication-relevant follow-up based on already permitted information.
 - An evidence request ends the current challenge phase and routes to the following evidence-resolution transition.
 - No lifecycle transition, evidence outcome, materiality threshold, or two-round safety limit changed.
-- Protocol 1.0, 1.1, and 1.2 sessions remain version-bound unless explicitly migrated.
 
-The authoritative configuration is `config/protocol.yaml`. See `docs/PROTOCOL_1_3_EVIDENCE_ROUND_ORDERING.md`.
+See `docs/PROTOCOL_1_3_EVIDENCE_ROUND_ORDERING.md`.
 
-## 2026-07-14 — Stage 4 accepted and merged
+## 2026-07-14 — Stage 4 acceptance and merge
 
-- The complete credential-free protocol 1.3 replay engine was accepted after automated and local artifact review.
-- PR #8 was squash-merged as commit `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
-- Stage 4 demonstrates lifecycle execution, information boundaries, direct advocate turns, challenge and evidence ordering, halt paths, atomic checkpoints, tamper rejection, deterministic replay resume, minority-objection preservation, hybrid adjudication, and actionable-plan export.
-- The accepted result does not claim genuine live profile fidelity, live interruption safety, or superiority over a capable single adviser.
-- The small missing lineage edges observed during artifact review are an observability improvement rather than a Stage 4 blocker.
+- The complete credential-free fake/replay engine satisfied the reviewed Stage 4 contract.
+- The local challenged scenario was inspected and accepted.
+- PR #8 was squash-merged as `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
+- Stage 4 proves protocol execution, information isolation, challenge routing, evidence ordering, halt paths, persistence, deterministic replay resume, minority-objection preservation, adjudication, and actionable-plan generation.
+- Stage 4 does not prove live profile fidelity, strategic improvement, or exactly-once live model execution.
 
-## 2026-07-14 — Stage 5 begins with one Codex call
+## 2026-07-14 — Stage 5 bounded Codex provider gate
 
-- Stage 5 uses existing ChatGPT-authenticated Codex CLI access rather than API-key billing for the first live test.
-- The first gate is exactly one isolated Accountant `Interpretation`, not a complete council run.
-- Codex runs non-interactively in an empty read-only temporary workspace with an ephemeral session, explicit JSON Schema, no project rules, no inherited council transcript, and no automatic retry.
-- GitHub Actions may simulate the subprocess but must never invoke live Codex or require user authentication.
-- A complete live council run remains blocked until the one-call result is schema-valid, inspectable, replayable, and sufficiently metered.
-- After an ambiguous live failure, Imperium must preserve the attempt and require explicit operator action rather than silently retrying.
-- One successful live run will not be treated as evidence that Imperium outperforms simpler baselines.
+- Stage 5 begins with one isolated Accountant `Interpretation`, not a complete live council.
+- Each Codex call uses a fresh process, empty temporary workspace, read-only sandbox, ephemeral session, explicit context, structured output, and zero automatic retries.
+- GitHub Actions simulates subprocesses and never consumes Codex tokens.
+- A failed live call is preserved and corrected before another token-consuming attempt.
 
-See `docs/STAGE_5_IMPLEMENTATION_PLAN.md`.
+### Structured Outputs compatibility
+
+The first live call on Codex CLI 0.142.5 exposed that Pydantic's schema for `Interpretation.value_influence` used the unsupported `propertyNames` keyword.
+
+The accepted provider boundary is:
+
+- Pydantic domain models remain unchanged;
+- an internal reversible wire-schema adapter removes unsupported annotations;
+- every wire object lists every property as required and sets `additionalProperties: false`;
+- arbitrary dictionaries are encoded as arrays of unique `{key, value}` entries;
+- wire output is restored before the original Pydantic model validates it;
+- duplicate keys, malformed entries, and domain-invalid output fail closed.
+
+This adaptation is provider infrastructure, not a protocol or domain-model change. One corrected live smoke result must still be reviewed before provider injection into the Stage 4 engine.
 
 ## Change Control
 
