@@ -5,7 +5,7 @@ from __future__ import annotations
 from hashlib import sha256
 from typing import Self
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
 
 from imperium.domain.council import CouncilConfiguration
 from imperium.domain.enums import (
@@ -47,6 +47,12 @@ def _text_digest(content: str) -> str:
 
 class FrozenTextArtifact(StrictModel):
     """Exact UTF-8 configuration or prompt content frozen for deterministic resume."""
+
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_assignment=True,
+        str_strip_whitespace=False,
+    )
 
     path: NonEmptyStr
     sha256: NonEmptyStr
