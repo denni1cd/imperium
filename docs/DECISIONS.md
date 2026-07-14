@@ -181,14 +181,16 @@ The accepted provider boundary is:
 
 This adaptation is provider infrastructure, not a protocol or domain-model change.
 
-## 2026-07-14 — Stage 5 Terra Light safety lock
+## 2026-07-14 — Stage 5 Terra Light and no-tools safety lock
 
 - All Stage 5 live tests use `gpt-5.6-terra` with CLI reasoning effort `low`, the CLI equivalent of Terra Light.
 - The user-facing live command exposes no model or reasoning-effort override.
 - The Codex provider rejects any non-Terra model or any effort other than `low` before launching the executable.
+- Shell execution is disabled with `features.shell_tool=false`.
+- Web search is disabled with `web_search="disabled"`.
 - Sol, Luna, other model families, medium, high, and xhigh are prohibited during current testing.
-- Any quality-driven escalation requires explicit user approval and a reviewed code change; it cannot occur through a runtime flag or local configuration default.
+- Any quality-driven escalation or tool enablement requires explicit user approval and a reviewed code change; it cannot occur through a runtime flag or local configuration default.
 
 ## Change Control
 
-Changes to the manifesto require direct user approval. Changes to values, council profiles, roster, lifecycle, visibility, debate rules, evidence ordering, stopping, canonical record ownership, or the Stage 5 model safety lock require explicit approval, versioning where applicable, regression tests, and migration consideration.
+Changes to the manifesto require direct user approval. Changes to values, council profiles, roster, lifecycle, visibility, debate rules, evidence ordering, stopping, canonical record ownership, or the Stage 5 model/tool safety lock require explicit approval, versioning where applicable, regression tests, and migration consideration.
