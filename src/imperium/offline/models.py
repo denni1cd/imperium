@@ -171,6 +171,18 @@ class OfflineScenario(StrictModel):
         return self
 
 
+def _scenario_digest(scenario: OfflineScenario) -> str:
+    """Freeze scenario structure while permitting explicit evidence replacement on resume."""
+
+    structural = scenario.model_copy(
+        update={
+            "frame_evidence_resolutions": (),
+            "proposal_evidence_resolutions": (),
+        }
+    )
+    return _text_digest(structural.model_dump_json())
+
+
 class TurnTrace(StrictModel):
     """Inspectable record of one explicit provider invocation."""
 
@@ -237,7 +249,7 @@ class OfflineSession(StrictModel):
     @model_validator(mode="after")
     def validate_session(self) -> Self:
         LifecycleState(stage=self.record.stage, history=self.lifecycle_history)
-        expected_scenario_digest = _text_digest(self.scenario.model_dump_json())
+        expected_scenario_digest = _scenario_digest(self.scenario)
         if self.scenario_sha256 is None:
             object.__setattr__(self, "scenario_sha256", expected_scenario_digest)
         elif self.scenario_sha256 != expected_scenario_digest:
