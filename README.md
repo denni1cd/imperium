@@ -12,9 +12,9 @@ Imperium is a strategic deliberation system designed to produce better, actionab
 
 Imperium remains in **design and validation**.
 
-Stages 0–4 are complete and merged. Stage 5 draft PR #12 implements the first bounded live-provider gate: one isolated ChatGPT-authenticated Codex interpretation before any complete live council run.
+Stages 0–4 are complete and merged. Stage 5 draft PR #12 contains the bounded Codex CLI provider and the successful one-call live Accountant interpretation. Gate 2 provider injection remains the next implementation step; a complete live council is still blocked.
 
-The first local call reached Codex but exposed a Pydantic/OpenAI schema mismatch. The branch now includes a reversible Structured Outputs adapter and passes 102 tests; the corrected one-call smoke must be rerun locally before provider injection.
+All Stage 5 live tests are locked to **GPT-5.6 Terra with low reasoning effort**, the Codex CLI equivalent of Terra Light. The live command exposes no model override, and the provider rejects any other model or reasoning effort before launching Codex.
 
 For the current status and next gate, see [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
 
@@ -31,7 +31,7 @@ For the current status and next gate, see [`docs/PROJECT_STATUS.md`](docs/PROJEC
 - [`config/protocol.yaml`](config/protocol.yaml) — approved protocol 1.3
 - [`prompts/`](prompts/) — stage-specific prompt contracts
 - [`src/imperium/offline/`](src/imperium/offline/) — merged Stage 4 orchestration
-- [`src/imperium/providers/codex_cli.py`](src/imperium/providers/codex_cli.py) — bounded Stage 5 Codex process adapter
+- [`src/imperium/providers/codex_cli.py`](src/imperium/providers/codex_cli.py) — bounded Terra-low Codex process adapter
 - [`src/imperium/providers/openai_schema.py`](src/imperium/providers/openai_schema.py) — reversible Structured Outputs schema adapter
 - [`src/imperium/live/`](src/imperium/live/) — one-call live smoke command
 - [`docs/EXPERIMENT_PLAN.md`](docs/EXPERIMENT_PLAN.md) — later controlled validation
@@ -58,6 +58,8 @@ The merged implementation provides:
 
 The live provider uses:
 
+- GPT-5.6 Terra only;
+- low reasoning effort only;
 - one fresh `codex exec` process;
 - an empty temporary workspace;
 - read-only sandboxing;
@@ -83,7 +85,7 @@ Run the Stage 4 synthetic session:
 python -m imperium.offline run --scenario challenged --output-dir stage4-output\challenged
 ```
 
-Run exactly one Stage 5 live call:
+Run exactly one Terra Light Stage 5 live call:
 
 ```powershell
 python -m imperium.live smoke --output-dir stage5-output\smoke
@@ -98,6 +100,6 @@ Do not automatically rerun a failed live call. Preserve the exact error and corr
 
 ## Implementation Gate
 
-A successful one-call smoke does not authorize a full live council by itself. Review the returned Accountant interpretation and metadata first. Provider injection into the Stage 4 engine is the next separately validated change.
+A successful one-call smoke does not authorize a full live council by itself. Gate 2 must inject the provider into the Stage 4 engine, preserve replay as the default, and add context/token ceilings under simulated tests before a complete live run is authorized.
 
 Imperium is not a coding swarm, roleplaying system, or autonomous execution framework.
