@@ -12,12 +12,14 @@ from imperium.offline.fixtures import (
 )
 from imperium.offline.models import OfflineScenario, OfflineSession
 from imperium.offline.persistence import load_session, write_review_artifacts
+from imperium.offline.provider_engine import ProviderBoundDeliberationEngine
 
 __all__ = [
     "OfflineDeliberationEngine",
     "OfflineInterrupted",
     "OfflineScenario",
     "OfflineSession",
+    "ProviderBoundDeliberationEngine",
     "build_challenged_scenario",
     "build_no_challenge_scenario",
     "checkpoint_for",
