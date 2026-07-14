@@ -2,7 +2,7 @@
 
 ## Status
 
-**Gate 1 implemented in draft PR #12; one successful local live call is still required before full provider injection.**
+**Gate 1 implemented in draft PR #12; one successful corrected local live call is required before full provider injection.**
 
 Stage 4 is accepted and merged. Protocol 1.3, council 1.0, and the manifesto remain unchanged.
 
@@ -30,7 +30,7 @@ The test uses the approved Accountant profile and the Stage 4 independent-interp
 
 ## Codex Process Boundary
 
-Each call must use:
+Each call uses:
 
 - one fresh non-interactive `codex exec` process;
 - an empty temporary working directory;
@@ -49,7 +49,7 @@ Pydantic JSON Schema is not passed directly to Codex.
 
 OpenAI Structured Outputs supports only a subset of JSON Schema, requires every object field to be listed as required, and requires `additionalProperties: false`. Arbitrary-key dictionaries cannot satisfy that contract directly.
 
-The provider therefore applies a reversible wire-schema adapter:
+The provider applies a reversible wire-schema adapter:
 
 - unsupported Pydantic annotations such as `title`, `default`, `minLength`, and `propertyNames` are removed;
 - every object property is required;
@@ -133,7 +133,7 @@ Stage 5 does not:
 
 GitHub Actions uses simulated subprocesses only and never invokes Codex.
 
-The schema-adapter implementation passed **102 tests** before the final documentation-only commits. The latest branch CI must remain green before the corrected local rerun.
+The schema-adapter implementation passed **102 tests** before final documentation-only updates. The latest branch CI must remain green before the corrected local rerun.
 
 Coverage includes:
 
