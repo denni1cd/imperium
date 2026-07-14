@@ -152,6 +152,26 @@ Protocol 1.3 removes `decision_critical_evidence` as a reason for another round 
 
 The authoritative configuration is `config/protocol.yaml`. See `docs/PROTOCOL_1_3_EVIDENCE_ROUND_ORDERING.md`.
 
+## 2026-07-14 — Stage 4 accepted and merged
+
+- The complete credential-free protocol 1.3 replay engine was accepted after automated and local artifact review.
+- PR #8 was squash-merged as commit `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
+- Stage 4 demonstrates lifecycle execution, information boundaries, direct advocate turns, challenge and evidence ordering, halt paths, atomic checkpoints, tamper rejection, deterministic replay resume, minority-objection preservation, hybrid adjudication, and actionable-plan export.
+- The accepted result does not claim genuine live profile fidelity, live interruption safety, or superiority over a capable single adviser.
+- The small missing lineage edges observed during artifact review are an observability improvement rather than a Stage 4 blocker.
+
+## 2026-07-14 — Stage 5 begins with one Codex call
+
+- Stage 5 uses existing ChatGPT-authenticated Codex CLI access rather than API-key billing for the first live test.
+- The first gate is exactly one isolated Accountant `Interpretation`, not a complete council run.
+- Codex runs non-interactively in an empty read-only temporary workspace with an ephemeral session, explicit JSON Schema, no project rules, no inherited council transcript, and no automatic retry.
+- GitHub Actions may simulate the subprocess but must never invoke live Codex or require user authentication.
+- A complete live council run remains blocked until the one-call result is schema-valid, inspectable, replayable, and sufficiently metered.
+- After an ambiguous live failure, Imperium must preserve the attempt and require explicit operator action rather than silently retrying.
+- One successful live run will not be treated as evidence that Imperium outperforms simpler baselines.
+
+See `docs/STAGE_5_IMPLEMENTATION_PLAN.md`.
+
 ## Change Control
 
 Changes to the manifesto require direct user approval. Changes to values, council profiles, roster, lifecycle, visibility, debate rules, evidence ordering, stopping, or canonical record ownership require explicit approval, versioning, regression tests, and migration consideration.
