@@ -17,10 +17,10 @@ These documents define the minimum viable deliberation protocol and the evidence
 5. [`CONSEQUENTIAL_DEBATE.md`](CONSEQUENTIAL_DEBATE.md) — **approved protocol 1.3:** materiality, challenge quality, round ordering, change records, cardinality, minority preservation, and debate-effect measurement.
 6. [`EXPERIMENT_PLAN.md`](EXPERIMENT_PLAN.md) — validation against direct advice, equivalent-budget self-critique, and independent perspectives; detailed cases and thresholds remain open.
 
-## Implementation Gates
+## Implementation Contracts
 
-- [`STAGE_4_IMPLEMENTATION_PLAN.md`](STAGE_4_IMPLEMENTATION_PLAN.md) — **complete and merged:** credential-free replay orchestration, halt paths, persistence, resume, exports, CLI, and synthetic review artifacts.
-- [`STAGE_5_IMPLEMENTATION_PLAN.md`](STAGE_5_IMPLEMENTATION_PLAN.md) — **in progress:** isolated Codex CLI provider smoke, followed only on success by one complete live vertical slice.
+- [`STAGE_4_IMPLEMENTATION_PLAN.md`](STAGE_4_IMPLEMENTATION_PLAN.md) — accepted and merged offline orchestration contract.
+- [`STAGE_5_CODEX_PROVIDER_PLAN.md`](STAGE_5_CODEX_PROVIDER_PLAN.md) — bounded Codex CLI provider gates, structured-output compatibility, and live-run stop conditions.
 
 ## Protocol Amendments
 
@@ -35,4 +35,4 @@ These documents define the minimum viable deliberation protocol and the evidence
 - [`../config/protocol.yaml`](../config/protocol.yaml) — minimum deliberation protocol version 1.3
 - [`../prompts/`](../prompts/) — stage-specific prompt contracts referenced by the protocol
 
-Stage 5 must preserve the merged Stage 4 engine as the provider-neutral regression baseline. Live Codex calls are local-only and never run in CI.
+The current engineering target is the smallest live-provider gate: one isolated Codex interpretation, reviewed before provider injection or a complete live council run.
