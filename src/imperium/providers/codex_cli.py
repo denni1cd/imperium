@@ -25,6 +25,11 @@ from imperium.providers.openai_schema import (
 
 OutputT = TypeVar("OutputT", bound=BaseModel)
 
+DEFAULT_CODEX_MODEL = "gpt-5.6-terra"
+DEFAULT_CODEX_REASONING_EFFORT = "low"
+_ALLOWED_CODEX_MODELS = frozenset({DEFAULT_CODEX_MODEL})
+_ALLOWED_REASONING_EFFORTS = frozenset({DEFAULT_CODEX_REASONING_EFFORT})
+
 
 @dataclass(frozen=True)
 class _ProcessResult:
@@ -103,7 +108,10 @@ def _windows_wrapped_command(command: list[str]) -> list[str]:
 class CodexCliProvider:
     """Invoke one fresh schema-constrained Codex process per model call.
 
-    This provider intentionally uses an empty temporary workspace, read-only
+    Stage 5 live tests are intentionally locked to GPT-5.6 Terra with low
+    reasoning effort, the CLI equivalent of Terra Light. Any model or effort
+    escalation requires an explicit reviewed code change rather than a runtime
+    flag. The provider also uses an empty temporary workspace, read-only
     sandboxing, ephemeral sessions, no project rules, and no automatic retries.
     Authentication remains owned by the user's existing Codex installation.
     """
@@ -114,12 +122,30 @@ class CodexCliProvider:
         executable: str = "codex",
         timeout_seconds: float = 300.0,
         event_log_dir: str | Path | None = None,
+        reasoning_effort: str = DEFAULT_CODEX_REASONING_EFFORT,
     ) -> None:
         if timeout_seconds <= 0:
             raise ValueError("Codex timeout must be positive")
+        normalized_effort = reasoning_effort.strip().casefold()
+        if normalized_effort not in _ALLOWED_REASONING_EFFORTS:
+            raise ValueError(
+                "Stage 5 live tests are locked to Terra Light; "
+                f"reasoning effort must be {DEFAULT_CODEX_REASONING_EFFORT!r}"
+            )
         self.executable = executable
         self.timeout_seconds = timeout_seconds
         self.event_log_dir = Path(event_log_dir).resolve() if event_log_dir else None
+        self.reasoning_effort = normalized_effort
+
+    @staticmethod
+    def _validated_model(model: str) -> str:
+        normalized = model.strip() or DEFAULT_CODEX_MODEL
+        if normalized not in _ALLOWED_CODEX_MODELS:
+            raise ProviderError(
+                "Stage 5 live tests are locked to Terra Light; "
+                f"model must be {DEFAULT_CODEX_MODEL!r}"
+            )
+        return normalized
 
     def _resolve_executable(self) -> str:
         resolved = shutil.which(self.executable)
@@ -143,6 +169,8 @@ class CodexCliProvider:
             executable,
             "--ask-for-approval",
             "never",
+            "--config",
+            f'model_reasoning_effort="{self.reasoning_effort}"',
             "exec",
             "--ephemeral",
             "--ignore-rules",
@@ -159,10 +187,10 @@ class CodexCliProvider:
             str(schema_path),
             "--output-last-message",
             str(output_path),
+            "--model",
+            model,
+            "-",
         ]
-        if model.strip():
-            command.extend(("--model", model.strip()))
-        command.append("-")
         return _windows_wrapped_command(command)
 
     async def _run_process(self, command: list[str], *, input_text: str) -> _ProcessResult:
@@ -214,8 +242,9 @@ class CodexCliProvider:
         output_type: type[OutputT],
         metadata: CallMetadata,
     ) -> ModelResult[OutputT]:
-        """Run one isolated Codex call and validate its final structured artifact."""
+        """Run one isolated Terra-low Codex call and validate its structured artifact."""
 
+        selected_model = self._validated_model(model)
         executable = self._resolve_executable()
         started = perf_counter()
         original_schema = output_type.model_json_schema()
@@ -233,7 +262,7 @@ class CodexCliProvider:
                 workspace=workspace,
                 schema_path=schema_path,
                 output_path=output_path,
-                model=model,
+                model=selected_model,
             )
             prompt = (
                 f"{instructions.strip()}\n\n"
@@ -273,11 +302,16 @@ class CodexCliProvider:
             ("response_id", "responseId", "thread_id", "threadId", "turn_id", "turnId"),
         )
         actual_model = _extract_string(events, ("model", "model_name", "modelName"))
+        if actual_model is not None and actual_model != selected_model:
+            raise ProviderError(
+                "Codex reported a model different from the Terra Light safety lock: "
+                f"expected {selected_model!r}, received {actual_model!r}"
+            )
         latency_ms = max(0, round((perf_counter() - started) * 1000))
         return ModelResult[OutputT](
             output=output,
             provider="codex-cli",
-            model=actual_model or model.strip() or "codex-config-default",
+            model=actual_model or selected_model,
             response_id=response_id,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
