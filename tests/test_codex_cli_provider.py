@@ -66,8 +66,16 @@ def _metadata(call_key: str) -> CallMetadata:
     )
 
 
+def _config_values(command: list[str]) -> set[str]:
+    return {
+        command[index + 1]
+        for index, value in enumerate(command[:-1])
+        if value == "--config"
+    }
+
+
 @pytest.mark.asyncio
-async def test_codex_provider_builds_isolated_terra_low_command_and_validates_output(
+async def test_codex_provider_builds_isolated_terra_low_no_tools_command(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -121,13 +129,14 @@ async def test_codex_provider_builds_isolated_terra_low_command_and_validates_ou
     assert command[command.index("--sandbox") + 1] == "read-only"
     assert "--skip-git-repo-check" in command
     assert command[command.index("--model") + 1] == DEFAULT_CODEX_MODEL
-    assert "--config" in command
-    assert (
-        command[command.index("--config") + 1]
-        == f'model_reasoning_effort="{DEFAULT_CODEX_REASONING_EFFORT}"'
-    )
+    assert _config_values(command) == {
+        f'model_reasoning_effort="{DEFAULT_CODEX_REASONING_EFFORT}"',
+        "features.shell_tool=false",
+        'web_search="disabled"',
+    }
     assert command[-1] == "-"
     assert "Do not inspect files" in str(observed["input"])
+    assert "search the web" in str(observed["input"])
     assert "mapping entry arrays" in str(observed["input"])
     assert result.output.member_id == "steward"
     assert result.output.value_influence == {
@@ -224,7 +233,7 @@ def test_windows_cmd_launcher_uses_command_processor(monkeypatch: pytest.MonkeyP
 
 
 @pytest.mark.asyncio
-async def test_live_smoke_writes_terra_report_without_running_real_codex(
+async def test_live_smoke_writes_auditable_terra_low_report_without_real_codex(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -254,8 +263,10 @@ async def test_live_smoke_writes_terra_report_without_running_real_codex(
 
     assert report.output.member_id == "steward"
     assert report.model == DEFAULT_CODEX_MODEL
+    assert report.reasoning_effort == DEFAULT_CODEX_REASONING_EFFORT
     assert report.input_tokens == 321
     persisted = json.loads((tmp_path / "smoke-report.json").read_text(encoding="utf-8"))
     assert persisted["response_id"] == "thread-123"
     assert persisted["model"] == DEFAULT_CODEX_MODEL
+    assert persisted["reasoning_effort"] == DEFAULT_CODEX_REASONING_EFFORT
     assert persisted["output"]["member_id"] == "steward"
