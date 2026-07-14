@@ -20,7 +20,7 @@ These documents define the minimum viable deliberation protocol and the evidence
 ## Implementation Contracts
 
 - [`STAGE_4_IMPLEMENTATION_PLAN.md`](STAGE_4_IMPLEMENTATION_PLAN.md) — accepted and merged offline orchestration contract.
-- [`STAGE_5_CODEX_PROVIDER_PLAN.md`](STAGE_5_CODEX_PROVIDER_PLAN.md) — bounded Codex CLI provider gates, structured-output compatibility, and live-run stop conditions.
+- [`STAGE_5_CODEX_PROVIDER_PLAN.md`](STAGE_5_CODEX_PROVIDER_PLAN.md) — sole current Stage 5 contract: bounded Codex CLI gates, Terra-low no-tools policy, structured-output compatibility, and live-run stop conditions.
 
 ## Protocol Amendments
 
@@ -35,4 +35,4 @@ These documents define the minimum viable deliberation protocol and the evidence
 - [`../config/protocol.yaml`](../config/protocol.yaml) — minimum deliberation protocol version 1.3
 - [`../prompts/`](../prompts/) — stage-specific prompt contracts referenced by the protocol
 
-The current engineering target is the smallest live-provider gate: one isolated Codex interpretation, reviewed before provider injection or a complete live council run.
+The current engineering gate is one local verification of the locked Terra-low no-tools command, followed by provider injection under simulated tests. A complete live council remains blocked.
