@@ -58,6 +58,23 @@ _FORBIDDEN_WIRE_KEYWORDS = {
     "dependentSchemas",
     "unevaluatedProperties",
 }
+_SCHEMA_MARKERS = {
+    "$ref",
+    "$defs",
+    "type",
+    "description",
+    "enum",
+    "format",
+    "anyOf",
+    "properties",
+    "items",
+    "required",
+    "additionalProperties",
+    "minimum",
+    "maximum",
+    "minItems",
+    "maxItems",
+}
 
 
 def _validate_node(node: Any, *, path: str = "$") -> None:
@@ -68,18 +85,20 @@ def _validate_node(node: Any, *, path: str = "$") -> None:
     if not isinstance(node, Mapping):
         return
 
-    forbidden = _FORBIDDEN_WIRE_KEYWORDS.intersection(node)
-    assert not forbidden, f"{path} contains unsupported keywords: {sorted(forbidden)}"
+    is_schema_node = bool(_SCHEMA_MARKERS.intersection(node))
+    if is_schema_node:
+        forbidden = _FORBIDDEN_WIRE_KEYWORDS.intersection(node)
+        assert not forbidden, f"{path} contains unsupported keywords: {sorted(forbidden)}"
 
-    if node.get("type") == "object":
-        properties = node.get("properties")
-        assert isinstance(properties, Mapping), f"{path} object lacks properties"
-        assert node.get("additionalProperties") is False, (
-            f"{path} object must reject additional properties"
-        )
-        assert node.get("required") == list(properties), (
-            f"{path} must require every declared property in declaration order"
-        )
+        if node.get("type") == "object":
+            properties = node.get("properties")
+            assert isinstance(properties, Mapping), f"{path} object lacks properties"
+            assert node.get("additionalProperties") is False, (
+                f"{path} object must reject additional properties"
+            )
+            assert node.get("required") == list(properties), (
+                f"{path} must require every declared property in declaration order"
+            )
 
     for key, value in node.items():
         _validate_node(value, path=f"{path}.{key}")
