@@ -6,12 +6,11 @@ Imperium remains in **design and validation**.
 
 - **Stages 0–4:** complete and merged.
 - **Stage 4 merge:** PR #8, squash commit `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
-- **Offline validation:** 95 repository tests and six Stage 4 integration paths passed before merge.
-- **Local review:** the generated challenged replay session was accepted.
-- **Stage 5:** started on branch `stage-5-codex-provider` with a one-call Codex CLI smoke gate.
-- **Live council status:** not yet run.
+- **Stage 5:** draft PR #12 implements Gate 1, one isolated live Codex interpretation.
+- **Validation:** 102 tests pass on the Stage 5 branch; GitHub Actions uses no live model calls.
+- **Current gate:** rerun exactly one local smoke call after the structured-output schema correction.
 
-`MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted durable decisions. `docs/STAGE_5_IMPLEMENTATION_PLAN.md` defines the current live-provider gate.
+`MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records accepted durable decisions. `docs/STAGE_5_CODEX_PROVIDER_PLAN.md` defines the current live-provider gate.
 
 ## Stage Summary
 
@@ -22,7 +21,7 @@ Imperium remains in **design and validation**.
 | 2 — Profiles and fixed council | Complete and merged | Seneschal plus Accountant, Gazgul, Overmind, and Castellan with persistent profiles and counterweights |
 | 3 — Exact deliberation protocol | Complete and merged | Protocol 1.3 with blind interpretation, direct debate, evidence ordering/cardinality, halt behavior, and bounded rounds |
 | 4 — Offline deliberation engine | Complete and merged | Full replay orchestration, halt paths, checkpoints, resume, exports, CLI, and synthetic review artifacts |
-| 5 — Codex provider and live slice | Provider smoke in progress | One isolated schema-valid live Interpretation before any full council run |
+| 5 — Codex provider and live slice | Gate 1 under review in PR #12 | Isolated Codex provider and one-call live smoke command |
 | 6 — Experiment harness | Not started | Conditions A1, A2, B, and C with frozen controls |
 | 7 — Pilot validation | Not started | Repeated blinded evaluation |
 | 8 — Investment gate | Not started | Proceed, revise and retest, or stop |
@@ -77,39 +76,44 @@ The current branch implements:
 - read-only sandbox;
 - ephemeral session;
 - ignored project rules and user configuration while preserving Codex authentication;
-- JSON Schema-constrained final output;
+- OpenAI-compatible structured output;
 - prompt delivery through stdin;
 - Windows `.cmd` launcher handling;
 - timeout, nonzero-exit, missing-output, and schema-failure handling;
 - zero automatic retries;
 - available model, response identifier, token, latency, and retry metadata;
-- local JSONL event log and credential-safe smoke report;
+- local JSONL event log and smoke report;
 - simulated CI tests that never invoke Codex.
+
+## First Live Failure and Correction
+
+The first local call reached Codex successfully but Codex CLI 0.142.5 rejected Pydantic's generated `propertyNames` keyword inside `Interpretation.value_influence`.
+
+The branch now uses a reversible Structured Outputs adapter:
+
+- unsupported Pydantic annotations such as `title`, `default`, `minLength`, and `propertyNames` are removed;
+- every object field is required;
+- every object sets `additionalProperties: false`;
+- arbitrary dictionaries are represented as arrays of unique key/value entries on the wire;
+- wire entries are restored to dictionaries before the original Pydantic model validates them;
+- malformed entries and duplicate keys fail closed.
+
+The exact failure is covered by regression tests. No live call was made by CI.
 
 ## Local Smoke Command
 
-Prerequisites:
+Pull the corrected branch:
 
 ```powershell
-codex --version
-codex
+git pull
+python -m pip install -e ".[dev]"
+pytest
 ```
 
-Use the second command once to sign in with ChatGPT if necessary, then exit Codex.
-
-Run exactly one live Accountant interpretation:
+Then run exactly one live Accountant interpretation:
 
 ```powershell
-python -m imperium.live smoke `
-  --output-dir stage5-output\smoke
-```
-
-Optional explicit model:
-
-```powershell
-python -m imperium.live smoke `
-  --model <codex-model> `
-  --output-dir stage5-output\smoke
+python -m imperium.live smoke --output-dir stage5-output\smoke
 ```
 
 Review:
@@ -121,7 +125,7 @@ Review:
 
 - Codex runs non-interactively under the existing ChatGPT sign-in.
 - The process exits without an approval prompt.
-- The final artifact validates as `Interpretation`.
+- The wire output restores and validates as `Interpretation`.
 - The output retains `member_id=steward`.
 - The run uses no repository workspace or inherited council transcript.
 - Available usage and duration are recorded.
@@ -132,7 +136,8 @@ Review:
 Stop before a complete live deliberation if:
 
 - authentication cannot be used non-interactively;
-- structured output fails;
+- the corrected schema is rejected;
+- wire decoding or domain validation fails;
 - the CLI requires write access or inherited repository context;
 - timeout and failure state cannot be bounded;
 - one accepted result cannot later be replayed;
@@ -140,11 +145,14 @@ Stop before a complete live deliberation if:
 
 ## Remaining Before the First Live Council
 
-- [ ] Pass repository CI for the provider smoke implementation
+- [x] Pass repository CI for the provider smoke implementation
+- [x] Preserve and diagnose the first structured-output failure
+- [x] Add reversible schema adaptation and exact regression coverage
+- [ ] Pull the correction locally
 - [ ] Run the one-call smoke locally
 - [ ] Inspect the live Interpretation and metadata
 - [ ] Confirm the result can be saved and replayed
-- [ ] Refactor Stage 4 orchestration to accept an injected provider
+- [ ] Inject the provider into Stage 4 orchestration
 - [ ] Freeze one bounded live strategic case and explicit model
 - [ ] Run one complete live deliberation sequentially with no automatic retries
 - [ ] Review transcript, profile fidelity, disagreement, usage, and minority objection
@@ -152,11 +160,11 @@ Stop before a complete live deliberation if:
 ## Current Validation Risks
 
 - Numeric profiles may not produce persistent live reasoning differences.
-- The first live call may inherit unexpected Codex behavior despite an empty workspace.
+- The first live call may reveal another unsupported schema construct.
 - Codex JSONL may not expose complete token metadata on every installation or model.
 - A live timeout or process failure is not safely equivalent to a replay interruption.
 - Human Sustainability may remain underrepresented.
 - The Seneschal may still bias synthesis.
 - Full deliberation may not outperform simpler baselines.
 
-These risks are now being tested in increasing order of cost rather than answered with additional architecture.
+These risks are being tested in increasing order of cost rather than answered with additional architecture.
