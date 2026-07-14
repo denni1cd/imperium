@@ -1,7 +1,7 @@
 """Session-level provider injection for the Stage 5 Gate 2 refactor.
 
 This adapter proves that one provider instance can serve the complete Stage 4
-lifecycle without changing replay output.  It is not yet a live-council engine:
+lifecycle without changing replay output. It is not yet a live-council engine:
 fixture-driven debate routing remains in :mod:`imperium.offline.engine` and must
 be removed before Gate 3.
 """
@@ -15,9 +15,10 @@ from typing import TypeVar
 from pydantic import BaseModel
 
 from imperium.domain.enums import ArtifactKind, ChallengePhase, DeliberationStage
-from imperium.domain.models import ModelCallRecord, StageContext
+from imperium.domain.models import EvidenceResolution, ModelCallRecord, StageContext
 from imperium.offline.engine import (
     OfflineDeliberationEngine,
+    OfflineInterrupted,
     _append_unique,
     _artifact_id,
     _call_key,
@@ -39,7 +40,7 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
     """Run one deliberation through one provider instance.
 
     When no provider is supplied, one :class:`ReplayProvider` is constructed
-    from the complete scenario script at session start.  A caller may inject a
+    from the complete scenario script at session start. A caller may inject a
     simulated provider for Gate 2 tests, but no live CLI entry point exposes
     this class.
     """
@@ -65,7 +66,10 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
         return self._session_provider
 
     def _prepare_provider(self, scenario: OfflineScenario) -> None:
-        self._session_provider = self._configured_provider or ReplayProvider(
+        if self._configured_provider is not None:
+            self._session_provider = self._configured_provider
+            return
+        self._session_provider = ReplayProvider(
             build_replay_records(scenario, model=self.model)
         )
 
@@ -92,7 +96,7 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
         checkpoint: str | Path,
         *,
         output_dir: str | Path | None = None,
-        evidence_replacements: Iterable = (),
+        evidence_replacements: Iterable[EvidenceResolution] = (),
         interrupt_after: str | None = None,
     ) -> OfflineSession:
         """Recreate replay state or reuse the injected provider before resume."""
@@ -226,7 +230,5 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
         )
         checkpoint = write_checkpoint(committed, output_dir)
         if interrupt_after == key:
-            from imperium.offline.engine import OfflineInterrupted
-
             raise OfflineInterrupted(key, checkpoint)
         return committed, result.output
