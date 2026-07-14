@@ -6,7 +6,7 @@ Imperium remains in **design and validation**.
 
 - **Main branch:** Stages 0–3 are merged through protocol 1.3.
 - **Stage 4 branch:** the complete offline fake/replay engine is implemented in draft PR #8.
-- **Validation:** 94 repository tests pass; all six Stage 4 integration paths pass.
+- **Validation:** 95 repository tests pass; all six Stage 4 integration paths pass.
 - **Generated review artifact:** one complete synthetic council session has been produced and inspected.
 - **Merge status:** Stage 4 is not merged and live-provider work is not authorized.
 
@@ -73,7 +73,7 @@ The draft implementation now provides:
 - stable call keys and separate provider-call traces;
 - atomic pending and completed checkpoints;
 - deterministic interruption and resume for the fake/replay provider;
-- malformed-checkpoint and frozen-content rejection;
+- malformed-checkpoint, frozen-content, scenario-structure, and accepted-artifact tamper rejection;
 - session, record, protocol trace, manifest, lineage, transcript, and plan exports;
 - a credential-free CLI;
 - synthetic-only GitHub Actions artifact publication.
@@ -145,6 +145,7 @@ Additional scenarios are `empty`, `conditional`, `waiting`, and `paused`.
 - [x] Exercise revised-claim second round
 - [x] Exercise gathered, conditional, waiting, and paused evidence paths
 - [x] Implement atomic checkpoint and deterministic fake/replay resume
+- [x] Reject tampered accepted replay artifacts
 - [x] Publish synthetic review artifacts in CI
 - [x] Inspect the generated challenged session
 - [ ] Complete final PR review for implementation quality and scope
