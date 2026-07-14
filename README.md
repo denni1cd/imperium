@@ -10,48 +10,50 @@ Imperium is a strategic deliberation system designed to produce better, actionab
 
 ## Current Stage
 
-Imperium is in **design and validation**. Stages 1–3 are now explicit and encoded: the value vocabulary, member profiles and fixed council, and the exact deliberation protocol.
+Imperium remains in **design and validation**.
 
-The next engineering target is **Stage 4: a complete offline fake/replay deliberation from sovereign request to actionable plan**.
+Stages 1–3 are approved and encoded: the value vocabulary, persistent council profiles, fixed council, and exact deliberation protocol. Stage 4 is implemented on the current draft branch as a complete credential-free fake/replay deliberation from sovereign request to actionable plan.
 
-For the shortest current status and recommended testing checkpoint, see [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
+The Stage 4 implementation proves protocol execution, information boundaries, evidence ordering, halt behavior, persistence, and deterministic resume. It does not prove that live models create genuine cognitive diversity or outperform a capable single adviser.
+
+For the shortest current status and remaining gate, see [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
 
 ## Repository Map
 
 - [`MANIFESTO.md`](MANIFESTO.md) — governing project rules
 - [`docs/DECISIONS.md`](docs/DECISIONS.md) — durable accepted decisions
-- [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — mobile-friendly stage status, built capabilities, risks, and test checkpoint
+- [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) — current implementation and validation status
 - [`docs/STRATEGIC_PROJECT_PLAN.md`](docs/STRATEGIC_PROJECT_PLAN.md) — gated roadmap to a first usable implementation
-- [`docs/VALUE_VOCABULARY.md`](docs/VALUE_VOCABULARY.md) — approved strategic values and operating rules
-- [`config/values.yaml`](config/values.yaml) — versioned value vocabulary
-- [`docs/COUNCIL_MEMBER_PROFILE.md`](docs/COUNCIL_MEMBER_PROFILE.md) — approved member profile contract
-- [`docs/INITIAL_COUNCIL.md`](docs/INITIAL_COUNCIL.md) — approved fixed first-experiment roster
-- [`config/council.yaml`](config/council.yaml) — versioned member profiles and roster
-- [`docs/DELIBERATION_LIFECYCLE.md`](docs/DELIBERATION_LIFECYCLE.md) — approved twelve-transition protocol
-- [`docs/CONSEQUENTIAL_DEBATE.md`](docs/CONSEQUENTIAL_DEBATE.md) — approved materiality, challenge, revision, and measurement rules
-- [`config/protocol.yaml`](config/protocol.yaml) — exact machine-readable stage, evidence, challenge, and stopping contracts
-- [`prompts/`](prompts/) — stage-specific prompt interfaces
-- [`docs/EXPERIMENT_PLAN.md`](docs/EXPERIMENT_PLAN.md) — validation against simpler approaches
+- [`docs/STAGE_4_IMPLEMENTATION_PLAN.md`](docs/STAGE_4_IMPLEMENTATION_PLAN.md) — reviewed Stage 4 scope and acceptance contract
+- [`config/values.yaml`](config/values.yaml) — approved value vocabulary 1.0
+- [`config/council.yaml`](config/council.yaml) — approved council 1.0
+- [`config/protocol.yaml`](config/protocol.yaml) — approved protocol 1.3
+- [`prompts/`](prompts/) — stage-specific prompt contracts
+- [`src/imperium/offline/`](src/imperium/offline/) — Stage 4 orchestration, fixtures, persistence, rendering, and CLI
+- [`tests/integration/test_offline_vertical_slice.py`](tests/integration/test_offline_vertical_slice.py) — complete and halted Stage 4 acceptance paths
+- [`docs/EXPERIMENT_PLAN.md`](docs/EXPERIMENT_PLAN.md) — later validation against simpler approaches
 
-## Supporting Code
+## Stage 4 Capabilities
 
-The current Python foundation implements accepted, provider-neutral constraints:
+The current draft implementation provides:
 
-- validated deliberation artifacts and normalized value vectors;
-- versioned loading of values, council, and protocol configuration;
-- exact vocabulary and council-version compatibility;
-- explicit separation between advocates and the non-advocating Seneschal;
-- deterministic lifecycle transitions, including post-proposal evidence resolution;
-- stage-specific information-boundary contracts;
-- normalized claim, challenge-plan, continuation-decision, and protocol-trace models;
-- deterministic challenge materiality, counterweight, repetition, and stopping checks;
-- fake and replay providers for zero-cost testing;
-- inspectable JSON session exports;
-- automated constitutional, vocabulary, profile, roster, lifecycle, and protocol tests.
+- all twelve protocol 1.3 lifecycle transitions;
+- four blind advocate interpretations and four independent proposals;
+- separate advocate-authored challenge and response turns;
+- a materially revised same-phase second-round claim;
+- evidence resolution after the challenge phase that created the request;
+- gathered, conditional, waiting-for-user, and paused evidence outcomes;
+- reasoned revisions or retentions from all four advocates;
+- Seneschal hybrid adjudication with a preserved minority objection;
+- an actionable plan with steps, checkpoints, risks, and reconsideration conditions;
+- exact frozen configuration, profile, protocol, prompt, and scenario-structure digests;
+- atomic checkpoints and deterministic fake/replay resume;
+- inspectable session, protocol trace, transcript, lineage, manifest, and plan exports;
+- synthetic-only GitHub Actions artifacts.
 
-It does not yet connect every stage into one complete offline deliberation. Stage 4 will provide that vertical slice before Codex or API integration.
+The implementation intentionally excludes live providers, network research, autonomous execution, dynamic council selection, and experiment conditions A1/A2/B/C.
 
-### Local Development
+## Local Development
 
 ```bash
 python -m venv .venv
@@ -59,8 +61,26 @@ python -m pip install -e ".[dev]"
 pytest
 ```
 
+Run the primary Stage 4 synthetic council session:
+
+```bash
+python -m imperium.offline run \
+  --scenario challenged \
+  --output-dir stage4-output/challenged
+```
+
+Available scenarios are `challenged`, `empty`, `conditional`, `waiting`, and `paused`.
+
+Resume a waiting or paused checkpoint with an explicit synthetic evidence disposition:
+
+```bash
+python -m imperium.offline resume \
+  --checkpoint stage4-output/waiting/session.json \
+  --evidence-outcome gathered
+```
+
 Source code lives under `src/imperium/`; tests live under `tests/`.
 
 ## Implementation Gate
 
-Live-model integration should begin only after the Stage 4 offline engine completes and resumes a full deliberation using fake or replay providers. Imperium is not a coding swarm, roleplaying system, or autonomous execution framework.
+Stage 4 is implemented but remains in a draft, unmerged pull request pending review of the generated artifacts. Live-model integration must not begin until Stage 4 is explicitly accepted and merged. Imperium is not a coding swarm, roleplaying system, or autonomous execution framework.
