@@ -122,6 +122,8 @@ Draft PR #15 proves under replay and simulated providers that:
 - crash-pending attempts retain conservative output-reserve charges;
 - model identity cannot change during replacement.
 
+The clean draft head passes **170 Python tests** and the Stage 4 artifact workflow. CI made no Codex or live council calls.
+
 ## Remaining Before the First Live Council
 
 Gate 2E still requires:
