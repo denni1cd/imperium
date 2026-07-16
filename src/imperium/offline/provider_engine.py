@@ -281,9 +281,12 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
                 }
             ).model_dump(mode="python")
         )
+        record = _update_record(session.record, status=SessionStatus.FAILED)
         session = self._replace_attempt(
             session,
             abandoned,
+            record=record,
+            failure_reason=f"AttemptAbandoned: {disposition_reason}",
             pending_call_key=None,
             checkpoint_sequence=session.checkpoint_sequence + 1,
         )
