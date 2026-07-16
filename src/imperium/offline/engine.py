@@ -297,11 +297,19 @@ class _ScenarioLifecycleEngine:
         except Exception as exc:
             attempt_session = getattr(exc, "imperium_session", session)
             record = _update_record(attempt_session.record, status=SessionStatus.FAILED)
+            pending_call_key = (
+                attempt_session.pending_call_key
+                if any(
+                    attempt.status is AttemptStatus.PENDING
+                    for attempt in attempt_session.attempts
+                )
+                else None
+            )
             session = _replace_session(
                 attempt_session,
                 record=record,
                 failure_reason=f"{type(exc).__name__}: {exc}",
-                pending_call_key=None,
+                pending_call_key=pending_call_key,
                 checkpoint_sequence=attempt_session.checkpoint_sequence + 1,
             )
             write_review_artifacts(session, output_dir)
