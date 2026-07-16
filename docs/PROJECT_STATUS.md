@@ -7,10 +7,10 @@ Imperium remains in **design and validation**.
 - **Stages 0–4:** complete and merged.
 - **Stage 4 merge:** PR #8, squash commit `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
 - **Stage 5 Gate 1:** complete and merged through PR #12, squash commit `bd16c0a4dcbc4f7174743029611b950d233abfa7`.
-- **Stage 5 Gate 2:** draft PR #13 resolves the shared-engine architecture gate under simulated providers; final review remains before merge.
+- **Stage 5 Gate 2:** draft PR #13 resolves the shared-engine architecture gate under simulated providers; merge review is pending.
 - **Live model policy:** all Stage 5 tests remain locked to `gpt-5.6-terra` with `low` reasoning effort.
 - **Live tool policy:** shell execution and web search remain disabled.
-- **Current gate:** review the consolidated Gate 2 implementation before Gate 2E live-failure accounting or any complete live council.
+- **Current gate:** review and merge Gate 2 before Gate 2E live-failure accounting or any complete live council.
 
 `MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records durable accepted decisions. `docs/STAGE_5_CODEX_PROVIDER_PLAN.md` defines the accepted Gate 1 boundary. `docs/STAGE_5_GATE_2_PROVIDER_INJECTION.md` defines the current Gate 2 review state.
 
@@ -83,7 +83,7 @@ Draft PR #13 demonstrates under simulated providers that:
 - clarification-required evidence halts and resumes by the accepted provider request ID;
 - Stage 4 strict replay and artifact workflows remain unchanged.
 
-The consolidated implementation passes **143 Python tests** and the Stage 4 artifact workflow. CI and local validation made no live model calls.
+The consolidated implementation passes **146 Python tests** and the Stage 4 artifact workflow. CI and local validation made no live model calls.
 
 ## Gate 2 Architecture Review Resolution
 
@@ -91,7 +91,7 @@ The three architecture blockers are resolved in the draft branch:
 
 1. `SharedDeliberationEngine` owns provider invocation, challenge routing, evidence resolution, resume, and the inherited single lifecycle. `OfflineDeliberationEngine` and `ProviderBoundDeliberationEngine` are thin authority adapters.
 2. Route-control validation is passed into the call acceptance boundary. Invalid plans and continuation decisions are not applied, traced, added to completed calls, or checkpointed as accepted.
-3. Second-round eligibility recognizes genuinely new claim IDs and claims reached through accepted consequential revisions. Cosmetic object inequality is ignored.
+3. Second-round eligibility accepts genuinely new claim IDs or an exact normalized canonical claim produced by an accepted prior-round `REFINE` response. Non-refine, wrong-phase, wrong-round, cosmetic, and unincorporated revisions do not qualify.
 
 ## Required Consolidation Before Gate 2E
 
