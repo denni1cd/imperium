@@ -35,7 +35,7 @@ class UsageBudget(StrictModel):
 
 
 class UsageTotals(StrictModel):
-    """Cumulative reported usage across every launched attempt."""
+    """Cumulative provider-reported usage across every launched attempt."""
 
     attempts_launched: int = Field(default=0, ge=0)
     input_tokens: int = Field(default=0, ge=0)
@@ -120,7 +120,7 @@ def estimate_input_tokens(input_text: str, budget: UsageBudget) -> int:
 
 
 def usage_totals(attempts: Iterable[ModelAttempt]) -> UsageTotals:
-    """Sum every launched attempt, including failed or ambiguous attempts."""
+    """Sum provider-reported usage, including failed or ambiguous attempts."""
 
     items = tuple(attempts)
     return UsageTotals(
@@ -128,6 +128,28 @@ def usage_totals(attempts: Iterable[ModelAttempt]) -> UsageTotals:
         input_tokens=sum(item.input_tokens for item in items),
         cached_input_tokens=sum(item.cached_input_tokens for item in items),
         output_tokens=sum(item.output_tokens for item in items),
+    )
+
+
+def charged_input_tokens(attempts: Iterable[ModelAttempt]) -> int:
+    """Charge at least the conservative input estimate for every launched attempt."""
+
+    return sum(
+        max(item.input_tokens, item.estimated_input_tokens)
+        for item in attempts
+    )
+
+
+def charged_output_tokens(
+    attempts: Iterable[ModelAttempt],
+    budget: UsageBudget,
+) -> int:
+    """Charge at least one output reserve for every terminal launched attempt."""
+
+    return sum(
+        max(item.output_tokens, budget.output_token_reserve_per_attempt)
+        for item in attempts
+        if item.status is not AttemptStatus.PENDING
     )
 
 
