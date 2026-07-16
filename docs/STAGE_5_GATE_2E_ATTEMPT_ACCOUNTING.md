@@ -2,9 +2,9 @@
 
 ## Status
 
-**Slice 2E.1 is implemented and proven under simulated providers. PR #14 remains draft pending merge review and does not authorize a complete live council.**
+**Slice 2E.1 is merged. Slice 2E.2 is implemented in draft PR #15 under simulated providers and does not authorize a complete live council.**
 
-Gate 2 was squash-merged as `d816cc64cc88e28b7472e89bada680217704237f`. Gate 2E adds the safety state required before a full live deliberation can be considered.
+Gate 2 was squash-merged as `d816cc64cc88e28b7472e89bada680217704237f`. Gate 2E.1 was squash-merged as `a074d27b648d63ffbb602fbec57aa7961cbe9576`. Gate 2E adds the safety state required before a full live deliberation can be considered.
 
 ## Central hypothesis
 
@@ -41,10 +41,11 @@ The implementation adds:
 4. A schema-valid but protocol-invalid output becomes a failed attempt and is not accepted into the deliberation record.
 5. A timeout or another explicitly uncertain provider outcome becomes ambiguous.
 6. A second attempt for the same call key requires explicit retry lineage from an earlier attempt marked `retried`.
-7. Slice 2E.1 does not expose any operation that can create that retry lineage; therefore no second attempt is currently authorized.
-8. Failed and ambiguous attempts count against usage budgets because they may have consumed provider resources.
-9. Accepted output content must continue matching its persisted digest when a checkpoint is loaded.
-10. Accepted prompt, input, stage, member, provider, and model identity must continue matching the accepted turn trace.
+7. Slice 2E.2 exposes two explicit operator operations: abandon without replacement, or authorize one replacement with a required reason.
+8. A replacement is authorized only when the original is atomically marked `retried` and attempt 2 is checkpointed as `pending` with bidirectional lineage.
+9. Failed and ambiguous attempts count against usage budgets because they may have consumed provider resources.
+10. Accepted output content must continue matching its persisted digest when a checkpoint is loaded.
+11. Accepted prompt, input, stage, member, provider, and model identity must continue matching the accepted turn trace.
 
 ## Budget semantics
 
@@ -81,25 +82,30 @@ The clean PR head passes:
 
 CI uses replay and simulated providers only. It does not invoke Codex or consume model tokens.
 
+## Slice 2E.2 operator workflow
+
+The operator may act only when exactly one unresolved first attempt is `pending`, `failed`, or `ambiguous`.
+
+- `abandon_attempt` requires a non-empty reason, marks the attempt `abandoned`, clears pending identity, and launches no provider.
+- `retry_attempt` requires a non-empty reason and the original model identity.
+- Authorization is consumed when the original becomes `retried` and attempt 2 becomes `pending` in the same checkpoint.
+- Attempt 2 identifies `retry_of_attempt_id`; attempt 1 identifies `superseded_by_attempt_id`.
+- Ordinary resume remains inert for failed sessions and cannot create a replacement.
+- A failed or ambiguous attempt 2 has no legal path to attempt 3.
+- Every attempt remains charged to the same persisted cumulative budget.
+- A crash-pending attempt consumes its conservative output reserve before attempt 2 can launch.
+
 ## Explicit exclusions
 
-Slice 2E.1 does not:
+Slice 2E.2 does not:
 
-- authorize retrying an ambiguous or failed attempt;
-- implement operator abandon/retry commands;
+- authorize automatic retry or more than one replacement;
 - capture accepted live outputs as replay fixtures;
 - replay a captured complete live session;
 - expose a live full-session CLI;
 - change the Terra-low, no-shell, no-web safety lock;
 - authorize a complete live council.
 
-## Next sub-gate — 2E.2
+## Next sub-gate
 
-After PR #14 review, Gate 2E.2 may add an explicit operator workflow for either:
-
-- abandoning an ambiguous or failed attempt without replacement; or
-- authorizing exactly one replacement attempt.
-
-That workflow must preserve both records, require a reason, create explicit retry lineage, retain cumulative usage from every attempt, and never retry automatically.
-
-Accepted live-output capture, captured-session replay, and complete-session usage estimation remain later Gate 2E work after the retry workflow is proven.
+After PR #15 review, the next separate slice may capture accepted live outputs as replay fixtures and prove captured-session replay without provider calls. A reviewed full-session usage estimate and explicit user authorization remain required before any complete live council.
