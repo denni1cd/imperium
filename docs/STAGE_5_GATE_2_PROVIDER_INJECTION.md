@@ -2,7 +2,7 @@
 
 ## Status
 
-**Provider-authority behavior and shared-engine consolidation are proven under simulated providers. PR #13 remains draft pending final review and does not authorize live council execution.**
+**Provider-authority behavior and shared-engine consolidation are proven under simulated providers. PR #13 remains draft pending merge review and does not authorize live council execution.**
 
 Gate 1 was squash-merged as `bd16c0a4dcbc4f7174743029611b950d233abfa7` after a successful locked Terra-low local smoke. PR #13 remains draft and unmerged. Gate 2 does not authorize a complete live council.
 
@@ -77,7 +77,7 @@ Adversarial tests prove that:
 
 The consolidated head passes:
 
-- **143 Python tests**;
+- **146 Python tests**;
 - all six Stage 4 integration paths;
 - the unchanged Stage 4 artifact workflow;
 - provider-authority adversarial tests;
@@ -100,11 +100,11 @@ The behavioral hypothesis now runs through one shared orchestration implementati
 
 ### Blocker 3 — Resolved: material new input
 
-Second-round eligibility is derived from genuinely new claim IDs or target claim IDs associated with accepted responses carrying `revised_claim`. Changed wording, evidence ordering, regenerated registers, and other object inequality do not independently qualify.
+Second-round eligibility is limited to genuinely new claim IDs or a carried claim whose next canonical statement exactly matches the normalized text of an accepted prior-round `REFINE` response. The response must belong to the active phase and immediately preceding round and must come from the assigned target. Cosmetic register changes, non-refine responses, wrong-round responses, and unincorporated `revised_claim` fields do not qualify.
 
 ## Next Implementation Gate — Gate 2E
 
-Shared-engine consolidation is implemented and locally validated. Gate 2E remains separate and may begin only after review of this draft; it does not authorize a live council.
+Shared-engine consolidation is implemented and validated. Gate 2E remains separate and may begin only after merge review of this draft; it does not authorize a live council.
 
 ## Gate 2E — Not Started
 
