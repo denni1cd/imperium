@@ -22,7 +22,12 @@ from imperium.domain.models import (
     EvidenceRequest,
     EvidenceResolution,
 )
-from imperium.domain.protocol import ChallengeArtifact, ChallengePlan, ContinuationDecision
+from imperium.domain.protocol import (
+    ChallengeArtifact,
+    ChallengePlan,
+    ClaimRegister,
+    ContinuationDecision,
+)
 from imperium.engine.protocol_rules import InvalidProtocolArtifact
 from imperium.offline.engine import OfflineDeliberationEngine, _call_key
 from imperium.offline.fixtures import build_challenged_scenario
@@ -30,6 +35,7 @@ from imperium.offline.provider_engine import (
     MissingEvidenceDisposition,
     ProviderBoundDeliberationEngine,
 )
+from imperium.offline.persistence import load_session
 from imperium.offline.replay_script import build_replay_records
 from imperium.providers.base import CallMetadata, ModelResult, ProviderError
 from imperium.providers.replay import ReplayProvider
@@ -420,6 +426,93 @@ async def test_provider_cannot_request_third_round(tmp_path: Path) -> None:
             project_root=ROOT,
             output_dir=tmp_path / "third-round",
         )
+
+    failed = load_session(tmp_path / "third-round" / "session.json")
+    assert continuation_key not in failed.completed_call_keys
+    assert all(turn.call_key != continuation_key for turn in failed.turns)
+    assert invalid_continue not in failed.protocol_trace.continuation_decisions
+
+
+@pytest.mark.asyncio
+async def test_protocol_invalid_plan_is_not_committed(tmp_path: Path) -> None:
+    scenario = build_challenged_scenario()
+    plan_key = _key(
+        DeliberationStage.FRAME_CHALLENGES_COMPLETE,
+        "seneschal",
+        ChallengePlan,
+        phase=ChallengePhase.FRAME,
+        round_number=1,
+        subject="plan",
+    )
+    original = scenario.frame_rounds[0].plan
+    invalid = original.model_copy(
+        update={
+            "assignments": (
+                original.assignments[0].model_copy(
+                    update={"target_claim_id": "schema-valid-but-unknown-claim"}
+                ),
+            )
+        }
+    )
+    output = tmp_path / "invalid-plan"
+
+    with pytest.raises(InvalidProtocolArtifact, match="unknown claim"):
+        await ProviderBoundDeliberationEngine(
+            provider=_provider_for(scenario, {plan_key: invalid}),
+            model="gate2-authority",
+        ).run(scenario, project_root=ROOT, output_dir=output)
+
+    failed = load_session(output / "session.json")
+    assert plan_key not in failed.completed_call_keys
+    assert all(turn.call_key != plan_key for turn in failed.turns)
+    assert invalid not in failed.protocol_trace.challenge_plans
+
+
+def test_cosmetic_claim_rewrite_is_not_material_new_input() -> None:
+    scenario = build_challenged_scenario()
+    previous = scenario.proposal_rounds[0].claim_register
+    cosmetic = previous.model_copy(
+        update={
+            "register_id": "cosmetic-register",
+            "claims": (
+                previous.claims[0].model_copy(
+                    update={"supporting_evidence": ("Reordered presentation only.",)}
+                ),
+                *previous.claims[1:],
+            ),
+        }
+    )
+
+    assert ProviderBoundDeliberationEngine._claims_with_new_input(previous, cosmetic) == ()
+
+
+def test_accepted_revised_claim_is_material_new_input() -> None:
+    scenario = build_challenged_scenario()
+    first, second = scenario.proposal_rounds
+
+    assert ProviderBoundDeliberationEngine._claims_with_new_input(
+        first.claim_register,
+        second.claim_register,
+        first.responses,
+        first.challenges,
+    ) == ("claim-vanguard-scope", "claim-architect-reuse")
+
+
+def test_genuinely_new_claim_id_is_material_new_input() -> None:
+    scenario = build_challenged_scenario()
+    previous = scenario.proposal_rounds[0].claim_register
+    new_claim = previous.claims[0].model_copy(
+        update={"claim_id": "claim-new-material-input"}
+    )
+    current = ClaimRegister(
+        register_id="register-with-new-claim",
+        phase=previous.phase,
+        claims=(*previous.claims, new_claim),
+    )
+
+    assert ProviderBoundDeliberationEngine._claims_with_new_input(
+        previous, current
+    ) == ("claim-new-material-input",)
 
 
 @pytest.mark.asyncio

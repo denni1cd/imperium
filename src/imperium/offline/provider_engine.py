@@ -82,6 +82,7 @@ from imperium.providers.replay import ReplayProvider
 
 OutputT = TypeVar("OutputT", bound=BaseModel)
 ApplyArtifact = Callable[[OfflineSession, OutputT], OfflineSession]
+ValidateArtifact = Callable[[OutputT], None]
 
 
 class MissingEvidenceDisposition(ProviderError):
@@ -284,6 +285,7 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
         round_number: int | None = None,
         subject: str | None = None,
         interrupt_after: str | None = None,
+        validate: ValidateArtifact[OutputT] | None = None,
     ) -> tuple[OfflineSession, OutputT]:
         """Invoke the session provider while preserving Stage 4 checkpoints."""
 
@@ -347,6 +349,12 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
                     f"provider output member {authored_member_id!r} does not match "
                     f"active member {member_id!r} for {key}"
                 )
+
+        # Context-dependent protocol validation belongs to the acceptance
+        # boundary. A schema-valid artifact must not become a completed turn
+        # until every routing and identity invariant has passed.
+        if validate is not None:
+            validate(result.output)
 
         committed = apply(pending, result.output)
         call_record = ModelCallRecord(
@@ -461,14 +469,26 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
     def _claims_with_new_input(
         previous: ClaimRegister | None,
         current: ClaimRegister,
+        responses: tuple[ChallengeResponse, ...] = (),
+        challenges: tuple[ChallengeArtifact, ...] = (),
     ) -> tuple[str, ...]:
         if previous is None:
             return tuple(claim.claim_id for claim in current.claims)
-        prior = {claim.claim_id: claim for claim in previous.claims}
+        prior_ids = {claim.claim_id for claim in previous.claims}
+        new_ids = {claim.claim_id for claim in current.claims if claim.claim_id not in prior_ids}
+        challenged_claim_ids = {
+            challenge.challenge_id: challenge.target_claim_id for challenge in challenges
+        }
+        revised_ids = {
+            challenged_claim_ids[response.challenge_id]
+            for response in responses
+            if response.revised_claim is not None
+            and response.challenge_id in challenged_claim_ids
+        }
         return tuple(
             claim.claim_id
             for claim in current.claims
-            if claim.claim_id not in prior or claim != prior[claim.claim_id]
+            if claim.claim_id in new_ids or claim.claim_id in revised_ids
         )
 
     async def _challenge_phase(
@@ -559,7 +579,12 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
             previous_claims = (
                 previous_snapshot.claim_register if previous_snapshot is not None else None
             )
-            new_input_claim_ids = self._claims_with_new_input(previous_claims, claims)
+            new_input_claim_ids = self._claims_with_new_input(
+                previous_claims,
+                claims,
+                session.record.challenge_responses,
+                session.protocol_trace.challenges,
+            )
 
             plan_context = ContextBuilder.seneschal_stage(
                 stage=session.record.stage,
@@ -594,14 +619,14 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
                 round_number=round_number,
                 subject="plan",
                 interrupt_after=interrupt_after,
-            )
-            validate_challenge_plan(
-                plan,
-                claims=claims,
-                council=session.runtime.council,
-                policy=policy,
-                prior_plans=tuple(prior_plans),
-                claims_with_new_input=new_input_claim_ids,
+                validate=lambda output: validate_challenge_plan(
+                    output,
+                    claims=claims,
+                    council=session.runtime.council,
+                    policy=policy,
+                    prior_plans=tuple(prior_plans),
+                    claims_with_new_input=new_input_claim_ids,
+                ),
             )
 
             round_challenges: list[ChallengeArtifact] = []
@@ -814,11 +839,11 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
                 round_number=round_number,
                 subject="continuation",
                 interrupt_after=interrupt_after,
-            )
-            validate_continuation_decision(
-                continuation,
-                claims=claims,
-                policy=policy,
+                validate=lambda output: validate_continuation_decision(
+                    output,
+                    claims=claims,
+                    policy=policy,
+                ),
             )
 
             produced = []
