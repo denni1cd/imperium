@@ -131,6 +131,8 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         self._session_provider: ModelProvider | None = None
         self._session_evidence_resolutions: dict[str, EvidenceResolution] = {}
         self._configured_usage_budget = usage_budget
+        self._authorized_retry_call_key: str | None = None
+        self._authorized_retry_reason: str | None = None
         self.max_context_bytes = max_context_bytes
         if artifact_authority not in {"scenario", "provider"}:
             raise ValueError("artifact_authority must be 'scenario' or 'provider'")
@@ -222,6 +224,113 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
             output_dir=destination,
             interrupt_after=interrupt_after,
         )
+
+    @staticmethod
+    def _disposition_target(session: OfflineSession) -> ModelAttempt:
+        unresolved = tuple(
+            attempt
+            for attempt in session.attempts
+            if attempt.call_key not in set(session.completed_call_keys)
+            and attempt.status
+            in {
+                AttemptStatus.PENDING,
+                AttemptStatus.FAILED,
+                AttemptStatus.AMBIGUOUS,
+            }
+        )
+        if len(unresolved) != 1:
+            raise ValueError(
+                "operator disposition requires exactly one unresolved pending, failed, "
+                "or ambiguous attempt"
+            )
+        target = unresolved[0]
+        attempts_for_call = tuple(
+            attempt for attempt in session.attempts if attempt.call_key == target.call_key
+        )
+        if len(attempts_for_call) != 1 or target.attempt_number != 1:
+            raise RetryAuthorizationRequired(
+                "Gate 2E.2 permits exactly one replacement attempt per call key"
+            )
+        return target
+
+    @staticmethod
+    def _disposition_reason(reason: str) -> str:
+        normalized = " ".join(reason.split())
+        if not normalized:
+            raise ValueError("operator disposition requires a non-empty reason")
+        return normalized
+
+    def abandon_attempt(
+        self,
+        checkpoint: str | Path,
+        *,
+        reason: str,
+        output_dir: str | Path | None = None,
+    ) -> OfflineSession:
+        """Explicitly abandon one unresolved attempt without launching a replacement."""
+
+        source = Path(checkpoint)
+        session = load_session(source)
+        target = self._disposition_target(session)
+        disposition_reason = self._disposition_reason(reason)
+        abandoned = ModelAttempt.model_validate(
+            target.model_copy(
+                update={
+                    "status": AttemptStatus.ABANDONED,
+                    "disposition_reason": disposition_reason,
+                }
+            ).model_dump(mode="python")
+        )
+        session = self._replace_attempt(
+            session,
+            abandoned,
+            pending_call_key=None,
+            checkpoint_sequence=session.checkpoint_sequence + 1,
+        )
+        destination = Path(output_dir) if output_dir is not None else source.parent
+        write_checkpoint(session, destination)
+        write_review_artifacts(session, destination)
+        return session
+
+    async def retry_attempt(
+        self,
+        checkpoint: str | Path,
+        *,
+        reason: str,
+        output_dir: str | Path | None = None,
+        interrupt_after: str | None = None,
+    ) -> OfflineSession:
+        """Authorize and launch exactly one replacement for one unresolved attempt."""
+
+        source = Path(checkpoint)
+        session = load_session(source)
+        target = self._disposition_target(session)
+        disposition_reason = self._disposition_reason(reason)
+        if self.model != target.model:
+            raise ValueError(
+                "replacement attempts must preserve the original model identity"
+            )
+        destination = Path(output_dir) if output_dir is not None else source.parent
+        self._prepare_provider(session.scenario)
+        record = _update_record(session.record, status=SessionStatus.ACTIVE)
+        session = _replace_session(
+            session,
+            record=record,
+            failure_reason=None,
+            checkpoint_sequence=session.checkpoint_sequence + 1,
+        )
+        write_checkpoint(session, destination)
+        self._authorized_retry_call_key = target.call_key
+        self._authorized_retry_reason = disposition_reason
+        try:
+            return await self._execute(
+                session,
+                output_dir=destination,
+                interrupt_after=interrupt_after,
+            )
+        finally:
+            self._authorized_retry_call_key = None
+            self._authorized_retry_reason = None
 
     async def _execute(
         self,
@@ -325,6 +434,7 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         session: OfflineSession,
         *,
         serialized_provider_input: str,
+        pending_attempts_becoming_terminal: int = 0,
     ) -> int:
         budget = session.usage_budget
         totals = usage_totals(session.attempts)
@@ -339,7 +449,9 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
             )
         if (
             charged_output_tokens(session.attempts, budget)
-            + budget.output_token_reserve_per_attempt
+            + (
+                pending_attempts_becoming_terminal + 1
+            ) * budget.output_token_reserve_per_attempt
             > budget.max_output_tokens
         ):
             raise UsageBudgetExceeded(
@@ -406,7 +518,19 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         if key in set(session.completed_call_keys):
             return session, self._accepted_output(session, key, type(expected))
         prior_attempts = tuple(item for item in session.attempts if item.call_key == key)
-        if prior_attempts:
+        authorized_retry = (
+            self._authorized_retry_call_key == key
+            and self._authorized_retry_reason is not None
+            and len(prior_attempts) == 1
+            and prior_attempts[0].attempt_number == 1
+            and prior_attempts[0].status
+            in {
+                AttemptStatus.PENDING,
+                AttemptStatus.FAILED,
+                AttemptStatus.AMBIGUOUS,
+            }
+        )
+        if prior_attempts and not authorized_retry:
             exc = RetryAuthorizationRequired(
                 f"call {key!r} already has an attempt; explicit abandon or retry authorization is required"
             )
@@ -446,14 +570,21 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
             estimated_input_tokens = self._check_pre_call_budget(
                 session,
                 serialized_provider_input=f"{prompt.content}\n{input_text}",
+                pending_attempts_becoming_terminal=(
+                    1
+                    if authorized_retry
+                    and prior_attempts[0].status is AttemptStatus.PENDING
+                    else 0
+                ),
             )
         except Exception as exc:
             self._attach_attempt_session(exc, session)
             raise
+        attempt_number = 2 if authorized_retry else 1
         attempt = ModelAttempt(
-            attempt_id=f"{key}:attempt-1",
+            attempt_id=f"{key}:attempt-{attempt_number}",
             call_key=key,
-            attempt_number=1,
+            attempt_number=attempt_number,
             status=AttemptStatus.PENDING,
             stage=session.record.stage,
             member_id=member_id,
@@ -461,10 +592,28 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
             prompt_sha256=prompt.sha256,
             input_sha256=_context_hash(context),
             estimated_input_tokens=estimated_input_tokens,
+            retry_of_attempt_id=(
+                prior_attempts[0].attempt_id if authorized_retry else None
+            ),
         )
+        attempts = session.attempts
+        if authorized_retry:
+            prior = ModelAttempt.model_validate(
+                prior_attempts[0].model_copy(
+                    update={
+                        "status": AttemptStatus.RETRIED,
+                        "superseded_by_attempt_id": attempt.attempt_id,
+                        "disposition_reason": self._authorized_retry_reason,
+                    }
+                ).model_dump(mode="python")
+            )
+            attempts = tuple(
+                prior if item.attempt_id == prior.attempt_id else item
+                for item in attempts
+            )
         pending = _replace_session(
             session,
-            attempts=(*session.attempts, attempt),
+            attempts=(*attempts, attempt),
             pending_call_key=key,
             checkpoint_sequence=session.checkpoint_sequence + 1,
         )
