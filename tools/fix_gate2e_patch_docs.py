@@ -11,8 +11,6 @@ replacements = {
     "- **Stage 5 Gate 2:** draft PR #13 resolves the shared-engine architecture gate under simulated providers; merge review is pending.",
     "- **Current gate:** review the consolidated Gate 2 implementation before Gate 2E live-failure accounting or any complete live council.":
     "- **Current gate:** review and merge Gate 2 before Gate 2E live-failure accounting or any complete live council.",
-    'serialized_provider_input=f"{prompt.content}\\n{input_text}",':
-    'serialized_provider_input=f"{prompt.content}\\\\n{input_text}",',
     '''    def _replace_attempt(session: OfflineSession, updated: ModelAttempt) -> OfflineSession:
         attempts = tuple(
             updated if item.attempt_id == updated.attempt_id else item
@@ -71,7 +69,7 @@ replacements = {
     '''        try:
             estimated_input_tokens = self._check_pre_call_budget(
                 session,
-                serialized_provider_input=f"{prompt.content}\\n{input_text}",
+                serialized_provider_input=f"{prompt.content}\\\\n{input_text}",
             )
         except Exception as exc:
             self._attach_attempt_session(exc, session)
