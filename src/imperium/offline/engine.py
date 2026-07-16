@@ -295,13 +295,14 @@ class _ScenarioLifecycleEngine:
         except OfflineInterrupted:
             raise
         except Exception as exc:
-            record = _update_record(session.record, status=SessionStatus.FAILED)
+            attempt_session = getattr(exc, "imperium_session", session)
+            record = _update_record(attempt_session.record, status=SessionStatus.FAILED)
             session = _replace_session(
-                session,
+                attempt_session,
                 record=record,
                 failure_reason=f"{type(exc).__name__}: {exc}",
                 pending_call_key=None,
-                checkpoint_sequence=session.checkpoint_sequence + 1,
+                checkpoint_sequence=attempt_session.checkpoint_sequence + 1,
             )
             write_review_artifacts(session, output_dir)
             raise

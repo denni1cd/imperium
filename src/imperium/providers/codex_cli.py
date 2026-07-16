@@ -16,7 +16,12 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
-from imperium.providers.base import CallMetadata, ModelResult, ProviderError
+from imperium.providers.base import (
+    CallMetadata,
+    ModelResult,
+    ProviderAmbiguousError,
+    ProviderError,
+)
 from imperium.providers.openai_schema import (
     StructuredSchemaError,
     adapt_pydantic_schema,
@@ -60,16 +65,23 @@ def _first_int(mapping: Mapping[str, Any], keys: tuple[str, ...]) -> int | None:
     return None
 
 
-def _extract_usage(events: tuple[Mapping[str, Any], ...]) -> tuple[int, int]:
+def _extract_usage(events: tuple[Mapping[str, Any], ...]) -> tuple[int, int, int]:
     input_keys = ("input_tokens", "inputTokens", "prompt_tokens", "promptTokens")
+    cached_keys = (
+        "cached_input_tokens",
+        "cachedInputTokens",
+        "cached_tokens",
+        "cachedTokens",
+    )
     output_keys = ("output_tokens", "outputTokens", "completion_tokens", "completionTokens")
     for event in reversed(events):
         for mapping in _walk_mappings(event):
             input_tokens = _first_int(mapping, input_keys)
             output_tokens = _first_int(mapping, output_keys)
             if input_tokens is not None and output_tokens is not None:
-                return input_tokens, output_tokens
-    return 0, 0
+                cached_input_tokens = _first_int(mapping, cached_keys) or 0
+                return input_tokens, cached_input_tokens, output_tokens
+    return 0, 0, 0
 
 
 def _extract_string(events: tuple[Mapping[str, Any], ...], keys: tuple[str, ...]) -> str | None:
@@ -210,9 +222,9 @@ class CodexCliProvider:
         except TimeoutError as exc:
             process.kill()
             await process.communicate()
-            raise ProviderError(
+            raise ProviderAmbiguousError(
                 f"Codex CLI timed out after {self.timeout_seconds:g} seconds; "
-                "the call was not retried"
+                "the call was not retried and its usage outcome is unknown"
             ) from exc
         return _ProcessResult(
             returncode=process.returncode or 0,
@@ -286,7 +298,10 @@ class CodexCliProvider:
                     f"{diagnostic[-2000:]}"
                 )
             if not output_path.exists():
-                raise ProviderError("Codex CLI completed without writing the final structured output")
+                raise ProviderAmbiguousError(
+                    "Codex CLI completed without writing the final structured output; "
+                    "the call was not retried and its accepted-output state is unknown"
+                )
             raw_output = output_path.read_text(encoding="utf-8")
             try:
                 wire_payload = json.loads(raw_output)
@@ -298,7 +313,7 @@ class CodexCliProvider:
                 ) from exc
 
         events = _parse_jsonl(process_result.stdout)
-        input_tokens, output_tokens = _extract_usage(events)
+        input_tokens, cached_input_tokens, output_tokens = _extract_usage(events)
         response_id = _extract_string(
             events,
             ("response_id", "responseId", "thread_id", "threadId", "turn_id", "turnId"),
@@ -316,6 +331,7 @@ class CodexCliProvider:
             model=actual_model or selected_model,
             response_id=response_id,
             input_tokens=input_tokens,
+            cached_input_tokens=cached_input_tokens,
             output_tokens=output_tokens,
             latency_ms=latency_ms,
             retries=0,

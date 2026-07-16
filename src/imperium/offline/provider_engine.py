@@ -52,6 +52,16 @@ from imperium.engine.protocol_rules import (
     validate_stage_inputs,
     validate_stage_outputs,
 )
+from imperium.offline.attempts import (
+    AttemptStatus,
+    ModelAttempt,
+    RetryAuthorizationRequired,
+    UsageBudget,
+    UsageBudgetExceeded,
+    artifact_digest,
+    estimate_input_tokens,
+    usage_totals,
+)
 from imperium.offline.engine import (
     _ScenarioLifecycleEngine,
     OfflineInterrupted,
@@ -77,7 +87,12 @@ from imperium.offline.models import (
 )
 from imperium.offline.persistence import load_session, write_checkpoint, write_review_artifacts
 from imperium.offline.replay_script import build_replay_records
-from imperium.providers.base import CallMetadata, ModelProvider, ProviderError
+from imperium.providers.base import (
+    CallMetadata,
+    ModelProvider,
+    ProviderAmbiguousError,
+    ProviderError,
+)
 from imperium.providers.replay import ReplayProvider
 
 OutputT = TypeVar("OutputT", bound=BaseModel)
@@ -103,6 +118,7 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         model: str = "offline-replay",
         max_context_bytes: int = 262_144,
         evidence_resolutions: Mapping[str, EvidenceResolution] | None = None,
+        usage_budget: UsageBudget | None = None,
         artifact_authority: str = "provider",
     ) -> None:
         super().__init__(model=model)
@@ -112,6 +128,7 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         self._configured_evidence_resolutions = dict(evidence_resolutions or {})
         self._session_provider: ModelProvider | None = None
         self._session_evidence_resolutions: dict[str, EvidenceResolution] = {}
+        self._configured_usage_budget = usage_budget
         self.max_context_bytes = max_context_bytes
         if artifact_authority not in {"scenario", "provider"}:
             raise ValueError("artifact_authority must be 'scenario' or 'provider'")
@@ -211,10 +228,22 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         output_dir: str | Path,
         interrupt_after: str | None,
     ) -> OfflineSession:
+        updates: dict[str, object] = {}
+        configured_budget = self._configured_usage_budget
+        if session.attempts and configured_budget is not None and (
+            session.usage_budget != configured_budget
+        ):
+            raise ValueError("a resumed session cannot silently change its persisted usage budget")
+        if not session.attempts and configured_budget is not None and (
+            session.usage_budget != configured_budget
+        ):
+            updates["usage_budget"] = configured_budget
         if session.artifact_authority != self.artifact_authority:
+            updates["artifact_authority"] = self.artifact_authority
+        if updates:
             session = _replace_session(
                 session,
-                artifact_authority=self.artifact_authority,
+                **updates,
                 checkpoint_sequence=session.checkpoint_sequence + 1,
             )
             write_checkpoint(session, output_dir)
@@ -273,6 +302,62 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
             f"artifact {artifact_id!r}"
         )
 
+    @staticmethod
+    def _replace_attempt(
+        session: OfflineSession,
+        updated: ModelAttempt,
+        **updates: object,
+    ) -> OfflineSession:
+        attempts = tuple(
+            updated if item.attempt_id == updated.attempt_id else item
+            for item in session.attempts
+        )
+        return _replace_session(session, attempts=attempts, **updates)
+
+    @staticmethod
+    def _attach_attempt_session(exc: Exception, session: OfflineSession) -> None:
+        setattr(exc, "imperium_session", session)
+
+    @staticmethod
+    def _check_pre_call_budget(
+        session: OfflineSession,
+        *,
+        serialized_provider_input: str,
+    ) -> int:
+        budget = session.usage_budget
+        totals = usage_totals(session.attempts)
+        if totals.attempts_launched >= budget.max_attempts:
+            raise UsageBudgetExceeded(
+                f"attempt budget exhausted: {totals.attempts_launched}/{budget.max_attempts}"
+            )
+        estimated = estimate_input_tokens(serialized_provider_input, budget)
+        if totals.input_tokens + estimated > budget.max_input_tokens:
+            raise UsageBudgetExceeded(
+                "estimated input token budget would be exceeded before provider launch"
+            )
+        if (
+            totals.output_tokens + budget.output_token_reserve_per_attempt
+            > budget.max_output_tokens
+        ):
+            raise UsageBudgetExceeded(
+                "reserved output token budget would be exceeded before provider launch"
+            )
+        return estimated
+
+    @staticmethod
+    def _check_reported_usage(session: OfflineSession, result) -> None:
+        budget = session.usage_budget
+        totals = usage_totals(session.attempts)
+        if totals.input_tokens + result.input_tokens > budget.max_input_tokens:
+            raise UsageBudgetExceeded("reported input token budget was exceeded")
+        if (
+            totals.cached_input_tokens + result.cached_input_tokens
+            > budget.max_cached_input_tokens
+        ):
+            raise UsageBudgetExceeded("reported cached input token budget was exceeded")
+        if totals.output_tokens + result.output_tokens > budget.max_output_tokens:
+            raise UsageBudgetExceeded("reported output token budget was exceeded")
+
     async def _call(
         self,
         session: OfflineSession,
@@ -291,7 +376,7 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         interrupt_after: str | None = None,
         validate: ValidateArtifact[OutputT] | None = None,
     ) -> tuple[OfflineSession, OutputT]:
-        """Invoke the session provider while preserving Stage 4 checkpoints."""
+        """Invoke one provider attempt through a durable fail-closed state transition."""
 
         key = _call_key(
             resulting_stage=resulting_stage,
@@ -304,6 +389,11 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         )
         if key in set(session.completed_call_keys):
             return session, self._accepted_output(session, key, type(expected))
+        prior_attempts = tuple(item for item in session.attempts if item.call_key == key)
+        if prior_attempts:
+            raise RetryAuthorizationRequired(
+                f"call {key!r} already has an attempt; explicit abandon or retry authorization is required"
+            )
 
         if context.member is not None:
             if context.member.member_id != member_id:
@@ -325,42 +415,119 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         provider = self._session_provider
         if provider is None:
             raise ProviderError("session provider was not prepared before model invocation")
-
         prompt = session.runtime.source(prompt_path)
+        try:
+            estimated_input_tokens = self._check_pre_call_budget(
+                session,
+                serialized_provider_input=f"{prompt.content}\n{input_text}",
+            )
+        except Exception as exc:
+            self._attach_attempt_session(exc, session)
+            raise
+        attempt = ModelAttempt(
+            attempt_id=f"{key}:attempt-1",
+            call_key=key,
+            attempt_number=1,
+            status=AttemptStatus.PENDING,
+            stage=session.record.stage,
+            member_id=member_id,
+            model=self.model,
+            prompt_sha256=prompt.sha256,
+            input_sha256=_context_hash(context),
+            estimated_input_tokens=estimated_input_tokens,
+        )
         pending = _replace_session(
             session,
+            attempts=(*session.attempts, attempt),
             pending_call_key=key,
             checkpoint_sequence=session.checkpoint_sequence + 1,
         )
         write_checkpoint(pending, output_dir)
 
-        result = await provider.generate(
-            model=self.model,
-            instructions=prompt.content,
-            input_text=input_text,
-            output_type=type(expected),
-            metadata=CallMetadata(
-                session_id=session.session_id,
-                call_key=key,
-                stage=session.record.stage,
-                member_id=member_id,
-            ),
+        result = None
+        try:
+            result = await provider.generate(
+                model=self.model,
+                instructions=prompt.content,
+                input_text=input_text,
+                output_type=type(expected),
+                metadata=CallMetadata(
+                    session_id=session.session_id,
+                    call_key=key,
+                    stage=session.record.stage,
+                    member_id=member_id,
+                ),
+            )
+            if result.retries != 0:
+                raise ProviderError("providers must not perform automatic retries")
+            if member_id is not None:
+                authored_member_id = getattr(result.output, "member_id", None)
+                if authored_member_id is not None and authored_member_id != member_id:
+                    raise ProviderError(
+                        f"provider output member {authored_member_id!r} does not match "
+                        f"active member {member_id!r} for {key}"
+                    )
+            self._check_reported_usage(session, result)
+            if validate is not None:
+                validate(result.output)
+            committed = apply(pending, result.output)
+        except Exception as exc:
+            terminal_status = (
+                AttemptStatus.AMBIGUOUS
+                if isinstance(exc, ProviderAmbiguousError)
+                else AttemptStatus.FAILED
+            )
+            output = result.output if result is not None else None
+            terminal = ModelAttempt.model_validate(
+                attempt.model_copy(
+                    update={
+                        "status": terminal_status,
+                        "provider": result.provider if result is not None else None,
+                        "response_id": result.response_id if result is not None else None,
+                        "output_sha256": artifact_digest(output) if output is not None else None,
+                        "output_artifact_id": _artifact_id(output) if output is not None else None,
+                        "input_tokens": result.input_tokens if result is not None else 0,
+                        "cached_input_tokens": (
+                            result.cached_input_tokens if result is not None else 0
+                        ),
+                        "output_tokens": result.output_tokens if result is not None else 0,
+                        "latency_ms": result.latency_ms if result is not None else 0,
+                        "error_type": type(exc).__name__,
+                        "error_message": str(exc) or type(exc).__name__,
+                    }
+                ).model_dump(mode="python")
+            )
+            failed = self._replace_attempt(
+                pending,
+                terminal,
+                pending_call_key=None,
+                checkpoint_sequence=pending.checkpoint_sequence + 1,
+            )
+            write_checkpoint(failed, output_dir)
+            self._attach_attempt_session(exc, failed)
+            raise
+
+        output_sha256 = artifact_digest(result.output)
+        output_artifact_id = _artifact_id(result.output)
+        accepted_attempt = ModelAttempt.model_validate(
+            attempt.model_copy(
+                update={
+                    "status": AttemptStatus.ACCEPTED,
+                    "provider": result.provider,
+                    "response_id": result.response_id,
+                    "output_sha256": output_sha256,
+                    "output_artifact_id": output_artifact_id,
+                    "input_tokens": result.input_tokens,
+                    "cached_input_tokens": result.cached_input_tokens,
+                    "output_tokens": result.output_tokens,
+                    "latency_ms": result.latency_ms,
+                }
+            ).model_dump(mode="python")
         )
-        if member_id is not None:
-            authored_member_id = getattr(result.output, "member_id", None)
-            if authored_member_id is not None and authored_member_id != member_id:
-                raise ProviderError(
-                    f"provider output member {authored_member_id!r} does not match "
-                    f"active member {member_id!r} for {key}"
-                )
-
-        # Context-dependent protocol validation belongs to the acceptance
-        # boundary. A schema-valid artifact must not become a completed turn
-        # until every routing and identity invariant has passed.
-        if validate is not None:
-            validate(result.output)
-
-        committed = apply(pending, result.output)
+        accepted_attempts = tuple(
+            accepted_attempt if item.attempt_id == accepted_attempt.attempt_id else item
+            for item in committed.attempts
+        )
         call_record = ModelCallRecord(
             call_id=key,
             provider=result.provider,
@@ -392,13 +559,14 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
             ),
             profile_member_id=context.member.member_id if context.member else None,
             input_sha256=_context_hash(context),
-            output_artifact_id=_artifact_id(result.output),
+            output_artifact_id=output_artifact_id,
             output_type=type(result.output).__name__,
             provider=result.provider,
             model=result.model,
         )
         committed = _replace_session(
             committed,
+            attempts=accepted_attempts,
             record=record,
             turns=(*committed.turns, trace),
             completed_call_keys=(*committed.completed_call_keys, key),

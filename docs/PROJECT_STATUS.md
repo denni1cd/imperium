@@ -7,10 +7,11 @@ Imperium remains in **design and validation**.
 - **Stages 0–4:** complete and merged.
 - **Stage 4 merge:** PR #8, squash commit `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
 - **Stage 5 Gate 1:** complete and merged through PR #12, squash commit `bd16c0a4dcbc4f7174743029611b950d233abfa7`.
-- **Stage 5 Gate 2:** draft PR #13 resolves the shared-engine architecture gate under simulated providers; merge review is pending.
+- **Stage 5 Gate 2:** complete and merged through PR #13, squash commit `d816cc64cc88e28b7472e89bada680217704237f`.
+- **Stage 5 Gate 2E:** attempt accounting and cumulative usage controls are in implementation under simulated providers.
 - **Live model policy:** all Stage 5 tests remain locked to `gpt-5.6-terra` with `low` reasoning effort.
 - **Live tool policy:** shell execution and web search remain disabled.
-- **Current gate:** review and merge Gate 2 before Gate 2E live-failure accounting or any complete live council.
+- **Current gate:** prove durable attempt accounting and usage budgets before retry controls or any complete live council.
 
 `MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records durable accepted decisions. `docs/STAGE_5_CODEX_PROVIDER_PLAN.md` defines the accepted Gate 1 boundary. `docs/STAGE_5_GATE_2_PROVIDER_INJECTION.md` defines the current Gate 2 review state.
 
@@ -83,7 +84,7 @@ Draft PR #13 demonstrates under simulated providers that:
 - clarification-required evidence halts and resumes by the accepted provider request ID;
 - Stage 4 strict replay and artifact workflows remain unchanged.
 
-The consolidated implementation passes **146 Python tests** and the Stage 4 artifact workflow. CI and local validation made no live model calls.
+The merged Gate 2 implementation passed **146 Python tests** and the Stage 4 artifact workflow. CI and local validation made no live model calls.
 
 ## Gate 2 Architecture Review Resolution
 

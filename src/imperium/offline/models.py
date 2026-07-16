@@ -38,6 +38,12 @@ from imperium.domain.protocol import (
     ProtocolConfiguration,
 )
 from imperium.domain.protocol_trace import ProtocolTrace
+from imperium.offline.attempts import (
+    AttemptStatus,
+    ModelAttempt,
+    UsageBudget,
+    artifact_digest,
+)
 from imperium.domain.vocabulary import ValueVocabulary
 from imperium.engine.lifecycle import LifecycleState
 
@@ -241,6 +247,8 @@ class OfflineSession(StrictModel):
     protocol_trace: ProtocolTrace = Field(default_factory=ProtocolTrace)
     lifecycle_history: tuple[DeliberationStage, ...] = (DeliberationStage.CREATED,)
     turns: tuple[TurnTrace, ...] = ()
+    attempts: tuple[ModelAttempt, ...] = ()
+    usage_budget: UsageBudget = Field(default_factory=UsageBudget)
     completed_call_keys: tuple[NonEmptyStr, ...] = ()
     pending_call_key: str | None = None
     evidence_history: tuple[EvidenceDispositionEvent, ...] = ()
@@ -284,6 +292,7 @@ class OfflineSession(StrictModel):
         else:
             self._validate_provider_artifacts()
 
+        self._validate_attempts()
         artifact_kinds = self._artifact_kind_index()
         profiles = {member.member_id: member for member in self.runtime.council.members}
         enriched: list[TurnTrace] = []
@@ -306,6 +315,104 @@ class OfflineSession(StrictModel):
             )
         object.__setattr__(self, "turns", tuple(enriched))
         return self
+
+    def _validate_attempts(self) -> None:
+        attempt_ids = [item.attempt_id for item in self.attempts]
+        if len(attempt_ids) != len(set(attempt_ids)):
+            raise ValueError("model attempt IDs must be unique")
+
+        attempts_by_call: dict[str, list[ModelAttempt]] = {}
+        for attempt in self.attempts:
+            attempts_by_call.setdefault(attempt.call_key, []).append(attempt)
+        for call_key, attempts in attempts_by_call.items():
+            numbers = sorted(item.attempt_number for item in attempts)
+            if numbers != list(range(1, len(numbers) + 1)):
+                raise ValueError(f"attempt numbers for {call_key!r} must be contiguous from one")
+
+        pending = [item for item in self.attempts if item.status is AttemptStatus.PENDING]
+        if len(pending) > 1:
+            raise ValueError("a session cannot contain more than one pending model attempt")
+        if pending:
+            if self.pending_call_key != pending[0].call_key:
+                raise ValueError("pending call key must match the pending model attempt")
+        elif self.pending_call_key is not None:
+            raise ValueError("pending call key requires a pending model attempt")
+
+        accepted_by_call: dict[str, ModelAttempt] = {}
+        for attempt in self.attempts:
+            if attempt.status is AttemptStatus.ACCEPTED:
+                if attempt.call_key in accepted_by_call:
+                    raise ValueError("a call key cannot have multiple accepted model attempts")
+                accepted_by_call[attempt.call_key] = attempt
+        if self.attempts and set(accepted_by_call) != set(self.completed_call_keys):
+            raise ValueError("accepted model attempts and completed call keys must match")
+
+        attempt_by_id = {item.attempt_id: item for item in self.attempts}
+        for attempt in self.attempts:
+            if attempt.retry_of_attempt_id is not None:
+                prior = attempt_by_id.get(attempt.retry_of_attempt_id)
+                if (
+                    prior is None
+                    or prior.call_key != attempt.call_key
+                    or prior.attempt_number + 1 != attempt.attempt_number
+                    or prior.status is not AttemptStatus.RETRIED
+                    or prior.superseded_by_attempt_id != attempt.attempt_id
+                ):
+                    raise ValueError("retry lineage must identify one explicitly retried prior attempt")
+            if attempt.status is AttemptStatus.RETRIED and not any(
+                candidate.retry_of_attempt_id == attempt.attempt_id
+                for candidate in self.attempts
+            ):
+                raise ValueError("retried attempts require a persisted replacement attempt")
+
+        if not accepted_by_call:
+            return
+        turns = {turn.call_key: turn for turn in self.turns}
+        calls = {call.call_id: call for call in self.record.model_calls}
+        artifacts = self._accepted_artifact_index()
+        for call_key, attempt in accepted_by_call.items():
+            turn = turns.get(call_key)
+            if turn is None or turn.output_artifact_id != attempt.output_artifact_id:
+                raise ValueError("accepted attempt output identity must match its turn trace")
+            artifact = artifacts.get(attempt.output_artifact_id or "")
+            if artifact is None or artifact_digest(artifact) != attempt.output_sha256:
+                raise ValueError("accepted attempt output digest does not match checkpoint artifact")
+            call = calls.get(call_key)
+            if call is None or (
+                call.provider != attempt.provider
+                or call.model != attempt.model
+                or call.input_tokens != attempt.input_tokens
+                or call.output_tokens != attempt.output_tokens
+                or call.latency_ms != attempt.latency_ms
+            ):
+                raise ValueError("accepted attempt usage must match its model call record")
+
+    def _accepted_artifact_index(self) -> dict[str, StrictModel]:
+        index: dict[str, StrictModel] = {}
+        index.update({item.interpretation_id: item for item in self.record.interpretations})
+        if self.record.frame_register is not None:
+            index["frame-register"] = self.record.frame_register
+        index.update({item.proposal_id: item for item in self.record.proposals})
+        index.update({item.revision_id: item for item in self.record.revisions})
+        index.update({item.challenge_id: item for item in self.protocol_trace.challenges})
+        index.update(
+            {f"{item.challenge_id}:response": item for item in self.record.challenge_responses}
+        )
+        index.update(
+            {
+                item.claim_register.register_id: item.claim_register
+                for item in self.protocol_trace.claim_register_snapshots
+            }
+        )
+        index.update({item.plan_id: item for item in self.protocol_trace.challenge_plans})
+        index.update(
+            {item.decision_id: item for item in self.protocol_trace.continuation_decisions}
+        )
+        if self.record.adjudication is not None:
+            index[self.record.adjudication.adjudication_id] = self.record.adjudication
+        if self.record.plan is not None:
+            index["actionableplan"] = self.record.plan
+        return index
 
     def _validate_council_snapshot(self) -> None:
         if self.record.member_snapshots:
