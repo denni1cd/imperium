@@ -132,13 +132,18 @@ async def test_operator_authorizes_exactly_one_replacement_with_lineage(
 @pytest.mark.asyncio
 async def test_plain_resume_cannot_replace_failed_attempt(tmp_path: Path) -> None:
     checkpoint = await _failed_checkpoint(tmp_path)
+    provider = FailingProvider()
 
-    with pytest.raises(RetryAuthorizationRequired):
-        await ProviderBoundDeliberationEngine(model="gate2e-replay").resume(checkpoint)
+    returned = await ProviderBoundDeliberationEngine(
+        provider=provider,
+        model="gate2e-replay",
+    ).resume(checkpoint)
 
+    assert provider.calls == []
+    assert len(returned.attempts) == 1
+    assert returned.attempts[0].status is AttemptStatus.FAILED
     failed = load_session(checkpoint)
-    assert len(failed.attempts) == 1
-    assert failed.attempts[0].status is AttemptStatus.FAILED
+    assert failed == returned
 
 
 @pytest.mark.asyncio
