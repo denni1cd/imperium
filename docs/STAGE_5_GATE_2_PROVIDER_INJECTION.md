@@ -2,7 +2,7 @@
 
 ## Status
 
-**Provider-authority behavior is proven under simulated providers. Gate 2 is paused at an architecture review gate before merge or live call accounting.**
+**Provider-authority behavior and shared-engine consolidation are proven under simulated providers. PR #13 remains draft pending final review and does not authorize live council execution.**
 
 Gate 1 was squash-merged as `bd16c0a4dcbc4f7174743029611b950d233abfa7` after a successful locked Terra-low local smoke. PR #13 remains draft and unmerged. Gate 2 does not authorize a complete live council.
 
@@ -75,9 +75,9 @@ Adversarial tests prove that:
 
 ## Validation Evidence
 
-The latest head passes:
+The consolidated head passes:
 
-- **139 Python tests**;
+- **143 Python tests**;
 - all six Stage 4 integration paths;
 - the unchanged Stage 4 artifact workflow;
 - provider-authority adversarial tests;
@@ -86,47 +86,25 @@ The latest head passes:
 
 CI uses simulated providers only and never invokes Codex or consumes tokens.
 
-## Architecture Review Blockers
+## Architecture Review Resolution
 
-The behavioral hypothesis is proven, but the current implementation must not merge unchanged.
+The behavioral hypothesis now runs through one shared orchestration implementation.
 
-### Blocker 1 — Duplicated orchestration surface
+### Blocker 1 — Resolved: shared orchestration
 
-`ProviderBoundDeliberationEngine` is approximately 1,000 lines and copies or overrides substantial portions of `_call`, challenge orchestration, evidence resolution, and context assembly from the Stage 4 engine.
+`SharedDeliberationEngine` owns the provider call seam, accepted-artifact recovery, challenge phase, evidence resolution, resume behavior, and inherited lifecycle. `OfflineDeliberationEngine` selects strict scenario authority; `ProviderBoundDeliberationEngine` selects provider authority. Both adapters are thin and execute the same control flow.
 
-Although it inherits the lifecycle loop, this creates two large orchestration surfaces that can drift. That conflicts with the manifesto's preference for the simplest inspectable design and approaches the Gate 2 stop condition against duplicating the Stage 4 lifecycle.
+### Blocker 2 — Resolved: validation before commitment
 
-**Required resolution:** move provider invocation, artifact authority, challenge routing, and evidence disposition into shared seams in the existing engine. Replay and live providers must use one orchestration implementation rather than parallel copies.
+`_call()` accepts a context-specific validation callback and executes it after schema and identity checks but before applying output. Adversarial plan and continuation tests verify that rejected output is absent from the authoritative record, turn trace, completed-call keys, and accepted checkpoint.
 
-### Blocker 2 — Route-control artifacts are checkpointed before full protocol validation
+### Blocker 3 — Resolved: material new input
 
-The current provider-bound challenge loop calls `_call()` for a `ChallengePlan` and `ContinuationDecision`, which commits the artifact and writes its completed-call checkpoint. The caller then runs `validate_challenge_plan()` or `validate_continuation_decision()` afterward.
+Second-round eligibility is derived from genuinely new claim IDs or target claim IDs associated with accepted responses carrying `revised_claim`. Changed wording, evidence ordering, regenerated registers, and other object inequality do not independently qualify.
 
-A schema-valid but protocol-invalid plan or continuation can therefore be durably recorded as a completed provider turn before the session fails. Resume would recover the invalid accepted artifact instead of permitting an explicit corrected attempt.
+## Next Implementation Gate — Gate 2E
 
-**Required resolution:** all context-dependent protocol validation for route-control artifacts must succeed before the artifact is committed as accepted or added to `completed_call_keys`.
-
-### Blocker 3 — Second-round new input is too permissive
-
-The current helper treats any changed claim object as new input. A cosmetic rewrite or non-material metadata change could therefore satisfy the anti-repetition gate.
-
-Protocol 1.3 requires a materially revised claim, a genuinely new material claim/frame, or another explicitly permitted input—not merely inequality between serialized objects.
-
-**Required resolution:** derive second-round eligibility from an accepted `ChallengeResponse.revised_claim`, a genuinely new claim ID, or another explicit protocol-approved input. Add adversarial tests proving cosmetic changes do not unlock a repeated challenge.
-
-## Next Implementation Gate — Shared Engine Consolidation
-
-The next change should be smaller than the current subclass, not additive:
-
-1. Introduce one provider invocation seam in the existing engine.
-2. Introduce one artifact-authority policy used by both replay and provider sessions.
-3. Make route-control validation pre-commit.
-4. Move provider-authoritative challenge routing into the shared challenge phase.
-5. Preserve Stage 4 strict replay validation and exact accepted outputs.
-6. Add the stricter second-round input test.
-7. Delete or reduce the provider-bound subclass to configuration only.
-
-Only after that consolidation is reviewed should Gate 2E begin.
+Shared-engine consolidation is implemented and locally validated. Gate 2E remains separate and may begin only after review of this draft; it does not authorize a live council.
 
 ## Gate 2E — Not Started
 

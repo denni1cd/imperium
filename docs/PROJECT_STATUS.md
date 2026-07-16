@@ -7,10 +7,10 @@ Imperium remains in **design and validation**.
 - **Stages 0–4:** complete and merged.
 - **Stage 4 merge:** PR #8, squash commit `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
 - **Stage 5 Gate 1:** complete and merged through PR #12, squash commit `bd16c0a4dcbc4f7174743029611b950d233abfa7`.
-- **Stage 5 Gate 2:** draft PR #13 proves provider-authoritative routing under simulated providers but is paused at an architecture review gate.
+- **Stage 5 Gate 2:** draft PR #13 resolves the shared-engine architecture gate under simulated providers; final review remains before merge.
 - **Live model policy:** all Stage 5 tests remain locked to `gpt-5.6-terra` with `low` reasoning effort.
 - **Live tool policy:** shell execution and web search remain disabled.
-- **Current gate:** consolidate Gate 2 into one shared orchestration path before live failure accounting or any complete live council.
+- **Current gate:** review the consolidated Gate 2 implementation before Gate 2E live-failure accounting or any complete live council.
 
 `MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records durable accepted decisions. `docs/STAGE_5_CODEX_PROVIDER_PLAN.md` defines the accepted Gate 1 boundary. `docs/STAGE_5_GATE_2_PROVIDER_INJECTION.md` defines the current Gate 2 review state.
 
@@ -23,7 +23,7 @@ Imperium remains in **design and validation**.
 | 2 — Profiles and fixed council | Complete and merged | Seneschal plus Accountant, Gazgul, Overmind, and Castellan with persistent profiles and counterweights |
 | 3 — Exact deliberation protocol | Complete and merged | Protocol 1.3 with blind interpretation, direct debate, evidence ordering/cardinality, halt behavior, and bounded rounds |
 | 4 — Offline deliberation engine | Complete and merged | Full replay orchestration, halt paths, checkpoints, resume, exports, CLI, and synthetic review artifacts |
-| 5 — Codex provider and live slice | Gate 1 merged; Gate 2 at architecture review | Terra-low provider proven; provider-authority behavior proven under simulation; consolidation and live-safety accounting remain |
+| 5 — Codex provider and live slice | Gate 1 merged; Gate 2 consolidated in draft | Terra-low provider proven; one shared replay/provider lifecycle passes simulated authority and precommit validation; live-safety accounting remains |
 | 6 — Experiment harness | Not started | Conditions A1, A2, B, and C with frozen controls |
 | 7 — Pilot validation | Not started | Repeated blinded evaluation |
 | 8 — Investment gate | Not started | Proceed, revise and retest, or stop |
@@ -83,17 +83,15 @@ Draft PR #13 demonstrates under simulated providers that:
 - clarification-required evidence halts and resumes by the accepted provider request ID;
 - Stage 4 strict replay and artifact workflows remain unchanged.
 
-The latest validation passes **139 Python tests** and the Stage 4 artifact workflow. CI made no live model calls.
+The consolidated implementation passes **143 Python tests** and the Stage 4 artifact workflow. CI and local validation made no live model calls.
 
-## Gate 2 Architecture Review Blockers
+## Gate 2 Architecture Review Resolution
 
-The current PR must not merge unchanged.
+The three architecture blockers are resolved in the draft branch:
 
-1. `ProviderBoundDeliberationEngine` duplicates a large portion of call, challenge, evidence, and context orchestration rather than establishing one shared engine seam.
-2. `ChallengePlan` and `ContinuationDecision` artifacts are committed and checkpointed before their context-dependent protocol validation runs.
-3. Second-round eligibility treats any changed claim object as new input, which is weaker than protocol 1.3's materially revised claim requirement.
-
-These findings trigger the documented Gate 2 stop condition. The next implementation must consolidate shared orchestration rather than add another layer.
+1. `SharedDeliberationEngine` owns provider invocation, challenge routing, evidence resolution, resume, and the inherited single lifecycle. `OfflineDeliberationEngine` and `ProviderBoundDeliberationEngine` are thin authority adapters.
+2. Route-control validation is passed into the call acceptance boundary. Invalid plans and continuation decisions are not applied, traced, added to completed calls, or checkpointed as accepted.
+3. Second-round eligibility recognizes genuinely new claim IDs and claims reached through accepted consequential revisions. Cosmetic object inequality is ignored.
 
 ## Required Consolidation Before Gate 2E
 
@@ -103,11 +101,11 @@ These findings trigger the documented Gate 2 stop condition. The next implementa
 - [x] Enforce bounded rounds
 - [x] Match and resume provider-generated evidence IDs
 - [x] Preserve Stage 4 strict replay behavior
-- [ ] Move replay and provider execution onto one shared orchestration path
-- [ ] Validate route-control artifacts before commitment
-- [ ] Enforce material second-round input rather than cosmetic inequality
-- [ ] Remove or reduce the large provider-bound subclass
-- [ ] Re-run adversarial provider-authority and Stage 4 parity tests
+- [x] Move replay and provider execution onto one shared orchestration path
+- [x] Validate route-control artifacts before commitment
+- [x] Enforce material second-round input rather than cosmetic inequality
+- [x] Reduce the provider-bound subclass to an authority adapter
+- [x] Re-run adversarial provider-authority and Stage 4 parity tests
 
 ## Remaining Before the First Live Council
 
