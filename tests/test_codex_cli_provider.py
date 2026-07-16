@@ -11,7 +11,12 @@ from imperium.domain.enums import DeliberationStage
 from imperium.domain.models import Interpretation
 from imperium.live.smoke import run_codex_smoke
 from imperium.providers import codex_cli
-from imperium.providers.base import CallMetadata, ModelResult, ProviderError
+from imperium.providers.base import (
+    CallMetadata,
+    ModelResult,
+    ProviderAmbiguousError,
+    ProviderError,
+)
 from imperium.providers.codex_cli import (
     DEFAULT_CODEX_MODEL,
     DEFAULT_CODEX_REASONING_EFFORT,
@@ -106,7 +111,8 @@ async def test_codex_provider_builds_isolated_terra_low_no_tools_command(
             returncode=0,
             stdout=(
                 f'{{"type":"thread.started","thread_id":"thread-123","model":"{DEFAULT_CODEX_MODEL}"}}\n'
-                '{"type":"turn.completed","usage":{"input_tokens":321,"output_tokens":87}}\n'
+                '{"type":"turn.completed","usage":{"input_tokens":321,'
+                '"cached_input_tokens":123,"output_tokens":87}}\n'
             ),
             stderr="",
         )
@@ -146,6 +152,7 @@ async def test_codex_provider_builds_isolated_terra_low_no_tools_command(
     assert result.model == DEFAULT_CODEX_MODEL
     assert result.response_id == "thread-123"
     assert result.input_tokens == 321
+    assert result.cached_input_tokens == 123
     assert result.output_tokens == 87
     assert result.retries == 0
     assert (tmp_path / "events" / "smoke_steward.jsonl").exists()
@@ -191,6 +198,28 @@ async def test_codex_provider_preserves_nonzero_exit_without_retry(
             input_text="{}",
             output_type=Interpretation,
             metadata=_metadata("smoke:failure"),
+        )
+
+
+@pytest.mark.asyncio
+async def test_codex_provider_marks_missing_final_output_ambiguous(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    provider = CodexCliProvider(timeout_seconds=30)
+    monkeypatch.setattr(provider, "_resolve_executable", lambda: "/usr/bin/codex")
+
+    async def fake_run(command: list[str], *, input_text: str) -> _ProcessResult:
+        del command, input_text
+        return _ProcessResult(returncode=0, stdout="{}\n", stderr="")
+
+    monkeypatch.setattr(provider, "_run_process", fake_run)
+    with pytest.raises(ProviderAmbiguousError, match="accepted-output state is unknown"):
+        await provider.generate(
+            model=DEFAULT_CODEX_MODEL,
+            instructions="Interpret.",
+            input_text="{}",
+            output_type=Interpretation,
+            metadata=_metadata("smoke:ambiguous"),
         )
 
 
@@ -261,6 +290,7 @@ async def test_live_smoke_writes_auditable_terra_low_report_without_real_codex(
             model=DEFAULT_CODEX_MODEL,
             response_id="thread-123",
             input_tokens=321,
+            cached_input_tokens=123,
             output_tokens=87,
             latency_ms=1200,
             retries=0,
@@ -277,8 +307,10 @@ async def test_live_smoke_writes_auditable_terra_low_report_without_real_codex(
     assert report.model == DEFAULT_CODEX_MODEL
     assert report.reasoning_effort == DEFAULT_CODEX_REASONING_EFFORT
     assert report.input_tokens == 321
+    assert report.cached_input_tokens == 123
     persisted = json.loads((tmp_path / "smoke-report.json").read_text(encoding="utf-8"))
     assert persisted["response_id"] == "thread-123"
     assert persisted["model"] == DEFAULT_CODEX_MODEL
     assert persisted["reasoning_effort"] == DEFAULT_CODEX_REASONING_EFFORT
+    assert persisted["cached_input_tokens"] == 123
     assert persisted["output"]["member_id"] == "steward"

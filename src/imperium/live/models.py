@@ -20,6 +20,7 @@ class CodexSmokeReport(StrictModel):
     reasoning_effort: NonEmptyStr
     response_id: str | None = None
     input_tokens: Annotated[int, Field(ge=0)]
+    cached_input_tokens: Annotated[int, Field(ge=0)] = 0
     output_tokens: Annotated[int, Field(ge=0)]
     latency_ms: Annotated[int, Field(ge=0)]
     retries: Annotated[int, Field(ge=0)]

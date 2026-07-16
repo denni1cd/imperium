@@ -38,6 +38,7 @@ from imperium.domain.protocol_trace import ClaimRegisterSnapshot, ProtocolTrace
 from imperium.engine.context import ContextBuilder, artifact_reference
 from imperium.engine.lifecycle import LifecycleState
 from imperium.engine.protocol_rules import validate_stage_inputs, validate_stage_outputs
+from imperium.offline.attempts import AttemptStatus
 from imperium.offline.models import (
     DebateRoundFixture,
     EvidenceDispositionEvent,
@@ -295,13 +296,22 @@ class _ScenarioLifecycleEngine:
         except OfflineInterrupted:
             raise
         except Exception as exc:
-            record = _update_record(session.record, status=SessionStatus.FAILED)
+            attempt_session = getattr(exc, "imperium_session", session)
+            record = _update_record(attempt_session.record, status=SessionStatus.FAILED)
+            pending_call_key = (
+                attempt_session.pending_call_key
+                if any(
+                    attempt.status is AttemptStatus.PENDING
+                    for attempt in attempt_session.attempts
+                )
+                else None
+            )
             session = _replace_session(
-                session,
+                attempt_session,
                 record=record,
                 failure_reason=f"{type(exc).__name__}: {exc}",
-                pending_call_key=None,
-                checkpoint_sequence=session.checkpoint_sequence + 1,
+                pending_call_key=pending_call_key,
+                checkpoint_sequence=attempt_session.checkpoint_sequence + 1,
             )
             write_review_artifacts(session, output_dir)
             raise

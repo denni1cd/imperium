@@ -98,6 +98,7 @@ async def run_codex_smoke(
         reasoning_effort=DEFAULT_CODEX_REASONING_EFFORT,
         response_id=result.response_id,
         input_tokens=result.input_tokens,
+        cached_input_tokens=result.cached_input_tokens,
         output_tokens=result.output_tokens,
         latency_ms=result.latency_ms,
         retries=result.retries,
