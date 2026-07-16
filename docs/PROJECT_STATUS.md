@@ -6,12 +6,13 @@ Imperium remains in **design and validation**.
 
 - **Stages 0–4:** complete and merged.
 - **Stage 4 merge:** PR #8, squash commit `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
-- **Stage 5:** draft PR #12 has completed Gate 1, the isolated live Codex provider test.
-- **Live model policy:** all Stage 5 tests are locked to `gpt-5.6-terra` with `low` reasoning effort.
-- **Live tool policy:** shell execution and web search are disabled.
-- **Current gate:** implement Gate 2 provider injection and token/context controls before any complete live council run.
+- **Stage 5 Gate 1:** complete and merged through PR #12, squash commit `bd16c0a4dcbc4f7174743029611b950d233abfa7`.
+- **Stage 5 Gate 2:** draft PR #13 resolves the shared-engine architecture gate under simulated providers; merge review is pending.
+- **Live model policy:** all Stage 5 tests remain locked to `gpt-5.6-terra` with `low` reasoning effort.
+- **Live tool policy:** shell execution and web search remain disabled.
+- **Current gate:** review and merge Gate 2 before Gate 2E live-failure accounting or any complete live council.
 
-`MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records durable accepted decisions. `docs/STAGE_5_CODEX_PROVIDER_PLAN.md` defines the current live-provider gates.
+`MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records durable accepted decisions. `docs/STAGE_5_CODEX_PROVIDER_PLAN.md` defines the accepted Gate 1 boundary. `docs/STAGE_5_GATE_2_PROVIDER_INJECTION.md` defines the current Gate 2 review state.
 
 ## Stage Summary
 
@@ -22,7 +23,7 @@ Imperium remains in **design and validation**.
 | 2 — Profiles and fixed council | Complete and merged | Seneschal plus Accountant, Gazgul, Overmind, and Castellan with persistent profiles and counterweights |
 | 3 — Exact deliberation protocol | Complete and merged | Protocol 1.3 with blind interpretation, direct debate, evidence ordering/cardinality, halt behavior, and bounded rounds |
 | 4 — Offline deliberation engine | Complete and merged | Full replay orchestration, halt paths, checkpoints, resume, exports, CLI, and synthetic review artifacts |
-| 5 — Codex provider and live slice | Gate 1 complete; Gate 2 next | Terra-low no-tools provider proven locally; engine injection and usage controls remain |
+| 5 — Codex provider and live slice | Gate 1 merged; Gate 2 consolidated in draft | Terra-low provider proven; one shared replay/provider lifecycle passes simulated authority and precommit validation; live-safety accounting remains |
 | 6 — Experiment harness | Not started | Conditions A1, A2, B, and C with frozen controls |
 | 7 — Pilot validation | Not started | Repeated blinded evaluation |
 | 8 — Investment gate | Not started | Proceed, revise and retest, or stop |
@@ -54,12 +55,8 @@ It does not prove genuine live cognitive diversity or an advantage over a single
 
 ## Stage 5 Gate 1 Accepted Result
 
-The locked local smoke completed successfully on Codex CLI 0.144.4.
+The locked local smoke completed on Codex CLI 0.144.4 using `gpt-5.6-terra` with `low` reasoning.
 
-- provider: `codex-cli`;
-- model: `gpt-5.6-terra`;
-- reasoning effort: `low`;
-- member: `steward`;
 - input tokens: `10,939`;
 - cached input tokens: `0`;
 - output tokens: `470`;
@@ -68,50 +65,59 @@ The locked local smoke completed successfully on Codex CLI 0.144.4.
 - retries: `0`;
 - confidence: `0.94`.
 
-The report and raw wire output match after reversible decoding. The event log contains no shell, file, command, web-search, or other tool event.
+The result was profile-faithful, schema-valid, isolated, and contained no shell, file, command, web-search, or other tool event.
 
-The interpretation is profile-faithful: economy, simplicity, optionality, human sustainability, recurring burden, and bounded commitment materially affect the recommendation.
+## Stage 5 Gate 2 Behavioral Result
 
-## Stage 5 Provider Boundary
+Draft PR #13 demonstrates under simulated providers that:
 
-The branch implements:
+- one provider instance can serve the complete 36-turn session;
+- replay remains the default;
+- provider-returned challenge plans control whether exchanges occur;
+- provider assignments control challenger and target routing;
+- provider-authored challenge text reaches the target context;
+- accepted responses reach the Seneschal continuation context;
+- provider continuation decisions control whether another round occurs;
+- the two-round protocol limit rejects a third round;
+- provider-generated evidence requests require exact matching dispositions;
+- clarification-required evidence halts and resumes by the accepted provider request ID;
+- Stage 4 strict replay and artifact workflows remain unchanged.
 
-- one fresh `codex exec` process per call;
-- explicit `gpt-5.6-terra` selection;
-- explicit `model_reasoning_effort=low`;
-- rejection of all other models and efforts before launch;
-- explicit `features.shell_tool=false`;
-- explicit `web_search=disabled`;
-- empty temporary workspace and read-only sandbox;
-- ephemeral session with ignored project rules and user configuration;
-- strict structured output and reversible Pydantic schema adaptation;
-- Windows `.cmd` launcher handling and bare enum overrides;
-- timeout, nonzero-exit, missing-output, and schema-failure handling;
-- zero automatic retries;
-- provider, model, reasoning, thread, token, latency, and retry metadata;
-- local JSONL event log and smoke report;
-- simulated CI tests with no live model calls.
+The consolidated implementation passes **146 Python tests** and the Stage 4 artifact workflow. CI and local validation made no live model calls.
 
-Every artifact type planned for a live council has a schema-subset regression test.
+## Gate 2 Architecture Review Resolution
+
+The three architecture blockers are resolved in the draft branch:
+
+1. `SharedDeliberationEngine` owns provider invocation, challenge routing, evidence resolution, resume, and the inherited single lifecycle. `OfflineDeliberationEngine` and `ProviderBoundDeliberationEngine` are thin authority adapters.
+2. Route-control validation is passed into the call acceptance boundary. Invalid plans and continuation decisions are not applied, traced, added to completed calls, or checkpointed as accepted.
+3. Second-round eligibility accepts genuinely new claim IDs or an exact normalized canonical claim produced by an accepted prior-round `REFINE` response. Non-refine, wrong-phase, wrong-round, cosmetic, and unincorporated revisions do not qualify.
+
+## Required Consolidation Before Gate 2E
+
+- [x] Extract complete replay scripts
+- [x] Inject one session provider under simulation
+- [x] Prove provider-returned routing authority
+- [x] Enforce bounded rounds
+- [x] Match and resume provider-generated evidence IDs
+- [x] Preserve Stage 4 strict replay behavior
+- [x] Move replay and provider execution onto one shared orchestration path
+- [x] Validate route-control artifacts before commitment
+- [x] Enforce material second-round input rather than cosmetic inequality
+- [x] Reduce the provider-bound subclass to an authority adapter
+- [x] Re-run adversarial provider-authority and Stage 4 parity tests
 
 ## Remaining Before the First Live Council
 
-- [x] Pass provider smoke CI
-- [x] Diagnose and cover structured-output failures
-- [x] Complete one valid live Accountant interpretation
-- [x] Lock tests to Terra low
-- [x] Disable shell and web tools
-- [x] Verify the locked command locally on Windows
-- [x] Validate every planned live artifact schema
-- [ ] Inject `ModelProvider` into Stage 4 orchestration
-- [ ] Preserve replay as the default provider
-- [ ] Add per-turn context ceilings and cumulative token budgets
-- [ ] Track cached input tokens
-- [ ] Add explicit live pending, failed, abandoned, and retry-attempt state
-- [ ] Save accepted live artifacts as replay fixtures
-- [ ] Pass Gate 2 simulated tests
-- [ ] Review estimated complete-session usage
-- [ ] Explicitly authorize one sequential complete live deliberation
+After consolidation, Gate 2E still requires:
+
+- persistent pending input digests and attempt identities;
+- explicit accepted, failed, ambiguous, abandoned, and retried attempt state;
+- cumulative input, cached-input, output-token, and call-count budgets;
+- accepted live artifacts saved as replay fixtures;
+- complete captured-session replay without provider calls;
+- reviewed full-session Terra-low usage estimate;
+- explicit user authorization for one sequential complete live deliberation.
 
 ## Current Validation Risks
 

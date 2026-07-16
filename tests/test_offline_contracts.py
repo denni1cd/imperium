@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from imperium.engine.context import ContextBuilder
-from imperium.offline.engine import OfflineDeliberationEngine
+from imperium.offline.provider_engine import OfflineDeliberationEngine
 from imperium.offline.fixtures import build_challenged_scenario
 from imperium.offline.models import FrozenTextArtifact, OfflineSession
 from imperium.offline.persistence import load_session

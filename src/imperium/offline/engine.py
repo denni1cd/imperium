@@ -24,7 +24,6 @@ from imperium.domain.models import (
     EvidenceResolution,
     FrameRegister,
     Interpretation,
-    ModelCallRecord,
     Revision,
     StageContext,
     StrategyProposal,
@@ -38,27 +37,16 @@ from imperium.domain.protocol import (
 from imperium.domain.protocol_trace import ClaimRegisterSnapshot, ProtocolTrace
 from imperium.engine.context import ContextBuilder, artifact_reference
 from imperium.engine.lifecycle import LifecycleState
-from imperium.engine.protocol_rules import (
-    evidence_session_status,
-    validate_challenge_plan,
-    validate_challenge_round_outputs,
-    validate_continuation_decision,
-    validate_evidence_resolutions,
-    validate_stage_inputs,
-    validate_stage_outputs,
-)
+from imperium.engine.protocol_rules import validate_stage_inputs, validate_stage_outputs
 from imperium.offline.models import (
     DebateRoundFixture,
     EvidenceDispositionEvent,
     LineageLink,
     OfflineScenario,
     OfflineSession,
-    TurnTrace,
 )
-from imperium.offline.persistence import load_session, session_path, write_checkpoint, write_review_artifacts
+from imperium.offline.persistence import session_path, write_checkpoint, write_review_artifacts
 from imperium.offline.runtime import freeze_runtime, text_sha256
-from imperium.providers.base import CallMetadata
-from imperium.providers.replay import ReplayProvider
 
 OutputT = TypeVar("OutputT", bound=BaseModel)
 ApplyArtifact = Callable[[OfflineSession, OutputT], OfflineSession]
@@ -205,7 +193,7 @@ def _update_trace(trace: ProtocolTrace, **updates: object) -> ProtocolTrace:
     return _replace_model(trace, **updates)
 
 
-class OfflineDeliberationEngine:
+class _ScenarioLifecycleEngine:
     """Execute every protocol 1.3 stage using scripted replay artifacts."""
 
     def __init__(self, *, model: str = "offline-replay") -> None:
@@ -241,39 +229,6 @@ class OfflineDeliberationEngine:
         return await self._execute(
             session,
             output_dir=output_dir,
-            interrupt_after=interrupt_after,
-        )
-
-    async def resume(
-        self,
-        checkpoint: str | Path,
-        *,
-        output_dir: str | Path | None = None,
-        evidence_replacements: Iterable[EvidenceResolution] = (),
-        interrupt_after: str | None = None,
-    ) -> OfflineSession:
-        """Resume a saved session using only its frozen runtime and scenario content."""
-
-        source = Path(checkpoint)
-        session = load_session(source)
-        destination = Path(output_dir) if output_dir is not None else source.parent
-        replacements = tuple(evidence_replacements)
-        if replacements:
-            session = self._replace_scenario_resolutions(session, replacements)
-            record = _update_record(session.record, status=SessionStatus.ACTIVE)
-            session = _replace_session(
-                session,
-                record=record,
-                failure_reason=None,
-                pending_call_key=None,
-                checkpoint_sequence=session.checkpoint_sequence + 1,
-            )
-            write_checkpoint(session, destination)
-        elif session.status in {SessionStatus.WAITING_FOR_USER, SessionStatus.PAUSED}:
-            raise ValueError("waiting or paused sessions require explicit evidence replacements")
-        return await self._execute(
-            session,
-            output_dir=destination,
             interrupt_after=interrupt_after,
         )
 
@@ -391,126 +346,6 @@ class OfflineDeliberationEngine:
         )
         session = _replace_session(session, record=record)
         return self._advance(session, DeliberationStage.COUNCIL_SELECTED, output_dir)
-
-    async def _call(
-        self,
-        session: OfflineSession,
-        *,
-        expected: OutputT,
-        resulting_stage: DeliberationStage,
-        procedural_role: str,
-        prompt_path: str,
-        context: StageContext,
-        apply: ApplyArtifact[OutputT],
-        output_dir: str | Path,
-        member_id: str | None = None,
-        phase: ChallengePhase | None = None,
-        round_number: int | None = None,
-        subject: str | None = None,
-        interrupt_after: str | None = None,
-    ) -> tuple[OfflineSession, OutputT]:
-        key = _call_key(
-            resulting_stage=resulting_stage,
-            role=procedural_role,
-            output_type=type(expected),
-            member_id=member_id,
-            phase=phase,
-            round_number=round_number,
-            subject=subject,
-        )
-        if key in set(session.completed_call_keys):
-            return session, expected
-
-        if context.member is not None:
-            if context.member.member_id != member_id:
-                raise ValueError("advocate context must contain only the active member profile")
-            if any(
-                reference.artifact_type == ArtifactKind.COUNCIL_SNAPSHOT.value
-                for reference in context.visible_artifacts
-            ):
-                raise ValueError("advocate context cannot expose the complete council registry")
-
-        prompt = session.runtime.source(prompt_path)
-        pending = _replace_session(
-            session,
-            pending_call_key=key,
-            checkpoint_sequence=session.checkpoint_sequence + 1,
-        )
-        write_checkpoint(pending, output_dir)
-
-        provider = ReplayProvider(
-            {
-                key: [
-                    {
-                        "output": expected.model_dump(mode="json"),
-                        "provider": "stage4-replay",
-                        "model": self.model,
-                    }
-                ]
-            }
-        )
-        result = await provider.generate(
-            model=self.model,
-            instructions=prompt.content,
-            input_text=context.model_dump_json(),
-            output_type=type(expected),
-            metadata=CallMetadata(
-                session_id=session.session_id,
-                call_key=key,
-                stage=session.record.stage,
-                member_id=member_id,
-            ),
-        )
-
-        committed = apply(pending, result.output)
-        call_record = ModelCallRecord(
-            call_id=key,
-            provider=result.provider,
-            model=result.model,
-            stage=session.record.stage,
-            member_id=member_id,
-            input_tokens=result.input_tokens,
-            output_tokens=result.output_tokens,
-            latency_ms=result.latency_ms,
-            retries=result.retries,
-        )
-        record = _update_record(
-            committed.record,
-            model_calls=_append_unique(
-                committed.record.model_calls,
-                call_record,
-                identity=lambda item: item.call_id,
-            ),
-        )
-        trace = TurnTrace(
-            call_key=key,
-            stage=session.record.stage,
-            procedural_role=procedural_role,
-            member_id=member_id,
-            prompt_path=prompt.path,
-            prompt_sha256=prompt.sha256,
-            visible_artifact_ids=tuple(
-                reference.artifact_id for reference in context.visible_artifacts
-            ),
-            profile_member_id=context.member.member_id if context.member else None,
-            input_sha256=_context_hash(context),
-            output_artifact_id=_artifact_id(result.output),
-            output_type=type(result.output).__name__,
-            provider=result.provider,
-            model=result.model,
-        )
-        committed = _replace_session(
-            committed,
-            record=record,
-            turns=(*committed.turns, trace),
-            completed_call_keys=(*committed.completed_call_keys, key),
-            pending_call_key=None,
-            checkpoint_sequence=committed.checkpoint_sequence + 1,
-        )
-        checkpoint = write_checkpoint(committed, output_dir)
-        if interrupt_after == key:
-            raise OfflineInterrupted(key, checkpoint)
-        return committed, result.output
 
     async def _interpret(
         self,
@@ -641,339 +476,6 @@ class OfflineDeliberationEngine:
         )
         return self._advance(session, DeliberationStage.FRAMES_COMPARED, output_dir)
 
-    async def _challenge_phase(
-        self,
-        session: OfflineSession,
-        *,
-        rounds: tuple[DebateRoundFixture, ...],
-        output_dir: str | Path,
-        interrupt_after: str | None,
-    ) -> OfflineSession:
-        phase = rounds[0].phase
-        resulting_stage = (
-            DeliberationStage.FRAME_CHALLENGES_COMPLETE
-            if phase is ChallengePhase.FRAME
-            else DeliberationStage.PROPOSAL_CHALLENGES_COMPLETE
-        )
-        contract = session.runtime.protocol.contract_for(resulting_stage)
-        prior_plans: list[ChallengePlan] = []
-
-        for index, fixture in enumerate(rounds):
-            if fixture.round_number != index + 1:
-                raise ValueError("debate round fixtures must be contiguous and begin at one")
-
-            if phase is ChallengePhase.PROPOSAL or fixture.claim_snapshot_round > 0:
-                base_refs = self._seneschal_debate_refs(session, phase)
-                context = ContextBuilder.seneschal_stage(
-                    stage=session.record.stage,
-                    request=session.record.request,
-                    visible_artifacts=base_refs,
-                )
-
-                def apply_register(
-                    current: OfflineSession,
-                    output: ClaimRegister,
-                    fixture: DebateRoundFixture = fixture,
-                ) -> OfflineSession:
-                    snapshot = ClaimRegisterSnapshot(
-                        phase=fixture.phase,
-                        round_number=fixture.claim_snapshot_round,
-                        claim_register=output,
-                        supersedes_register_id=fixture.supersedes_register_id,
-                    )
-                    trace = _update_trace(
-                        current.protocol_trace,
-                        claim_register_snapshots=_append_unique(
-                            current.protocol_trace.claim_register_snapshots,
-                            snapshot,
-                            identity=lambda item: f"{item.phase.value}:{item.round_number}",
-                        ),
-                    )
-                    return _replace_session(current, protocol_trace=trace)
-
-                session, _ = await self._call(
-                    session,
-                    expected=fixture.claim_register,
-                    resulting_stage=resulting_stage,
-                    procedural_role="seneschal",
-                    prompt_path=contract.prompt_template or "",
-                    context=context,
-                    apply=apply_register,
-                    output_dir=output_dir,
-                    phase=phase,
-                    round_number=fixture.round_number,
-                    subject="claims",
-                    interrupt_after=interrupt_after,
-                )
-
-            validate_challenge_plan(
-                fixture.plan,
-                claims=fixture.claim_register,
-                council=session.runtime.council,
-                policy=session.runtime.protocol.challenge_policy,
-                prior_plans=tuple(prior_plans),
-                claims_with_new_input=fixture.claims_with_new_input,
-            )
-            plan_context = ContextBuilder.seneschal_stage(
-                stage=session.record.stage,
-                request=session.record.request,
-                visible_artifacts=self._seneschal_debate_refs(session, phase),
-            )
-
-            def apply_plan(current: OfflineSession, output: ChallengePlan) -> OfflineSession:
-                trace = _update_trace(
-                    current.protocol_trace,
-                    challenge_plans=_append_unique(
-                        current.protocol_trace.challenge_plans,
-                        output,
-                        identity=lambda item: f"{item.phase.value}:{item.round_number}",
-                    ),
-                )
-                return _replace_session(current, protocol_trace=trace)
-
-            session, _ = await self._call(
-                session,
-                expected=fixture.plan,
-                resulting_stage=resulting_stage,
-                procedural_role="seneschal",
-                prompt_path=contract.prompt_template or "",
-                context=plan_context,
-                apply=apply_plan,
-                output_dir=output_dir,
-                phase=phase,
-                round_number=fixture.round_number,
-                subject="plan",
-                interrupt_after=interrupt_after,
-            )
-
-            challenge_by_id = {item.challenge_id: item for item in fixture.challenges}
-            response_by_id = {item.challenge_id: item for item in fixture.responses}
-            for assignment in fixture.plan.assignments:
-                challenge = challenge_by_id[assignment.challenge_id]
-                source = _source_reference(session, assignment.target_artifact_id)
-                claim_ref = _reference(fixture.claim_register, ArtifactKind.CLAIM_REGISTER)
-                plan_ref = _reference(fixture.plan, ArtifactKind.CHALLENGE_PLAN)
-                turn = contract.challenge_turns[0]
-                supplied = (
-                    ArtifactKind.CLAIM_REGISTER,
-                    ArtifactKind.CHALLENGE_PLAN,
-                    ArtifactKind(source.artifact_type),
-                )
-                _validate_visible(
-                    label=turn.turn_id,
-                    allowed=turn.allowed_input_artifacts,
-                    supplied=supplied,
-                )
-                challenge_context = ContextBuilder.member_stage(
-                    stage=session.record.stage,
-                    request=session.record.request,
-                    member=_profile(session, assignment.challenger_member_id),
-                    visible_artifacts=(claim_ref, plan_ref, source),
-                )
-
-                def apply_challenge(
-                    current: OfflineSession,
-                    output: ChallengeArtifact,
-                ) -> OfflineSession:
-                    trace = _update_trace(
-                        current.protocol_trace,
-                        challenges=_append_unique(
-                            current.protocol_trace.challenges,
-                            output,
-                            identity=lambda item: item.challenge_id,
-                        ),
-                    )
-                    link = LineageLink(
-                        source_artifact_id=output.target_claim_id,
-                        target_artifact_id=output.challenge_id,
-                        relationship="challenged_by",
-                    )
-                    return _replace_session(
-                        current,
-                        protocol_trace=trace,
-                        lineage=_append_unique(
-                            current.lineage,
-                            link,
-                            identity=lambda item: (
-                                f"{item.source_artifact_id}:{item.target_artifact_id}:"
-                                f"{item.relationship}"
-                            ),
-                        ),
-                    )
-
-                session, _ = await self._call(
-                    session,
-                    expected=challenge,
-                    resulting_stage=resulting_stage,
-                    procedural_role="challenger",
-                    prompt_path=turn.prompt_template,
-                    context=challenge_context,
-                    apply=apply_challenge,
-                    output_dir=output_dir,
-                    member_id=assignment.challenger_member_id,
-                    phase=phase,
-                    round_number=fixture.round_number,
-                    subject=assignment.challenge_id,
-                    interrupt_after=interrupt_after,
-                )
-
-                response = response_by_id[assignment.challenge_id]
-                response_turn = contract.challenge_turns[1]
-                challenge_ref = _reference(challenge, ArtifactKind.CHALLENGE)
-                supplied_response = (
-                    ArtifactKind.CHALLENGE_PLAN,
-                    ArtifactKind.CHALLENGE,
-                    ArtifactKind(source.artifact_type),
-                )
-                _validate_visible(
-                    label=response_turn.turn_id,
-                    allowed=response_turn.allowed_input_artifacts,
-                    supplied=supplied_response,
-                )
-                response_context = ContextBuilder.member_stage(
-                    stage=session.record.stage,
-                    request=session.record.request,
-                    member=_profile(session, assignment.target_member_id),
-                    visible_artifacts=(plan_ref, challenge_ref, source),
-                )
-
-                def apply_response(
-                    current: OfflineSession,
-                    output: ChallengeResponse,
-                ) -> OfflineSession:
-                    responses = _append_unique(
-                        current.record.challenge_responses,
-                        output,
-                        identity=lambda item: item.challenge_id,
-                    )
-                    requests = current.record.evidence_requests
-                    if output.evidence_request is not None:
-                        requests = _append_unique(
-                            requests,
-                            output.evidence_request,
-                            identity=lambda item: item.evidence_request_id,
-                        )
-                    record = _update_record(
-                        current.record,
-                        challenge_responses=responses,
-                        evidence_requests=requests,
-                    )
-                    links = list(current.lineage)
-                    links.append(
-                        LineageLink(
-                            source_artifact_id=output.challenge_id,
-                            target_artifact_id=f"{output.challenge_id}:response",
-                            relationship="answered_by",
-                        )
-                    )
-                    if output.evidence_request is not None:
-                        links.append(
-                            LineageLink(
-                                source_artifact_id=f"{output.challenge_id}:response",
-                                target_artifact_id=output.evidence_request.evidence_request_id,
-                                relationship="requested_evidence",
-                            )
-                        )
-                    unique_links: list[LineageLink] = []
-                    seen: set[str] = set()
-                    for link in links:
-                        key = (
-                            f"{link.source_artifact_id}:{link.target_artifact_id}:"
-                            f"{link.relationship}"
-                        )
-                        if key not in seen:
-                            seen.add(key)
-                            unique_links.append(link)
-                    return _replace_session(
-                        current,
-                        record=record,
-                        lineage=tuple(unique_links),
-                    )
-
-                session, _ = await self._call(
-                    session,
-                    expected=response,
-                    resulting_stage=resulting_stage,
-                    procedural_role="target",
-                    prompt_path=response_turn.prompt_template,
-                    context=response_context,
-                    apply=apply_response,
-                    output_dir=output_dir,
-                    member_id=assignment.target_member_id,
-                    phase=phase,
-                    round_number=fixture.round_number,
-                    subject=assignment.challenge_id,
-                    interrupt_after=interrupt_after,
-                )
-
-            validate_challenge_round_outputs(
-                fixture.plan,
-                challenges=fixture.challenges,
-                responses=fixture.responses,
-            )
-            validate_continuation_decision(
-                fixture.continuation,
-                claims=fixture.claim_register,
-                policy=session.runtime.protocol.challenge_policy,
-            )
-            continuation_context = ContextBuilder.seneschal_stage(
-                stage=session.record.stage,
-                request=session.record.request,
-                visible_artifacts=self._seneschal_debate_refs(session, phase),
-            )
-
-            def apply_continuation(
-                current: OfflineSession,
-                output: ContinuationDecision,
-            ) -> OfflineSession:
-                trace = _update_trace(
-                    current.protocol_trace,
-                    continuation_decisions=_append_unique(
-                        current.protocol_trace.continuation_decisions,
-                        output,
-                        identity=lambda item: f"{item.phase.value}:{item.completed_round}",
-                    ),
-                )
-                return _replace_session(current, protocol_trace=trace)
-
-            session, _ = await self._call(
-                session,
-                expected=fixture.continuation,
-                resulting_stage=resulting_stage,
-                procedural_role="seneschal",
-                prompt_path=contract.prompt_template or "",
-                context=continuation_context,
-                apply=apply_continuation,
-                output_dir=output_dir,
-                phase=phase,
-                round_number=fixture.round_number,
-                subject="continuation",
-                interrupt_after=interrupt_after,
-            )
-
-            produced = []
-            if phase is ChallengePhase.PROPOSAL or fixture.claim_snapshot_round > 0:
-                produced.append(ArtifactKind.CLAIM_REGISTER)
-            produced.extend(
-                [
-                    ArtifactKind.CHALLENGE_PLAN,
-                    *(ArtifactKind.CHALLENGE for _ in fixture.challenges),
-                    *(ArtifactKind.CHALLENGE_RESPONSE for _ in fixture.responses),
-                    ArtifactKind.CONTINUATION_DECISION,
-                ]
-            )
-            validate_stage_outputs(contract, tuple(produced))
-            prior_plans.append(fixture.plan)
-
-            if not fixture.continuation.continue_debate:
-                if index != len(rounds) - 1:
-                    raise ValueError("scenario contains rounds after a stopping decision")
-                break
-            if index == len(rounds) - 1:
-                raise ValueError("continuation decision requires another scripted round")
-
-        return self._advance(session, resulting_stage, output_dir)
-
     def _seneschal_debate_refs(
         self,
         session: OfflineSession,
@@ -1020,107 +522,6 @@ class OfflineDeliberationEngine:
             if challenge.phase is phase
         )
         return tuple(refs)
-
-    def _phase_request_ids(
-        self,
-        rounds: tuple[DebateRoundFixture, ...],
-    ) -> tuple[str, ...]:
-        return tuple(
-            response.evidence_request.evidence_request_id
-            for round_fixture in rounds
-            for response in round_fixture.responses
-            if response.evidence_request is not None
-        )
-
-    def _resolve_evidence(
-        self,
-        session: OfflineSession,
-        *,
-        phase: ChallengePhase,
-        resolutions: tuple[EvidenceResolution, ...],
-        output_dir: str | Path,
-    ) -> OfflineSession:
-        resulting_stage = (
-            DeliberationStage.EVIDENCE_RESOLVED
-            if phase is ChallengePhase.FRAME
-            else DeliberationStage.PROPOSAL_EVIDENCE_RESOLVED
-        )
-        contract = session.runtime.protocol.contract_for(resulting_stage)
-        rounds = (
-            session.scenario.frame_rounds
-            if phase is ChallengePhase.FRAME
-            else session.scenario.proposal_rounds
-        )
-        request_ids = self._phase_request_ids(rounds)
-        requests_by_id = {
-            request.evidence_request_id: request for request in session.record.evidence_requests
-        }
-        requests = tuple(requests_by_id[request_id] for request_id in request_ids)
-        validate_evidence_resolutions(requests, resolutions)
-        validate_stage_inputs(
-            contract,
-            tuple(ArtifactKind.EVIDENCE_REQUEST for _ in requests),
-        )
-        validate_stage_outputs(
-            contract,
-            tuple(ArtifactKind.EVIDENCE_RESOLUTION for _ in resolutions),
-            supplied_input_artifacts=tuple(
-                ArtifactKind.EVIDENCE_REQUEST for _ in requests
-            ),
-        )
-
-        current = {
-            resolution.evidence_request_id: resolution
-            for resolution in session.record.evidence_resolutions
-        }
-        history = list(session.evidence_history)
-        links = list(session.lineage)
-        for resolution in resolutions:
-            previous = current.get(resolution.evidence_request_id)
-            current[resolution.evidence_request_id] = resolution
-            history.append(
-                EvidenceDispositionEvent(
-                    evidence_request_id=resolution.evidence_request_id,
-                    outcome=resolution.outcome,
-                    replaced_outcome=previous.outcome if previous else None,
-                    note=(
-                        "Replaced prior evidence disposition during explicit resume."
-                        if previous
-                        else "Recorded evidence disposition for the current stage."
-                    ),
-                )
-            )
-            links.append(
-                LineageLink(
-                    source_artifact_id=resolution.evidence_request_id,
-                    target_artifact_id=f"{resolution.evidence_request_id}:resolution",
-                    relationship="resolved_as",
-                )
-            )
-
-        ordered_resolutions = tuple(
-            current[request.evidence_request_id]
-            for request in session.record.evidence_requests
-            if request.evidence_request_id in current
-        )
-        stage_status = evidence_session_status(resolutions)
-        record = _update_record(
-            session.record,
-            evidence_resolutions=ordered_resolutions,
-            status=stage_status,
-        )
-        session = _replace_session(
-            session,
-            record=record,
-            evidence_history=tuple(history),
-            lineage=tuple(links),
-            checkpoint_sequence=session.checkpoint_sequence + 1,
-        )
-        write_checkpoint(session, output_dir)
-        if stage_status is not SessionStatus.ACTIVE:
-            write_review_artifacts(session, output_dir)
-            return session
-        return self._advance(session, resulting_stage, output_dir)
 
     async def _propose(
         self,
@@ -1417,43 +818,18 @@ class OfflineDeliberationEngine:
         validate_stage_outputs(contract, (ArtifactKind.ACTIONABLE_PLAN,))
         return self._advance(session, DeliberationStage.PLAN_COMPLETE, output_dir)
 
-    def _replace_scenario_resolutions(
-        self,
-        session: OfflineSession,
-        replacements: tuple[EvidenceResolution, ...],
-    ) -> OfflineSession:
-        frame_ids = set(self._phase_request_ids(session.scenario.frame_rounds))
-        proposal_ids = set(self._phase_request_ids(session.scenario.proposal_rounds))
-        frame = {
-            item.evidence_request_id: item
-            for item in session.scenario.frame_evidence_resolutions
-        }
-        proposal = {
-            item.evidence_request_id: item
-            for item in session.scenario.proposal_evidence_resolutions
-        }
-        for replacement in replacements:
-            request_id = replacement.evidence_request_id
-            if request_id in frame_ids:
-                frame[request_id] = replacement
-            elif request_id in proposal_ids:
-                proposal[request_id] = replacement
-            else:
-                raise ValueError(f"replacement references unknown evidence request {request_id!r}")
-        scenario = _replace_model(
-            session.scenario,
-            frame_evidence_resolutions=tuple(
-                frame[request_id] for request_id in self._phase_request_ids(session.scenario.frame_rounds)
-            ),
-            proposal_evidence_resolutions=tuple(
-                proposal[request_id]
-                for request_id in self._phase_request_ids(session.scenario.proposal_rounds)
-            ),
-        )
-        return _replace_session(session, scenario=scenario)
-
 
 def checkpoint_for(output_dir: str | Path) -> Path:
     """Return the authoritative checkpoint path for CLI and tests."""
 
     return session_path(output_dir)
+
+
+def __getattr__(name: str) -> object:
+    """Preserve the historical engine import without defining another engine."""
+
+    if name == "OfflineDeliberationEngine":
+        from imperium.offline.provider_engine import OfflineDeliberationEngine
+
+        return OfflineDeliberationEngine
+    raise AttributeError(name)

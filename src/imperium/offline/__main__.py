@@ -7,7 +7,7 @@ import asyncio
 from pathlib import Path
 
 from imperium.domain.enums import EvidenceOutcome
-from imperium.offline.engine import OfflineDeliberationEngine
+from imperium.offline.provider_engine import OfflineDeliberationEngine
 from imperium.offline.fixtures import build_challenged_scenario, scenario_by_name
 from imperium.offline.persistence import load_session
 
