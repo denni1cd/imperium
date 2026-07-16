@@ -39,14 +39,3 @@ jobs:
           name: pytest-log
           path: pytest.log
           if-no-files-found: error
-
-      - name: Export source for focused repair
-        uses: actions/upload-artifact@v4
-        with:
-          name: pr13-source-export
-          path: |
-            src/imperium/offline/provider_engine.py
-            src/imperium/offline/fixtures.py
-            tests/test_provider_bound_engine.py
-            docs/STAGE_5_GATE_2_PROVIDER_INJECTION.md
-          if-no-files-found: error
