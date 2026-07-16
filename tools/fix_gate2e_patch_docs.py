@@ -63,6 +63,20 @@ replacements = {
             attempts=accepted_attempts,
             record=record,
 ''',
+    '''        estimated_input_tokens = self._check_pre_call_budget(
+            session,
+            serialized_provider_input=f"{prompt.content}\\n{input_text}",
+        )
+''':
+    '''        try:
+            estimated_input_tokens = self._check_pre_call_budget(
+                session,
+                serialized_provider_input=f"{prompt.content}\\n{input_text}",
+            )
+        except Exception as exc:
+            self._attach_attempt_session(exc, session)
+            raise
+''',
 }
 for old, new in replacements.items():
     if old not in text:
