@@ -11,6 +11,8 @@ replacements = {
     "- **Stage 5 Gate 2:** draft PR #13 resolves the shared-engine architecture gate under simulated providers; merge review is pending.",
     "- **Current gate:** review the consolidated Gate 2 implementation before Gate 2E live-failure accounting or any complete live council.":
     "- **Current gate:** review and merge Gate 2 before Gate 2E live-failure accounting or any complete live council.",
+    'serialized_provider_input=f"{prompt.content}\\n{input_text}",':
+    'serialized_provider_input=f"{prompt.content}\\\\n{input_text}",',
 }
 for old, new in replacements.items():
     if old not in text:
