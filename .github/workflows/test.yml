@@ -32,6 +32,7 @@ jobs:
           if git log -1 --pretty=%B | grep -q '\[gate2e-attempt-applied\]'; then
             echo "Gate 2E patch is already applied." | tee gate2e-patch.log
           else
+            python tools/fix_gate2e_patch_docs.py
             python tools/apply_gate2e_attempt_slice.py 2>&1 | tee gate2e-patch.log
           fi
 
