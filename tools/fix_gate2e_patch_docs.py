@@ -13,6 +13,56 @@ replacements = {
     "- **Current gate:** review and merge Gate 2 before Gate 2E live-failure accounting or any complete live council.",
     'serialized_provider_input=f"{prompt.content}\\n{input_text}",':
     'serialized_provider_input=f"{prompt.content}\\\\n{input_text}",',
+    '''    def _replace_attempt(session: OfflineSession, updated: ModelAttempt) -> OfflineSession:
+        attempts = tuple(
+            updated if item.attempt_id == updated.attempt_id else item
+            for item in session.attempts
+        )
+        return _replace_session(session, attempts=attempts)
+''':
+    '''    def _replace_attempt(
+        session: OfflineSession,
+        updated: ModelAttempt,
+        **updates: object,
+    ) -> OfflineSession:
+        attempts = tuple(
+            updated if item.attempt_id == updated.attempt_id else item
+            for item in session.attempts
+        )
+        return _replace_session(session, attempts=attempts, **updates)
+''',
+    '''            failed = self._replace_attempt(pending, terminal)
+            failed = _replace_session(
+                failed,
+                pending_call_key=None,
+                checkpoint_sequence=failed.checkpoint_sequence + 1,
+            )
+''':
+    '''            failed = self._replace_attempt(
+                pending,
+                terminal,
+                pending_call_key=None,
+                checkpoint_sequence=pending.checkpoint_sequence + 1,
+            )
+''',
+    '''        committed = self._replace_attempt(committed, accepted_attempt)
+        call_record = ModelCallRecord(
+''':
+    '''        accepted_attempts = tuple(
+            accepted_attempt if item.attempt_id == accepted_attempt.attempt_id else item
+            for item in committed.attempts
+        )
+        call_record = ModelCallRecord(
+''',
+    '''        committed = _replace_session(
+            committed,
+            record=record,
+''':
+    '''        committed = _replace_session(
+            committed,
+            attempts=accepted_attempts,
+            record=record,
+''',
 }
 for old, new in replacements.items():
     if old not in text:
