@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from imperium.offline.engine import OfflineDeliberationEngine
+from imperium.offline.provider_engine import OfflineDeliberationEngine
 from imperium.offline.fixtures import build_challenged_scenario, build_no_challenge_scenario
 from imperium.offline.replay_script import build_replay_records
 from imperium.providers.replay import ReplayProvider

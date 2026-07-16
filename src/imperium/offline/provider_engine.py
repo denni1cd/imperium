@@ -53,7 +53,7 @@ from imperium.engine.protocol_rules import (
     validate_stage_outputs,
 )
 from imperium.offline.engine import (
-    OfflineDeliberationEngine,
+    _ScenarioLifecycleEngine,
     OfflineInterrupted,
     _append_unique,
     _artifact_id,
@@ -89,8 +89,8 @@ class MissingEvidenceDisposition(ProviderError):
     """Raised when provider-generated evidence lacks an explicit operator disposition."""
 
 
-class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
-    """Run one deliberation through one provider instance.
+class SharedDeliberationEngine(_ScenarioLifecycleEngine):
+    """Run the single deliberation lifecycle through a selected authority policy.
 
     Replay remains the default. The class is intentionally absent from every
     live CLI until failure accounting and cumulative budgets are implemented.
@@ -103,6 +103,7 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
         model: str = "offline-replay",
         max_context_bytes: int = 262_144,
         evidence_resolutions: Mapping[str, EvidenceResolution] | None = None,
+        artifact_authority: str = "provider",
     ) -> None:
         super().__init__(model=model)
         if max_context_bytes <= 0:
@@ -112,6 +113,9 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
         self._session_provider: ModelProvider | None = None
         self._session_evidence_resolutions: dict[str, EvidenceResolution] = {}
         self.max_context_bytes = max_context_bytes
+        if artifact_authority not in {"scenario", "provider"}:
+            raise ValueError("artifact_authority must be 'scenario' or 'provider'")
+        self.artifact_authority = artifact_authority
 
     @property
     def session_provider(self) -> ModelProvider | None:
@@ -207,10 +211,10 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
         output_dir: str | Path,
         interrupt_after: str | None,
     ) -> OfflineSession:
-        if session.artifact_authority != "provider":
+        if session.artifact_authority != self.artifact_authority:
             session = _replace_session(
                 session,
-                artifact_authority="provider",
+                artifact_authority=self.artifact_authority,
                 checkpoint_sequence=session.checkpoint_sequence + 1,
             )
             write_checkpoint(session, output_dir)
@@ -1041,3 +1045,17 @@ class ProviderBoundDeliberationEngine(OfflineDeliberationEngine):
                 is not ChallengePhase.PROPOSAL
             )
         )
+
+
+class ProviderBoundDeliberationEngine(SharedDeliberationEngine):
+    """Thin Gate 2 adapter selecting provider-authoritative validation."""
+
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(artifact_authority="provider", **kwargs)
+
+
+class OfflineDeliberationEngine(SharedDeliberationEngine):
+    """Thin Stage 4 adapter selecting strict scenario-authoritative validation."""
+
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(artifact_authority="scenario", **kwargs)

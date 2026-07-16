@@ -8,7 +8,8 @@ import pytest
 
 from imperium.domain.enums import DeliberationStage, EvidenceOutcome, SessionStatus
 from imperium.domain.models import DeliberationRecord, EvidenceResolution
-from imperium.offline.engine import OfflineDeliberationEngine, OfflineInterrupted
+from imperium.offline.engine import OfflineInterrupted
+from imperium.offline.provider_engine import OfflineDeliberationEngine
 from imperium.offline.fixtures import (
     build_challenged_scenario,
     build_no_challenge_scenario,

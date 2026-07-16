@@ -29,10 +29,11 @@ from imperium.domain.protocol import (
     ContinuationDecision,
 )
 from imperium.engine.protocol_rules import InvalidProtocolArtifact
-from imperium.offline.engine import OfflineDeliberationEngine, _call_key
+from imperium.offline.engine import _call_key
 from imperium.offline.fixtures import build_challenged_scenario
 from imperium.offline.provider_engine import (
     MissingEvidenceDisposition,
+    OfflineDeliberationEngine,
     ProviderBoundDeliberationEngine,
 )
 from imperium.offline.persistence import load_session

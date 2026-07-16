@@ -205,7 +205,7 @@ def _update_trace(trace: ProtocolTrace, **updates: object) -> ProtocolTrace:
     return _replace_model(trace, **updates)
 
 
-class OfflineDeliberationEngine:
+class _ScenarioLifecycleEngine:
     """Execute every protocol 1.3 stage using scripted replay artifacts."""
 
     def __init__(self, *, model: str = "offline-replay") -> None:
@@ -1457,3 +1457,13 @@ def checkpoint_for(output_dir: str | Path) -> Path:
     """Return the authoritative checkpoint path for CLI and tests."""
 
     return session_path(output_dir)
+
+
+def __getattr__(name: str) -> object:
+    """Preserve the historical engine import without defining another engine."""
+
+    if name == "OfflineDeliberationEngine":
+        from imperium.offline.provider_engine import OfflineDeliberationEngine
+
+        return OfflineDeliberationEngine
+    raise AttributeError(name)
