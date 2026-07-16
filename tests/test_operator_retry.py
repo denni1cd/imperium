@@ -203,6 +203,26 @@ async def test_second_replacement_is_rejected(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_replacement_cannot_change_model_identity(tmp_path: Path) -> None:
+    checkpoint = await _failed_checkpoint(tmp_path)
+    provider = FailingProvider()
+
+    with pytest.raises(ValueError, match="preserve the original model identity"):
+        await ProviderBoundDeliberationEngine(
+            provider=provider,
+            model="different-model",
+        ).retry_attempt(
+            checkpoint,
+            reason="Model substitution is not part of retry authorization.",
+        )
+
+    assert provider.calls == []
+    unchanged = load_session(checkpoint)
+    assert len(unchanged.attempts) == 1
+    assert unchanged.attempts[0].status is AttemptStatus.FAILED
+
+
+@pytest.mark.asyncio
 async def test_retry_requires_non_empty_reason(tmp_path: Path) -> None:
     checkpoint = await _failed_checkpoint(tmp_path)
 
