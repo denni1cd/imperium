@@ -8,7 +8,7 @@ from typing import TypeVar
 import pytest
 from pydantic import BaseModel
 
-from imperium.domain.enums import DeliberationStage
+from imperium.domain.enums import DeliberationStage, SessionStatus
 from imperium.domain.models import Interpretation
 from imperium.offline.attempts import (
     AttemptStatus,
@@ -101,6 +101,31 @@ async def test_operator_can_abandon_without_launching_replacement(tmp_path: Path
             checkpoint,
             reason="An abandoned attempt cannot be revived.",
         )
+
+
+@pytest.mark.asyncio
+async def test_abandoning_crash_pending_attempt_makes_session_terminal(
+    tmp_path: Path,
+) -> None:
+    scenario = build_challenged_scenario()
+    with pytest.raises(SimulatedCrash):
+        await ProviderBoundDeliberationEngine(
+            provider=CrashingProvider(),
+            model="gate2e-replay",
+        ).run(scenario, project_root=ROOT, output_dir=tmp_path)
+
+    abandoned = ProviderBoundDeliberationEngine(
+        model="gate2e-replay"
+    ).abandon_attempt(
+        tmp_path / "session.json",
+        reason="The operator will proceed without replacing the uncertain call.",
+    )
+
+    assert abandoned.status is SessionStatus.FAILED
+    assert abandoned.attempts[0].status is AttemptStatus.ABANDONED
+    assert abandoned.pending_call_key is None
+    assert abandoned.failure_reason is not None
+    assert abandoned.failure_reason.startswith("AttemptAbandoned:")
 
 
 @pytest.mark.asyncio
