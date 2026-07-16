@@ -11,6 +11,11 @@ replacements = {
     "- **Stage 5 Gate 2:** draft PR #13 resolves the shared-engine architecture gate under simulated providers; merge review is pending.",
     "- **Current gate:** review the consolidated Gate 2 implementation before Gate 2E live-failure accounting or any complete live council.":
     "- **Current gate:** review and merge Gate 2 before Gate 2E live-failure accounting or any complete live council.",
+    '''        self._validate_attempts()
+        self._validate_council_snapshot()
+        if self.artifact_authority == "scenario":''':
+    '''        self._validate_council_snapshot()
+        if self.artifact_authority == "scenario":''',
     '''    def _replace_attempt(session: OfflineSession, updated: ModelAttempt) -> OfflineSession:
         attempts = tuple(
             updated if item.attempt_id == updated.attempt_id else item
@@ -80,4 +85,23 @@ for old, new in replacements.items():
     if old not in text:
         raise RuntimeError(f"expected stale patch text not found: {old[:80]!r}")
     text = text.replace(old, new, 1)
+
+post_authority_attempt_validation = """
+replace_exact(
+    "src/imperium/offline/models.py",
+    '''        else:
+            self._validate_provider_artifacts()
+
+        artifact_kinds = self._artifact_kind_index()
+''',
+    '''        else:
+            self._validate_provider_artifacts()
+
+        self._validate_attempts()
+        artifact_kinds = self._artifact_kind_index()
+''',
+)
+"""
+if "post-authority attempt validation" not in text:
+    text += "\n# post-authority attempt validation\n" + post_authority_attempt_validation
 path.write_text(text, encoding="utf-8")
