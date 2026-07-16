@@ -21,7 +21,7 @@ These documents define the minimum viable deliberation protocol and the evidence
 
 - [`STAGE_4_IMPLEMENTATION_PLAN.md`](STAGE_4_IMPLEMENTATION_PLAN.md) — accepted and merged offline orchestration contract.
 - [`STAGE_5_CODEX_PROVIDER_PLAN.md`](STAGE_5_CODEX_PROVIDER_PLAN.md) — accepted Gate 1 Codex CLI boundary, Terra-low no-tools policy, and structured-output compatibility.
-- [`STAGE_5_GATE_2_PROVIDER_INJECTION.md`](STAGE_5_GATE_2_PROVIDER_INJECTION.md) — current Gate 2 contract and architecture review: replay extraction, provider authority, bounded rounds, evidence disposition, consolidation blockers, and remaining live-safety controls.
+- [`STAGE_5_GATE_2_PROVIDER_INJECTION.md`](STAGE_5_GATE_2_PROVIDER_INJECTION.md) — current Gate 2 contract and architecture review: replay extraction, provider authority, bounded rounds, evidence disposition, shared-engine consolidation, and remaining live-safety controls.
 
 ## Protocol Amendments
 
@@ -36,4 +36,4 @@ These documents define the minimum viable deliberation protocol and the evidence
 - [`../config/protocol.yaml`](../config/protocol.yaml) — minimum deliberation protocol version 1.3
 - [`../prompts/`](../prompts/) — stage-specific prompt contracts referenced by the protocol
 
-The current engineering gate is shared-engine consolidation after provider-authority behavior passed simulated tests. PR #13 is paused for review; a complete live council remains blocked.
+The current engineering gate is merge review of the completed Gate 2 shared-engine consolidation. Gate 2E live-failure accounting and every complete live council remain blocked.
