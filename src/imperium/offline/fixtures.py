@@ -320,8 +320,8 @@ def _proposal_claims(round_two: bool = False) -> ClaimRegister:
     scale_statement = (
         "Stage 4 should implement every planned synthetic path before local review."
         if not round_two
-        else "Stage 4 should implement the complete challenged path plus explicit empty, halt, "
-        "conditional, and interruption acceptance fixtures before local review."
+        else "Implement the challenged complete path plus explicit empty, halt, conditional, "
+        "and interruption acceptance fixtures before local review."
     )
     return ClaimRegister(
         register_id="proposal-register-r1" if round_two else "proposal-register-r0",

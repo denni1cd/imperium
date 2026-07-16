@@ -475,20 +475,62 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         current: ClaimRegister,
         responses: tuple[ChallengeResponse, ...] = (),
         challenges: tuple[ChallengeArtifact, ...] = (),
+        *,
+        phase: ChallengePhase | None = None,
+        prior_round_number: int | None = None,
     ) -> tuple[str, ...]:
+        """Return claims with inspectable, protocol-approved material new input.
+
+        A carried claim qualifies only when the immediately preceding round accepted a
+        REFINE response and the next canonical register contains that exact normalized
+        revision. Merely changing another field, regenerating the register, or attaching
+        an unincorporated ``revised_claim`` does not unlock a repeated challenge.
+        """
+
+        active_phase = phase or current.phase
+        if current.phase is not active_phase or (
+            previous is not None and previous.phase is not active_phase
+        ):
+            raise ValueError("claim registers must match the active challenge phase")
         if previous is None:
             return tuple(claim.claim_id for claim in current.claims)
-        prior_ids = {claim.claim_id for claim in previous.claims}
-        new_ids = {claim.claim_id for claim in current.claims if claim.claim_id not in prior_ids}
-        challenged_claim_ids = {
-            challenge.challenge_id: challenge.target_claim_id for challenge in challenges
+
+        def normalize(value: str) -> str:
+            return " ".join(value.split()).casefold()
+
+        prior_by_id = {claim.claim_id: claim for claim in previous.claims}
+        current_by_id = {claim.claim_id: claim for claim in current.claims}
+        new_ids = set(current_by_id) - set(prior_by_id)
+        eligible_challenges = {
+            challenge.challenge_id: challenge
+            for challenge in challenges
+            if challenge.phase is active_phase
+            and (
+                prior_round_number is None
+                or challenge.round_number == prior_round_number
+            )
         }
-        revised_ids = {
-            challenged_claim_ids[response.challenge_id]
-            for response in responses
-            if response.revised_claim is not None
-            and response.challenge_id in challenged_claim_ids
-        }
+
+        revised_ids: set[str] = set()
+        for response in responses:
+            challenge = eligible_challenges.get(response.challenge_id)
+            if (
+                challenge is None
+                or response.disposition is not ChallengeDisposition.REFINE
+                or response.revised_claim is None
+                or response.member_id != challenge.target_member_id
+            ):
+                continue
+            prior_claim = prior_by_id.get(challenge.target_claim_id)
+            current_claim = current_by_id.get(challenge.target_claim_id)
+            if prior_claim is None or current_claim is None:
+                continue
+            prior_text = normalize(prior_claim.statement)
+            revised_text = normalize(response.revised_claim)
+            current_text = normalize(current_claim.statement)
+            if revised_text != prior_text and current_text == revised_text:
+                revised_ids.add(challenge.target_claim_id)
+
         return tuple(
             claim.claim_id
             for claim in current.claims
@@ -588,6 +630,8 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
                 claims,
                 session.record.challenge_responses,
                 session.protocol_trace.challenges,
+                phase=phase,
+                prior_round_number=round_number - 1,
             )
 
             plan_context = ContextBuilder.seneschal_stage(

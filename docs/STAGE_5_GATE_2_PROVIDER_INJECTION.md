@@ -157,6 +157,6 @@ Gate 2 does not:
 - add network research or autonomous action;
 - claim that provider injection proves strategic improvement.
 
-## Stop Condition Applied
+## Review Boundary Applied
 
-The Gate 2 stop condition is now active. Implementation pauses here because the behavior was achieved with enough duplicated orchestration and validation-order risk to require design review before further expansion.
+The shared-engine, validation-order, and material-new-input blockers are resolved under simulated providers. Implementation pauses here for merge review; Gate 2E failure accounting, cumulative usage budgets, captured-session replay, and every complete live council remain blocked.

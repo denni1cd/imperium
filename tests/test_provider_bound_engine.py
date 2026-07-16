@@ -9,6 +9,7 @@ import pytest
 from pydantic import BaseModel
 
 from imperium.domain.enums import (
+    ChallengeDisposition,
     ChallengePhase,
     ContinuationReason,
     DeliberationStage,
@@ -487,7 +488,7 @@ def test_cosmetic_claim_rewrite_is_not_material_new_input() -> None:
     assert ProviderBoundDeliberationEngine._claims_with_new_input(previous, cosmetic) == ()
 
 
-def test_accepted_revised_claim_is_material_new_input() -> None:
+def test_only_incorporated_refinement_is_material_new_input() -> None:
     scenario = build_challenged_scenario()
     first, second = scenario.proposal_rounds
 
@@ -496,7 +497,62 @@ def test_accepted_revised_claim_is_material_new_input() -> None:
         second.claim_register,
         first.responses,
         first.challenges,
-    ) == ("claim-vanguard-scope", "claim-architect-reuse")
+        phase=ChallengePhase.PROPOSAL,
+        prior_round_number=1,
+    ) == ("claim-vanguard-scope",)
+
+
+def test_unincorporated_refinement_is_not_material_new_input() -> None:
+    scenario = build_challenged_scenario()
+    first, second = scenario.proposal_rounds
+    unchanged = second.claim_register.model_copy(
+        update={
+            "claims": (
+                first.claim_register.claims[0],
+                *second.claim_register.claims[1:],
+            )
+        }
+    )
+
+    assert ProviderBoundDeliberationEngine._claims_with_new_input(
+        first.claim_register,
+        unchanged,
+        first.responses,
+        first.challenges,
+        phase=ChallengePhase.PROPOSAL,
+        prior_round_number=1,
+    ) == ()
+
+
+def test_non_refine_response_cannot_unlock_repetition() -> None:
+    scenario = build_challenged_scenario()
+    first, second = scenario.proposal_rounds
+    scope_response = first.responses[0].model_copy(
+        update={"disposition": ChallengeDisposition.DEFEND}
+    )
+
+    assert ProviderBoundDeliberationEngine._claims_with_new_input(
+        first.claim_register,
+        second.claim_register,
+        (scope_response,),
+        first.challenges,
+        phase=ChallengePhase.PROPOSAL,
+        prior_round_number=1,
+    ) == ()
+
+
+def test_other_round_refinement_cannot_unlock_repetition() -> None:
+    scenario = build_challenged_scenario()
+    first, second = scenario.proposal_rounds
+
+    assert ProviderBoundDeliberationEngine._claims_with_new_input(
+        first.claim_register,
+        second.claim_register,
+        first.responses,
+        first.challenges,
+        phase=ChallengePhase.PROPOSAL,
+        prior_round_number=2,
+    ) == ()
 
 
 def test_genuinely_new_claim_id_is_material_new_input() -> None:
