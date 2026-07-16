@@ -11,7 +11,12 @@ from pydantic import BaseModel, ValidationError
 
 from imperium.domain.enums import DeliberationStage
 from imperium.domain.models import Interpretation
-from imperium.offline.attempts import UsageBudget, UsageBudgetExceeded
+from imperium.offline.attempts import (
+    AttemptStatus,
+    RetryAuthorizationRequired,
+    UsageBudget,
+    UsageBudgetExceeded,
+)
 from imperium.offline.engine import OfflineInterrupted, _call_key
 from imperium.offline.fixtures import build_challenged_scenario
 from imperium.offline.persistence import load_session
@@ -69,6 +74,18 @@ class ZeroUsageReplayProvider:
         )
 
 
+class SimulatedProviderCrash(BaseException):
+    """Represent process loss after the pending checkpoint but before a result."""
+
+
+class CrashingReplayProvider(ZeroUsageReplayProvider):
+    """Terminate outside normal provider error handling after launch."""
+
+    async def generate(self, **kwargs):
+        self.calls.append(kwargs["metadata"])
+        raise SimulatedProviderCrash
+
+
 class TighteningReplayProvider(ZeroUsageReplayProvider):
     """Make the next context exceed the ceiling after one accepted call."""
 
@@ -80,6 +97,34 @@ class TighteningReplayProvider(ZeroUsageReplayProvider):
             assert self.engine is not None
             self.engine.max_context_bytes = 1
         return result
+
+
+@pytest.mark.asyncio
+async def test_resume_preserves_pending_attempt_when_retry_authorization_is_required(
+    tmp_path: Path,
+) -> None:
+    scenario = build_challenged_scenario()
+    provider = CrashingReplayProvider(scenario)
+
+    with pytest.raises(SimulatedProviderCrash):
+        await ProviderBoundDeliberationEngine(
+            provider=provider,
+            model="gate2e-crash",
+        ).run(scenario, project_root=ROOT, output_dir=tmp_path)
+
+    checkpoint = tmp_path / "session.json"
+    crashed = load_session(checkpoint)
+    assert crashed.pending_call_key == _first_call_key()
+    assert crashed.attempts[0].status is AttemptStatus.PENDING
+
+    with pytest.raises(RetryAuthorizationRequired):
+        await ProviderBoundDeliberationEngine(model="gate2e-replay").resume(checkpoint)
+
+    failed = load_session(checkpoint)
+    assert failed.pending_call_key == _first_call_key()
+    assert failed.attempts[0].status is AttemptStatus.PENDING
+    assert failed.failure_reason is not None
+    assert failed.failure_reason.startswith("RetryAuthorizationRequired:")
 
 
 @pytest.mark.asyncio
