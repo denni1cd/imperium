@@ -328,6 +328,11 @@ class OfflineSession(StrictModel):
             numbers = sorted(item.attempt_number for item in attempts)
             if numbers != list(range(1, len(numbers) + 1)):
                 raise ValueError(f"attempt numbers for {call_key!r} must be contiguous from one")
+            for attempt in attempts:
+                if attempt.attempt_number == 1 and attempt.retry_of_attempt_id is not None:
+                    raise ValueError("the first attempt cannot identify retry lineage")
+                if attempt.attempt_number > 1 and attempt.retry_of_attempt_id is None:
+                    raise ValueError("attempts after the first require retry lineage")
 
         pending = [item for item in self.attempts if item.status is AttemptStatus.PENDING]
         if len(pending) > 1:
@@ -374,6 +379,18 @@ class OfflineSession(StrictModel):
             turn = turns.get(call_key)
             if turn is None or turn.output_artifact_id != attempt.output_artifact_id:
                 raise ValueError("accepted attempt output identity must match its turn trace")
+            if (
+                turn.prompt_sha256 != attempt.prompt_sha256
+                or turn.input_sha256 != attempt.input_sha256
+            ):
+                raise ValueError("accepted attempt input and prompt digests must match its turn trace")
+            if (
+                turn.stage is not attempt.stage
+                or turn.member_id != attempt.member_id
+                or turn.provider != attempt.provider
+                or turn.model != attempt.model
+            ):
+                raise ValueError("accepted attempt execution identity must match its turn trace")
             artifact = artifacts.get(attempt.output_artifact_id or "")
             if artifact is None or artifact_digest(artifact) != attempt.output_sha256:
                 raise ValueError("accepted attempt output digest does not match checkpoint artifact")

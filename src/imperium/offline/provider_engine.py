@@ -59,6 +59,8 @@ from imperium.offline.attempts import (
     UsageBudget,
     UsageBudgetExceeded,
     artifact_digest,
+    charged_input_tokens,
+    charged_output_tokens,
     estimate_input_tokens,
     usage_totals,
 )
@@ -331,12 +333,13 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
                 f"attempt budget exhausted: {totals.attempts_launched}/{budget.max_attempts}"
             )
         estimated = estimate_input_tokens(serialized_provider_input, budget)
-        if totals.input_tokens + estimated > budget.max_input_tokens:
+        if charged_input_tokens(session.attempts) + estimated > budget.max_input_tokens:
             raise UsageBudgetExceeded(
                 "estimated input token budget would be exceeded before provider launch"
             )
         if (
-            totals.output_tokens + budget.output_token_reserve_per_attempt
+            charged_output_tokens(session.attempts, budget)
+            + budget.output_token_reserve_per_attempt
             > budget.max_output_tokens
         ):
             raise UsageBudgetExceeded(
@@ -345,17 +348,30 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         return estimated
 
     @staticmethod
-    def _check_reported_usage(session: OfflineSession, result) -> None:
+    def _check_reported_usage(
+        session: OfflineSession,
+        result,
+        *,
+        estimated_input_tokens: int,
+    ) -> None:
         budget = session.usage_budget
         totals = usage_totals(session.attempts)
-        if totals.input_tokens + result.input_tokens > budget.max_input_tokens:
+        charged_input = max(result.input_tokens, estimated_input_tokens)
+        if charged_input_tokens(session.attempts) + charged_input > budget.max_input_tokens:
             raise UsageBudgetExceeded("reported input token budget was exceeded")
         if (
             totals.cached_input_tokens + result.cached_input_tokens
             > budget.max_cached_input_tokens
         ):
             raise UsageBudgetExceeded("reported cached input token budget was exceeded")
-        if totals.output_tokens + result.output_tokens > budget.max_output_tokens:
+        charged_output = max(
+            result.output_tokens,
+            budget.output_token_reserve_per_attempt,
+        )
+        if (
+            charged_output_tokens(session.attempts, budget) + charged_output
+            > budget.max_output_tokens
+        ):
             raise UsageBudgetExceeded("reported output token budget was exceeded")
 
     async def _call(
@@ -391,30 +407,40 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
             return session, self._accepted_output(session, key, type(expected))
         prior_attempts = tuple(item for item in session.attempts if item.call_key == key)
         if prior_attempts:
-            raise RetryAuthorizationRequired(
+            exc = RetryAuthorizationRequired(
                 f"call {key!r} already has an attempt; explicit abandon or retry authorization is required"
             )
+            self._attach_attempt_session(exc, session)
+            raise exc
 
         if context.member is not None:
             if context.member.member_id != member_id:
-                raise ValueError("advocate context must contain only the active member profile")
+                exc = ValueError("advocate context must contain only the active member profile")
+                self._attach_attempt_session(exc, session)
+                raise exc
             if any(
                 reference.artifact_type == ArtifactKind.COUNCIL_SNAPSHOT.value
                 for reference in context.visible_artifacts
             ):
-                raise ValueError("advocate context cannot expose the complete council registry")
+                exc = ValueError("advocate context cannot expose the complete council registry")
+                self._attach_attempt_session(exc, session)
+                raise exc
 
         input_text = context.model_dump_json()
         input_bytes = len(input_text.encode("utf-8"))
         if input_bytes > self.max_context_bytes:
-            raise ProviderError(
+            exc = ProviderError(
                 f"context for {key} is {input_bytes} bytes; "
                 f"limit is {self.max_context_bytes} bytes"
             )
+            self._attach_attempt_session(exc, session)
+            raise exc
 
         provider = self._session_provider
         if provider is None:
-            raise ProviderError("session provider was not prepared before model invocation")
+            exc = ProviderError("session provider was not prepared before model invocation")
+            self._attach_attempt_session(exc, session)
+            raise exc
         prompt = session.runtime.source(prompt_path)
         try:
             estimated_input_tokens = self._check_pre_call_budget(
@@ -467,7 +493,11 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
                         f"provider output member {authored_member_id!r} does not match "
                         f"active member {member_id!r} for {key}"
                     )
-            self._check_reported_usage(session, result)
+            self._check_reported_usage(
+                session,
+                result,
+                estimated_input_tokens=estimated_input_tokens,
+            )
             if validate is not None:
                 validate(result.output)
             committed = apply(pending, result.output)
