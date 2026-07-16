@@ -69,9 +69,9 @@ A post-return breach records the failed attempt and its available usage/output i
 
 ## Validation evidence
 
-The clean PR head passes:
+The merged Gate 2E.1 head passed **162 Python tests**. The current Gate 2E.2 draft head passes:
 
-- **161 Python tests**;
+- **170 Python tests**;
 - the Stage 4 offline artifact workflow;
 - all Gate 2 provider-authority regressions;
 - pending, accepted, failed, and ambiguous attempt tests;
