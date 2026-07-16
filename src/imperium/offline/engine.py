@@ -38,6 +38,7 @@ from imperium.domain.protocol_trace import ClaimRegisterSnapshot, ProtocolTrace
 from imperium.engine.context import ContextBuilder, artifact_reference
 from imperium.engine.lifecycle import LifecycleState
 from imperium.engine.protocol_rules import validate_stage_inputs, validate_stage_outputs
+from imperium.offline.attempts import AttemptStatus
 from imperium.offline.models import (
     DebateRoundFixture,
     EvidenceDispositionEvent,
