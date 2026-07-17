@@ -41,11 +41,12 @@ The implementation adds:
 4. A schema-valid but protocol-invalid output becomes a failed attempt and is not accepted into the deliberation record.
 5. A timeout or another explicitly uncertain provider outcome becomes ambiguous.
 6. A second attempt for the same call key requires explicit retry lineage from an earlier attempt marked `retried`.
-7. Slice 2E.2 exposes two explicit operator operations: abandon without replacement, or authorize one replacement with a required reason.
-8. A replacement is authorized only when the original is atomically marked `retried` and attempt 2 is checkpointed as `pending` with bidirectional lineage.
-9. Failed and ambiguous attempts count against usage budgets because they may have consumed provider resources.
-10. Accepted output content must continue matching its persisted digest when a checkpoint is loaded.
-11. Accepted prompt, input, stage, member, provider, and model identity must continue matching the accepted turn trace.
+7. Slice 2E.2 exposes two explicit operator operations: abandon without replacement, or authorize the next attempt with a required reason.
+8. Each replacement is authorized only when the prior attempt is atomically marked `retried` and the next attempt is checkpointed as `pending` with bidirectional lineage.
+9. `max_attempts_per_call` is persisted with the session, defaults to `2`, and may be configured independently from the session-wide `max_attempts` ceiling.
+10. Failed and ambiguous attempts count against usage budgets because they may have consumed provider resources.
+11. Accepted output content must continue matching its persisted digest when a checkpoint is loaded.
+12. Accepted prompt, input, stage, member, provider, and model identity must continue matching the accepted turn trace.
 
 ## Budget semantics
 
@@ -71,7 +72,7 @@ A post-return breach records the failed attempt and its available usage/output i
 
 The merged Gate 2E.1 head passed **162 Python tests**. The current Gate 2E.2 draft head passes:
 
-- **170 Python tests**;
+- **173 Python tests**;
 - the Stage 4 offline artifact workflow;
 - all Gate 2 provider-authority regressions;
 - pending, accepted, failed, and ambiguous attempt tests;
@@ -84,22 +85,23 @@ CI uses replay and simulated providers only. It does not invoke Codex or consume
 
 ## Slice 2E.2 operator workflow
 
-The operator may act only when exactly one unresolved first attempt is `pending`, `failed`, or `ambiguous`.
+The operator may act only when exactly one latest unresolved attempt is `pending`, `failed`, or `ambiguous`.
 
-- `abandon_attempt` requires a non-empty reason, marks the attempt `abandoned`, clears pending identity, and launches no provider.
+- `abandon_attempt` requires a non-empty reason, marks the latest unresolved attempt `abandoned`, clears pending identity, and launches no provider.
 - `retry_attempt` requires a non-empty reason and the original model identity.
-- Authorization is consumed when the original becomes `retried` and attempt 2 becomes `pending` in the same checkpoint.
-- Attempt 2 identifies `retry_of_attempt_id`; attempt 1 identifies `superseded_by_attempt_id`.
+- `max_attempts_per_call` defaults to `2` but is a persisted configuration value and may permit additional sequential attempts.
+- Each authorization is consumed when the current attempt becomes `retried` and the next numbered attempt becomes `pending` in the same checkpoint.
+- Every adjacent pair retains bidirectional `retry_of_attempt_id` and `superseded_by_attempt_id` lineage.
 - Ordinary resume remains inert for failed sessions and cannot create a replacement.
-- A failed or ambiguous attempt 2 has no legal path to attempt 3.
+- Reaching the configured per-call ceiling blocks another provider launch, while the final unresolved attempt may still be abandoned.
 - Every attempt remains charged to the same persisted cumulative budget.
-- A crash-pending attempt consumes its conservative output reserve before attempt 2 can launch.
+- A crash-pending attempt consumes its conservative output reserve before another attempt can launch, including post-return budget validation.
 
 ## Explicit exclusions
 
 Slice 2E.2 does not:
 
-- authorize automatic retry or more than one replacement;
+- authorize automatic retry or any attempt above the persisted per-call ceiling;
 - capture accepted live outputs as replay fixtures;
 - replay a captured complete live session;
 - expose a live full-session CLI;
