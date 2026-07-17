@@ -8,10 +8,11 @@ Imperium remains in **design and validation**.
 - **Stage 4 merge:** PR #8, squash commit `9f1344672b07443a1b95b99ad001ef6d70c78f72`.
 - **Stage 5 Gate 1:** complete and merged through PR #12, squash commit `bd16c0a4dcbc4f7174743029611b950d233abfa7`.
 - **Stage 5 Gate 2:** complete and merged through PR #13, squash commit `d816cc64cc88e28b7472e89bada680217704237f`.
-- **Stage 5 Gate 2E.1:** implemented in draft PR #14 and proven under simulated providers; merge review is pending.
+- **Stage 5 Gate 2E.1:** complete and merged through PR #14, squash commit `a074d27b648d63ffbb602fbec57aa7961cbe9576`.
+- **Stage 5 Gate 2E.2:** implemented in draft PR #15 under simulated providers; review is pending.
 - **Live model policy:** all Stage 5 tests remain locked to `gpt-5.6-terra` with `low` reasoning effort.
 - **Live tool policy:** shell execution and web search remain disabled.
-- **Current gate:** review Gate 2E.1 before implementing explicit abandon/retry authorization or any complete live council.
+- **Current gate:** review Gate 2E.2 operator abandonment and configurable-attempt authorization before captured replay or any complete live council.
 
 `MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records durable accepted decisions. `docs/STAGE_5_CODEX_PROVIDER_PLAN.md` defines the accepted Gate 1 boundary. `docs/STAGE_5_GATE_2_PROVIDER_INJECTION.md` defines accepted Gate 2. `docs/STAGE_5_GATE_2E_ATTEMPT_ACCOUNTING.md` defines the current Gate 2E safety contract.
 
@@ -24,7 +25,7 @@ Imperium remains in **design and validation**.
 | 2 — Profiles and fixed council | Complete and merged | Seneschal plus Accountant, Gazgul, Overmind, and Castellan with persistent profiles and counterweights |
 | 3 — Exact deliberation protocol | Complete and merged | Protocol 1.3 with blind interpretation, direct debate, evidence ordering/cardinality, halt behavior, and bounded rounds |
 | 4 — Offline deliberation engine | Complete and merged | Full replay orchestration, halt paths, checkpoints, resume, exports, CLI, and synthetic review artifacts |
-| 5 — Codex provider and live slice | Gates 1 and 2 merged; Gate 2E.1 in draft | Terra-low provider proven; shared provider-authoritative lifecycle and durable budgeted attempts pass simulated tests; retry authorization and captured replay remain |
+| 5 — Codex provider and live slice | Gates 1, 2, and 2E.1 merged; Gate 2E.2 in draft | Terra-low provider proven; durable budgeted attempts and explicit configurable-attempt authorization pass simulated tests; captured replay remains |
 | 6 — Experiment harness | Not started | Conditions A1, A2, B, and C with frozen controls |
 | 7 — Pilot validation | Not started | Repeated blinded evaluation |
 | 8 — Investment gate | Not started | Proceed, revise and retest, or stop |
@@ -94,7 +95,7 @@ The architecture review established:
 
 ## Stage 5 Gate 2E.1 Result
 
-Draft PR #14 proves under replay and simulated providers that:
+Merged PR #14 proves under replay and simulated providers that:
 
 - every provider launch has a pending attempt checkpoint before invocation;
 - accepted, failed, and ambiguous outcomes remain distinct and inspectable;
@@ -104,16 +105,30 @@ Draft PR #14 proves under replay and simulated providers that:
 - missing provider usage is charged conservatively rather than treated as zero;
 - previously accepted attempts survive a later preflight failure;
 - a second attempt requires explicit retry lineage;
-- no operation currently authorizes that lineage;
 - providers reporting an automatic retry are rejected.
 
-The clean draft head passes **161 Python tests** and the Stage 4 artifact workflow. CI made no Codex or live council calls.
+The merged Gate 2E.1 head passed **162 Python tests** and the Stage 4 artifact workflow. CI made no Codex or live council calls.
+
+## Stage 5 Gate 2E.2 Result
+
+Draft PR #15 proves under replay and simulated providers that:
+
+- an operator can abandon one unresolved first attempt without launching a provider;
+- every additional attempt requires an explicit non-empty reason;
+- `max_attempts_per_call` is persisted, defaults to `2`, and can be configured independently from the session-wide attempt budget;
+- adjacent attempts retain bidirectional durable lineage;
+- ordinary resume cannot create a replacement;
+- the configured per-call ceiling prohibits another launch while still allowing final abandonment;
+- original and replacement usage remain cumulative;
+- crash-pending attempts retain conservative output-reserve charges;
+- model identity cannot change during replacement.
+
+The clean draft head passes **173 Python tests** and the Stage 4 artifact workflow. CI made no Codex or live council calls.
 
 ## Remaining Before the First Live Council
 
 Gate 2E still requires:
 
-- an explicit operator workflow to abandon an ambiguous/failed attempt or authorize exactly one replacement attempt;
 - accepted live artifacts saved as replay fixtures;
 - complete captured-session replay without provider calls;
 - reviewed full-session Terra-low usage estimate;

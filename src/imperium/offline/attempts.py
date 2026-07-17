@@ -27,6 +27,7 @@ class UsageBudget(StrictModel):
     """Persisted hard limits applied before and after provider invocation."""
 
     max_attempts: int = Field(default=64, ge=1)
+    max_attempts_per_call: int = Field(default=2, ge=1)
     max_input_tokens: int = Field(default=2_000_000, ge=1)
     max_cached_input_tokens: int = Field(default=2_000_000, ge=0)
     max_output_tokens: int = Field(default=250_000, ge=1)
