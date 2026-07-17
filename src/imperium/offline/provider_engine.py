@@ -132,6 +132,7 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         self._session_evidence_resolutions: dict[str, EvidenceResolution] = {}
         self._configured_usage_budget = usage_budget
         self._authorized_retry_call_key: str | None = None
+        self._authorized_retry_attempt_id: str | None = None
         self._authorized_retry_reason: str | None = None
         self.max_context_bytes = max_context_bytes
         if artifact_authority not in {"scenario", "provider"}:
@@ -243,15 +244,7 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
                 "operator disposition requires exactly one unresolved pending, failed, "
                 "or ambiguous attempt"
             )
-        target = unresolved[0]
-        attempts_for_call = tuple(
-            attempt for attempt in session.attempts if attempt.call_key == target.call_key
-        )
-        if len(attempts_for_call) != 1 or target.attempt_number != 1:
-            raise RetryAuthorizationRequired(
-                "Gate 2E.2 permits exactly one replacement attempt per call key"
-            )
-        return target
+        return unresolved[0]
 
     @staticmethod
     def _disposition_reason(reason: str) -> str:
@@ -309,6 +302,11 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         session = load_session(source)
         target = self._disposition_target(session)
         disposition_reason = self._disposition_reason(reason)
+        if target.attempt_number >= session.usage_budget.max_attempts_per_call:
+            raise RetryAuthorizationRequired(
+                "configured per-call attempt limit is exhausted: "
+                f"{target.attempt_number}/{session.usage_budget.max_attempts_per_call}"
+            )
         if self.model != target.model:
             raise ValueError(
                 "replacement attempts must preserve the original model identity"
@@ -324,6 +322,7 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         )
         write_checkpoint(session, destination)
         self._authorized_retry_call_key = target.call_key
+        self._authorized_retry_attempt_id = target.attempt_id
         self._authorized_retry_reason = disposition_reason
         try:
             return await self._execute(
@@ -333,6 +332,7 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
             )
         finally:
             self._authorized_retry_call_key = None
+            self._authorized_retry_attempt_id = None
             self._authorized_retry_reason = None
 
     async def _execute(
@@ -468,6 +468,7 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         result,
         *,
         estimated_input_tokens: int,
+        pending_attempts_becoming_terminal: int = 0,
     ) -> None:
         budget = session.usage_budget
         totals = usage_totals(session.attempts)
@@ -484,7 +485,9 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
             budget.output_token_reserve_per_attempt,
         )
         if (
-            charged_output_tokens(session.attempts, budget) + charged_output
+            charged_output_tokens(session.attempts, budget)
+            + pending_attempts_becoming_terminal * budget.output_token_reserve_per_attempt
+            + charged_output
             > budget.max_output_tokens
         ):
             raise UsageBudgetExceeded("reported output token budget was exceeded")
@@ -521,12 +524,19 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         if key in set(session.completed_call_keys):
             return session, self._accepted_output(session, key, type(expected))
         prior_attempts = tuple(item for item in session.attempts if item.call_key == key)
+        retry_source = (
+            max(prior_attempts, key=lambda item: item.attempt_number)
+            if prior_attempts
+            else None
+        )
         authorized_retry = (
             self._authorized_retry_call_key == key
+            and self._authorized_retry_attempt_id is not None
             and self._authorized_retry_reason is not None
-            and len(prior_attempts) == 1
-            and prior_attempts[0].attempt_number == 1
-            and prior_attempts[0].status
+            and retry_source is not None
+            and retry_source.attempt_id == self._authorized_retry_attempt_id
+            and retry_source.attempt_number < session.usage_budget.max_attempts_per_call
+            and retry_source.status
             in {
                 AttemptStatus.PENDING,
                 AttemptStatus.FAILED,
@@ -576,14 +586,19 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
                 pending_attempts_becoming_terminal=(
                     1
                     if authorized_retry
-                    and prior_attempts[0].status is AttemptStatus.PENDING
+                    and retry_source is not None
+                    and retry_source.status is AttemptStatus.PENDING
                     else 0
                 ),
             )
         except Exception as exc:
             self._attach_attempt_session(exc, session)
             raise
-        attempt_number = 2 if authorized_retry else 1
+        attempt_number = (
+            retry_source.attempt_number + 1
+            if authorized_retry and retry_source is not None
+            else 1
+        )
         attempt = ModelAttempt(
             attempt_id=f"{key}:attempt-{attempt_number}",
             call_key=key,
@@ -596,13 +611,15 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
             input_sha256=_context_hash(context),
             estimated_input_tokens=estimated_input_tokens,
             retry_of_attempt_id=(
-                prior_attempts[0].attempt_id if authorized_retry else None
+                retry_source.attempt_id
+                if authorized_retry and retry_source is not None
+                else None
             ),
         )
         attempts = session.attempts
-        if authorized_retry:
+        if authorized_retry and retry_source is not None:
             prior = ModelAttempt.model_validate(
-                prior_attempts[0].model_copy(
+                retry_source.model_copy(
                     update={
                         "status": AttemptStatus.RETRIED,
                         "superseded_by_attempt_id": attempt.attempt_id,
@@ -649,6 +666,13 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
                 session,
                 result,
                 estimated_input_tokens=estimated_input_tokens,
+                pending_attempts_becoming_terminal=(
+                    1
+                    if authorized_retry
+                    and retry_source is not None
+                    and retry_source.status is AttemptStatus.PENDING
+                    else 0
+                ),
             )
             if validate is not None:
                 validate(result.output)
