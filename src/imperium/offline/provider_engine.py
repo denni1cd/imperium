@@ -296,7 +296,7 @@ class SharedDeliberationEngine(_ScenarioLifecycleEngine):
         output_dir: str | Path | None = None,
         interrupt_after: str | None = None,
     ) -> OfflineSession:
-        """Authorize and launch exactly one replacement for one unresolved attempt."""
+        """Authorize and launch the next configured attempt for one unresolved call."""
 
         source = Path(checkpoint)
         session = load_session(source)
