@@ -1,4 +1,4 @@
-"""Gate 2E.2 operator abandon and single-replacement authorization tests."""
+"""Gate 2E.2 operator disposition and configured-attempt authorization tests."""
 
 from __future__ import annotations
 
@@ -20,7 +20,9 @@ from imperium.offline.engine import OfflineInterrupted, _call_key
 from imperium.offline.fixtures import build_challenged_scenario
 from imperium.offline.persistence import load_session
 from imperium.offline.provider_engine import ProviderBoundDeliberationEngine
+from imperium.offline.replay_script import build_replay_records
 from imperium.providers.base import CallMetadata, ModelResult, ProviderError
+from imperium.providers.replay import ReplayProvider
 
 ROOT = Path(__file__).resolve().parents[1]
 OutputT = TypeVar("OutputT", bound=BaseModel)
@@ -63,12 +65,17 @@ class CrashingProvider(FailingProvider):
         raise SimulatedCrash
 
 
-async def _failed_checkpoint(tmp_path: Path) -> Path:
+async def _failed_checkpoint(
+    tmp_path: Path,
+    *,
+    budget: UsageBudget | None = None,
+) -> Path:
     provider = FailingProvider()
     with pytest.raises(ProviderError, match="simulated provider failure"):
         await ProviderBoundDeliberationEngine(
             provider=provider,
             model="gate2e-replay",
+            usage_budget=budget,
         ).run(
             build_challenged_scenario(),
             project_root=ROOT,
@@ -172,7 +179,7 @@ async def test_plain_resume_cannot_replace_failed_attempt(tmp_path: Path) -> Non
 
 
 @pytest.mark.asyncio
-async def test_second_replacement_is_rejected(tmp_path: Path) -> None:
+async def test_default_per_call_limit_rejects_third_attempt(tmp_path: Path) -> None:
     checkpoint = await _failed_checkpoint(tmp_path)
     replacement_provider = FailingProvider()
 
@@ -194,12 +201,86 @@ async def test_second_replacement_is_rejected(tmp_path: Path) -> None:
 
     with pytest.raises(
         RetryAuthorizationRequired,
-        match="exactly one replacement attempt",
+        match="configured per-call attempt limit is exhausted",
     ):
         await ProviderBoundDeliberationEngine(model="gate2e-replay").retry_attempt(
             checkpoint,
-            reason="A second replacement must remain impossible.",
+            reason="The default configuration permits only two attempts.",
         )
+
+
+@pytest.mark.asyncio
+async def test_failed_replacement_can_be_abandoned_without_another_call(
+    tmp_path: Path,
+) -> None:
+    checkpoint = await _failed_checkpoint(tmp_path)
+    provider = FailingProvider()
+    with pytest.raises(ProviderError, match="simulated provider failure"):
+        await ProviderBoundDeliberationEngine(
+            provider=provider,
+            model="gate2e-replay",
+        ).retry_attempt(
+            checkpoint,
+            reason="Authorize one replacement after the diagnosed failure.",
+        )
+
+    abandoned = ProviderBoundDeliberationEngine(
+        model="gate2e-replay"
+    ).abandon_attempt(
+        checkpoint,
+        reason="The replacement also failed; stop this call without another launch.",
+    )
+
+    assert len(provider.calls) == 1
+    assert [attempt.status for attempt in abandoned.attempts] == [
+        AttemptStatus.RETRIED,
+        AttemptStatus.ABANDONED,
+    ]
+    assert abandoned.attempts[-1].attempt_number == 2
+
+
+@pytest.mark.asyncio
+async def test_configured_per_call_limit_allows_three_attempts(
+    tmp_path: Path,
+) -> None:
+    budget = UsageBudget(max_attempts_per_call=3)
+    checkpoint = await _failed_checkpoint(tmp_path, budget=budget)
+
+    for replacement_number in (2, 3):
+        provider = FailingProvider()
+        with pytest.raises(ProviderError, match="simulated provider failure"):
+            await ProviderBoundDeliberationEngine(
+                provider=provider,
+                model="gate2e-replay",
+                usage_budget=budget,
+            ).retry_attempt(
+                checkpoint,
+                reason=f"Authorize configured attempt {replacement_number}.",
+            )
+        assert len(provider.calls) == 1
+
+    failed = load_session(checkpoint)
+    assert [attempt.status for attempt in failed.attempts] == [
+        AttemptStatus.RETRIED,
+        AttemptStatus.RETRIED,
+        AttemptStatus.FAILED,
+    ]
+    assert failed.usage_budget.max_attempts_per_call == 3
+
+    blocked = FailingProvider()
+    with pytest.raises(
+        RetryAuthorizationRequired,
+        match="configured per-call attempt limit is exhausted",
+    ):
+        await ProviderBoundDeliberationEngine(
+            provider=blocked,
+            model="gate2e-replay",
+            usage_budget=budget,
+        ).retry_attempt(
+            checkpoint,
+            reason="Attempt four exceeds the persisted per-call limit.",
+        )
+    assert blocked.calls == []
 
 
 @pytest.mark.asyncio
@@ -268,3 +349,44 @@ async def test_pending_crash_consumes_output_reserve_before_replacement(
     preserved = load_session(checkpoint)
     assert len(preserved.attempts) == 1
     assert preserved.attempts[0].status is AttemptStatus.PENDING
+
+
+@pytest.mark.asyncio
+async def test_pending_retry_post_return_charges_original_output_reserve(
+    tmp_path: Path,
+) -> None:
+    scenario = build_challenged_scenario()
+    reserve = 4_096
+    budget = UsageBudget(
+        max_output_tokens=9_000,
+        output_token_reserve_per_attempt=reserve,
+    )
+    with pytest.raises(SimulatedCrash):
+        await ProviderBoundDeliberationEngine(
+            provider=CrashingProvider(),
+            model="gate2e-replay",
+            usage_budget=budget,
+        ).run(scenario, project_root=ROOT, output_dir=tmp_path)
+
+    records = build_replay_records(scenario, model="gate2e-replay")
+    records[_first_call_key()][0]["output_tokens"] = 6_000
+    provider = ReplayProvider(records)
+
+    with pytest.raises(UsageBudgetExceeded, match="reported output token budget"):
+        await ProviderBoundDeliberationEngine(
+            provider=provider,
+            model="gate2e-replay",
+            usage_budget=budget,
+        ).retry_attempt(
+            tmp_path / "session.json",
+            reason="Retry the uncertain call while retaining its conservative reserve.",
+        )
+
+    assert len(provider.calls) == 1
+    failed = load_session(tmp_path / "session.json")
+    assert [attempt.status for attempt in failed.attempts] == [
+        AttemptStatus.RETRIED,
+        AttemptStatus.FAILED,
+    ]
+    assert failed.attempts[-1].output_tokens == 6_000
+
