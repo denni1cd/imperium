@@ -2,7 +2,7 @@
 
 ## Status
 
-**Slice 2E.1 is merged. Slice 2E.2 is implemented in draft PR #15 under simulated providers and does not authorize a complete live council.**
+**Slices 2E.1 and 2E.2 are merged. PR #15 added configurable per-call attempt authorization and still does not itself authorize a complete live council.**
 
 Gate 2 was squash-merged as `d816cc64cc88e28b7472e89bada680217704237f`. Gate 2E.1 was squash-merged as `a074d27b648d63ffbb602fbec57aa7961cbe9576`. Gate 2E adds the safety state required before a full live deliberation can be considered.
 
@@ -70,7 +70,7 @@ A post-return breach records the failed attempt and its available usage/output i
 
 ## Validation evidence
 
-The merged Gate 2E.1 head passed **162 Python tests**. The current Gate 2E.2 draft head passes:
+The merged Gate 2E.1 head passed **162 Python tests**. The merged Gate 2E.2 head passed:
 
 - **173 Python tests**;
 - the Stage 4 offline artifact workflow;
@@ -110,4 +110,4 @@ Slice 2E.2 does not:
 
 ## Next sub-gate
 
-After PR #15 review, the next separate slice may capture accepted live outputs as replay fixtures and prove captured-session replay without provider calls. A reviewed full-session usage estimate and explicit user authorization remain required before any complete live council.
+Gate 2F separately adds full-council setup, accepted-output capture, provider-free replay, and a replay-only usage estimate. Its explicit authorization boundary remains required before any complete live council.
