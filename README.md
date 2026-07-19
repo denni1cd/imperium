@@ -12,11 +12,9 @@ Imperium is a strategic deliberation system designed to produce better, actionab
 
 Imperium remains in **design and validation**.
 
-Stages 0–4 are complete and merged. Stage 5 draft PR #12 contains the bounded Codex CLI provider and the successful one-call live Accountant interpretation. Gate 2 provider injection remains the next implementation step; a complete live council is still blocked.
+Stages 0–4 are complete and merged. Stage 5 Gates 1, 2, 2E.1, and 2E.2 are merged. Gate 2F now sets up the first complete fixed-council deliberation under replay and simulated providers; the live run remains blocked until review, estimate inspection, and explicit authorization.
 
 All Stage 5 live tests are locked to **GPT-5.6 Terra with low reasoning effort**, the Codex CLI equivalent of Terra Light. The live command exposes no model override, and the provider rejects any other model or reasoning effort before launching Codex. Shell execution and web search are also explicitly disabled.
-
-The original successful smoke used the user's then-current default Codex configuration. Before PR #12 is merged, one additional bounded local smoke must confirm that the installed CLI accepts the explicit Terra-low no-tools command.
 
 For the current status and next gate, see [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md).
 
@@ -28,6 +26,7 @@ For the current status and next gate, see [`docs/PROJECT_STATUS.md`](docs/PROJEC
 - [`docs/STRATEGIC_PROJECT_PLAN.md`](docs/STRATEGIC_PROJECT_PLAN.md) — gated roadmap
 - [`docs/STAGE_4_IMPLEMENTATION_PLAN.md`](docs/STAGE_4_IMPLEMENTATION_PLAN.md) — accepted Stage 4 contract
 - [`docs/STAGE_5_CODEX_PROVIDER_PLAN.md`](docs/STAGE_5_CODEX_PROVIDER_PLAN.md) — current live-provider gates
+- [`docs/STAGE_5_GATE_2F_LIVE_COUNCIL.md`](docs/STAGE_5_GATE_2F_LIVE_COUNCIL.md) — complete live-council gate and frozen strategic case
 - [`config/values.yaml`](config/values.yaml) — approved vocabulary 1.0
 - [`config/council.yaml`](config/council.yaml) — approved council 1.0
 - [`config/protocol.yaml`](config/protocol.yaml) — approved protocol 1.3
@@ -35,7 +34,7 @@ For the current status and next gate, see [`docs/PROJECT_STATUS.md`](docs/PROJEC
 - [`src/imperium/offline/`](src/imperium/offline/) — merged Stage 4 orchestration
 - [`src/imperium/providers/codex_cli.py`](src/imperium/providers/codex_cli.py) — bounded Terra-low no-tools Codex process adapter
 - [`src/imperium/providers/openai_schema.py`](src/imperium/providers/openai_schema.py) — reversible Structured Outputs schema adapter
-- [`src/imperium/live/`](src/imperium/live/) — one-call live smoke command
+- [`src/imperium/live/`](src/imperium/live/) — one-call smoke plus estimate, full-council, capture, and replay commands
 - [`docs/EXPERIMENT_PLAN.md`](docs/EXPERIMENT_PLAN.md) — later controlled validation
 
 ## Stage 4 Capabilities
@@ -102,8 +101,22 @@ Inspect:
 
 Do not automatically rerun a failed live call. Preserve the exact error and correct the provider boundary first.
 
+Estimate the complete council path without live calls:
+
+```powershell
+python -m imperium.live council-estimate --output-dir stage5-output\gate-2f-estimate
+```
+
+The full gate is a sequential four-advocate debate with Seneschal adjudication, not a single-member review. After review and explicit authorization, run it with configurable per-call attempts:
+
+```powershell
+python -m imperium.live council --output-dir stage5-output\gate-2f --authorize RUN_FULL_COUNCIL --max-attempts-per-call 3
+```
+
+The command captures every accepted output, proves a zero-Codex full replay, and still requires human review of whether the disagreement and revisions were genuinely material.
+
 ## Implementation Gate
 
-A successful one-call smoke does not authorize a full live council by itself. Gate 2 must inject the provider into the Stage 4 engine, preserve replay as the default, and add context/token ceilings under simulated tests before a complete live run is authorized.
+A successful one-call smoke does not validate Imperium. The first complete council can test the full debate process, but one run still cannot prove an advantage over the A1, A2, and B baselines. That claim remains reserved for repeated blinded experiments.
 
 Imperium is not a coding swarm, roleplaying system, or autonomous execution framework.

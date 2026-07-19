@@ -431,6 +431,16 @@ class OfflineSession(StrictModel):
             index["actionableplan"] = self.record.plan
         return index
 
+    def accepted_artifact_index(self) -> dict[str, StrictModel]:
+        """Return a defensive copy of accepted provider artifacts keyed by stable ID.
+
+        Live-capture tooling needs the same canonical artifact view used by checkpoint
+        validation.  Keeping the construction here prevents capture code from growing a
+        second, subtly different artifact-identity policy.
+        """
+
+        return dict(self._accepted_artifact_index())
+
     def _validate_council_snapshot(self) -> None:
         if self.record.member_snapshots:
             if len(self.record.member_snapshots) != len(self.runtime.council.members):

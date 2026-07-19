@@ -58,6 +58,7 @@ class ReplayProvider:
             model=str(record.get("model", model)),
             response_id=record.get("response_id"),
             input_tokens=int(record.get("input_tokens", 0)),
+            cached_input_tokens=int(record.get("cached_input_tokens", 0)),
             output_tokens=int(record.get("output_tokens", 0)),
             latency_ms=int(record.get("latency_ms", 0)),
             retries=int(record.get("retries", 0)),
