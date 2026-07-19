@@ -9,10 +9,11 @@ Imperium remains in **design and validation**.
 - **Stage 5 Gate 1:** complete and merged through PR #12, squash commit `bd16c0a4dcbc4f7174743029611b950d233abfa7`.
 - **Stage 5 Gate 2:** complete and merged through PR #13, squash commit `d816cc64cc88e28b7472e89bada680217704237f`.
 - **Stage 5 Gate 2E.1:** complete and merged through PR #14, squash commit `a074d27b648d63ffbb602fbec57aa7961cbe9576`.
-- **Stage 5 Gate 2E.2:** implemented in draft PR #15 under simulated providers; review is pending.
+- **Stage 5 Gate 2E.2:** complete and merged through PR #15, squash commit `29bb42ae0e1503c9428a5ff8fbd8a6ace9efb146`.
+- **Stage 5 Gate 2F:** implemented under replay and simulated providers on `stage-5-gate-2f-live-council`; live execution remains unauthorized.
 - **Live model policy:** all Stage 5 tests remain locked to `gpt-5.6-terra` with `low` reasoning effort.
 - **Live tool policy:** shell execution and web search remain disabled.
-- **Current gate:** review Gate 2E.2 operator abandonment and configurable-attempt authorization before captured replay or any complete live council.
+- **Current gate:** review Gate 2F frozen case, full-council runner, accepted-output capture, exact replay, and estimate before explicit authorization of one live council.
 
 `MANIFESTO.md` remains the governing source of truth. `DECISIONS.md` records durable accepted decisions. `docs/STAGE_5_CODEX_PROVIDER_PLAN.md` defines the accepted Gate 1 boundary. `docs/STAGE_5_GATE_2_PROVIDER_INJECTION.md` defines accepted Gate 2. `docs/STAGE_5_GATE_2E_ATTEMPT_ACCOUNTING.md` defines the current Gate 2E safety contract.
 
@@ -25,7 +26,7 @@ Imperium remains in **design and validation**.
 | 2 — Profiles and fixed council | Complete and merged | Seneschal plus Accountant, Gazgul, Overmind, and Castellan with persistent profiles and counterweights |
 | 3 — Exact deliberation protocol | Complete and merged | Protocol 1.3 with blind interpretation, direct debate, evidence ordering/cardinality, halt behavior, and bounded rounds |
 | 4 — Offline deliberation engine | Complete and merged | Full replay orchestration, halt paths, checkpoints, resume, exports, CLI, and synthetic review artifacts |
-| 5 — Codex provider and live slice | Gates 1, 2, and 2E.1 merged; Gate 2E.2 in draft | Terra-low provider proven; durable budgeted attempts and explicit configurable-attempt authorization pass simulated tests; captured replay remains |
+| 5 — Codex provider and live slice | Gates 1, 2, 2E.1, and 2E.2 merged; Gate 2F implemented for review | Terra-low provider, durable budgeted attempts, full-council command, capture, replay, and manifesto checks pass simulated tests; live run remains unauthorized |
 | 6 — Experiment harness | Not started | Conditions A1, A2, B, and C with frozen controls |
 | 7 — Pilot validation | Not started | Repeated blinded evaluation |
 | 8 — Investment gate | Not started | Proceed, revise and retest, or stop |
@@ -111,7 +112,7 @@ The merged Gate 2E.1 head passed **162 Python tests** and the Stage 4 artifact w
 
 ## Stage 5 Gate 2E.2 Result
 
-Draft PR #15 proves under replay and simulated providers that:
+Merged PR #15 proves under replay and simulated providers that:
 
 - an operator can abandon one unresolved first attempt without launching a provider;
 - every additional attempt requires an explicit non-empty reason;
@@ -123,16 +124,31 @@ Draft PR #15 proves under replay and simulated providers that:
 - crash-pending attempts retain conservative output-reserve charges;
 - model identity cannot change during replacement.
 
-The clean draft head passes **173 Python tests** and the Stage 4 artifact workflow. CI made no Codex or live council calls.
+The merged head passed **173 Python tests** and the Stage 4 artifact workflow. CI made no Codex or live council calls.
+
+## Stage 5 Gate 2F Implemented Result
+
+The review branch adds, without making live calls:
+
+- one frozen technology-investment question for the complete condition-C council;
+- the fixed four advocates plus non-advocating Seneschal under protocol 1.3;
+- a provider-free expected-path estimate and explicit 59-call protocol ceiling;
+- an exact `RUN_FULL_COUNCIL` authorization string before Codex can launch;
+- CLI configuration for session attempts, attempts per call, input, cached input, output, and output reserve;
+- accepted-output capture with typed and provider-neutral payload digests;
+- cached-token-preserving ReplayProvider records;
+- a complete provider-free replay and semantic session-equivalence check;
+- automated rejection of completion without challenge exchanges, consequential response dispositions, and post-debate revision signals;
+- mandatory human review of perspective distinctness, materiality, synthesis quality, and plan fidelity.
+
+The branch tests make no Codex calls. One full live council remains explicitly unauthorized until the branch is reviewed and the replay-only usage estimate is inspected.
 
 ## Remaining Before the First Live Council
 
-Gate 2E still requires:
-
-- accepted live artifacts saved as replay fixtures;
-- complete captured-session replay without provider calls;
-- reviewed full-session Terra-low usage estimate;
-- explicit user authorization for one sequential complete live deliberation.
+- review and merge Gate 2F;
+- run and inspect the provider-free full-session estimate in the target environment;
+- receive explicit user authorization for one sequential complete live deliberation;
+- if the live council completes, perform the mandatory human strategic review before declaring the gate passed.
 
 ## Current Validation Risks
 
