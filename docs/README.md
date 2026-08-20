@@ -23,6 +23,7 @@ These documents define the minimum viable deliberation protocol and the evidence
 - [`STAGE_5_CODEX_PROVIDER_PLAN.md`](STAGE_5_CODEX_PROVIDER_PLAN.md) — accepted Gate 1 Codex CLI boundary, Terra-low no-tools policy, and structured-output compatibility.
 - [`STAGE_5_GATE_2_PROVIDER_INJECTION.md`](STAGE_5_GATE_2_PROVIDER_INJECTION.md) — accepted Gate 2 contract: replay extraction, provider authority, bounded rounds, evidence disposition, shared-engine consolidation, and material second-round validation.
 - [`STAGE_5_GATE_2E_ATTEMPT_ACCOUNTING.md`](STAGE_5_GATE_2E_ATTEMPT_ACCOUNTING.md) — current Gate 2E contract: durable attempt states, conservative usage budgets, accepted-artifact integrity, and explicit operator-controlled configurable-attempt lineage.
+- [`STAGE_5_GATE_2F_LIVE_COUNCIL.md`](STAGE_5_GATE_2F_LIVE_COUNCIL.md) — first complete condition-C council gate: frozen case, authorization boundary, capture, replay, and manifesto-aligned review criteria.
 
 ## Protocol Amendments
 
@@ -37,4 +38,4 @@ These documents define the minimum viable deliberation protocol and the evidence
 - [`../config/protocol.yaml`](../config/protocol.yaml) — minimum deliberation protocol version 1.3
 - [`../prompts/`](../prompts/) — stage-specific prompt contracts referenced by the protocol
 
-The current engineering gate is review of Gate 2E.2 operator abandonment and configurable-attempt authorization. A complete live council remains blocked.
+The current engineering gate is review of Gate 2F. A complete live council remains blocked until the replay-only estimate is inspected and the user explicitly authorizes the run.
