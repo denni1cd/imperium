@@ -30,7 +30,6 @@ Using four delegated agents A–D, Work successfully demonstrated:
 
 - preserved independent initial proposals;
 - controlled disclosure after the independent phase;
-- continued use of the same named delegated agents after disclosure;
 - delivery of all four complete initial proposals and all four private facts to the councillors;
 - councillor-selected debate issues rather than centrally assigned objections;
 - specific cross-agent challenge, support, reinforcement, concession, revision, and synthesis;
@@ -46,27 +45,73 @@ The clearest consequential changes were:
 
 ### Limitation discovered
 
-The rebuttal round did **not** circulate the complete opening Council responses verbatim. Work preserved access to the original proposal packet but compressed the opening discussion before sending it into the rebuttal round.
+The rebuttal round did not circulate the complete opening Council responses verbatim. Work preserved access to the original proposal packet but compressed the opening discussion before sending it into the rebuttal round.
 
-This violates the current protocol requirement that, once the chamber opens, participating councillors should have access to the complete evolving deliberative record.
-
-This is a concrete runtime behavior to address in instructions and retest. It does not invalidate the demonstrated cross-agent debate capability, but Gate 0B should not be treated as a clean pass until we know whether verbatim transcript circulation can be reliably enforced or whether controlled summarization must become an explicit, tested design choice.
-
-### Conclusion
-
-ChatGPT Work has demonstrated the core transition from independent counsel to genuine shared debate. The remaining question is transcript fidelity across rounds.
-
-See `GATE_0B_RESULT.md` for the detailed observed result.
+This does not invalidate the demonstrated debate capability, but it raises a design question: the Council may not need an ever-growing verbatim transcript if it can preserve all material argument state faithfully.
 
 ---
 
-## Gate 0C — Multi-round identity/profile persistence
+## Gate 0C — Persistent councillor state with disposable workers
 
-**Status: PENDING**
+**Status: RETEST REQUIRED**
 
-Test whether persistent strategic value profiles remain behaviorally distinct across multiple debate rounds, including after cross-member persuasion and partial convergence.
+### First attempt
 
-This test should also explicitly require verbatim circulation of the immediately preceding Council responses to determine whether the Gate 0B transcript limitation can be corrected by instruction.
+The first Gate 0C test attempted to keep the same four runtime subagent processes alive across multiple debate rounds.
+
+Work successfully created four independent councillors with distinct value matrices and produced behaviorally distinct Phase 1 proposals. Architect also completed one post-disclosure revision after incorporating Steward's capacity objection.
+
+However, Work did not reliably carry all four same runtime subagent sessions through the full disclosure and multi-round debate sequence. The test therefore failed as specified.
+
+### Architectural interpretation
+
+The failure does not demonstrate that persistent councillor identity is impossible. It demonstrates that equating a councillor with a persistent runtime subagent process is unnecessarily strong and may be a poor fit for ChatGPT Work.
+
+The revised hypothesis is:
+
+> **A councillor is a persistent strategic identity and position state, not a persistent runtime process.**
+
+A fresh delegated worker may speak for a councillor in a later round if it receives sufficient state to continue that councillor's reasoning faithfully.
+
+Each councillor should therefore preserve:
+
+- immutable identity/profile and value matrix;
+- immutable original independent proposal;
+- current strategy;
+- current rationale;
+- accepted arguments;
+- rejected arguments;
+- unresolved concerns;
+- concessions and revisions made;
+- causal reason for the last material position change;
+- immediately preceding councillor statement when useful.
+
+The runtime worker may be disposable. The councillor state is persistent.
+
+### Critical anti-drift rule
+
+A fresh worker must not reinterpret the whole problem from scratch and silently produce a different answer.
+
+It must treat the supplied current councillor state as the starting judgment and evaluate only the new material introduced since the councillor last spoke.
+
+A change in generated output is **not** a valid change in Council position unless the councillor provides a causal bridge identifying:
+
+1. what new argument, evidence, or synthesis changed the judgment;
+2. which previous assumption or rationale it defeats or modifies;
+3. why the change is consistent with the councillor's persistent values.
+
+If no such material cause exists, the previous position remains authoritative.
+
+The protocol must also avoid the opposite failure: over-anchoring. Councillors are not required to defend their previous position when stronger evidence or argument defeats it. Rational mind-changing is required behavior, not a failure of identity.
+
+### Revised Gate 0C objective
+
+Test whether fresh delegated workers can continue persistent councillor states across multiple debate rounds while satisfying both requirements:
+
+- **continuity:** no unexplained stochastic position drift;
+- **updateability:** genuine new arguments can cause explicit, causally justified revision.
+
+The test should compare each councillor's state before and after each turn rather than requiring persistent runtime sessions.
 
 ---
 
@@ -99,7 +144,7 @@ Proceed to packaging the behavior as an Imperial Council Skill and Workspace Age
 
 1. independent delegated counsel with controlled private context;
 2. post-independence disclosure and genuine cross-agent debate;
-3. sufficiently reliable identity/profile persistence and deliberative context sharing;
+3. persistent strategic identity across disposable worker invocations without unexplained drift, while still permitting rational revision;
 4. reliable debate closure and voting;
 5. one definitive coherent final plan.
 
