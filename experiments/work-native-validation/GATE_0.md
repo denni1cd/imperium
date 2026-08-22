@@ -53,7 +53,7 @@ This does not invalidate the demonstrated debate capability, but it raises a des
 
 ## Gate 0C — Persistent councillor state with disposable workers
 
-**Status: RETEST REQUIRED**
+**Status: PASS WITH RECOMMENDATION REVERSAL NOT YET DEMONSTRATED**
 
 ### First attempt
 
@@ -61,19 +61,17 @@ The first Gate 0C test attempted to keep the same four runtime subagent processe
 
 Work successfully created four independent councillors with distinct value matrices and produced behaviorally distinct Phase 1 proposals. Architect also completed one post-disclosure revision after incorporating Steward's capacity objection.
 
-However, Work did not reliably carry all four same runtime subagent sessions through the full disclosure and multi-round debate sequence. The test therefore failed as specified.
+However, Work did not reliably carry all four same runtime subagent sessions through the full disclosure and multi-round debate sequence.
 
-### Architectural interpretation
+### Revised architecture
 
-The failure does not demonstrate that persistent councillor identity is impossible. It demonstrates that equating a councillor with a persistent runtime subagent process is unnecessarily strong and may be a poor fit for ChatGPT Work.
+The first attempt showed that equating a councillor with a persistent runtime process was unnecessarily strong and a poor fit for the Work runtime.
 
 The revised hypothesis is:
 
 > **A councillor is a persistent strategic identity and position state, not a persistent runtime process.**
 
-A fresh delegated worker may speak for a councillor in a later round if it receives sufficient state to continue that councillor's reasoning faithfully.
-
-Each councillor should therefore preserve:
+The councillor preserves:
 
 - immutable identity/profile and value matrix;
 - immutable original independent proposal;
@@ -86,32 +84,47 @@ Each councillor should therefore preserve:
 - causal reason for the last material position change;
 - immediately preceding councillor statement when useful.
 
-The runtime worker may be disposable. The councillor state is persistent.
+The delegated worker may be disposable.
 
 ### Critical anti-drift rule
 
 A fresh worker must not reinterpret the whole problem from scratch and silently produce a different answer.
 
-It must treat the supplied current councillor state as the starting judgment and evaluate only the new material introduced since the councillor last spoke.
+It must treat the supplied current councillor state as the starting judgment and evaluate new material against that state.
 
-A change in generated output is **not** a valid change in Council position unless the councillor provides a causal bridge identifying:
+A change in generated output is not a valid change in Council position unless the councillor can provide a causal bridge identifying:
 
 1. what new argument, evidence, or synthesis changed the judgment;
 2. which previous assumption or rationale it defeats or modifies;
-3. why the change is consistent with the councillor's persistent values.
+3. why the change remains consistent with the councillor's persistent values.
 
-If no such material cause exists, the previous position remains authoritative.
+The opposite failure must also be avoided: persistent state must not make councillors artificially stubborn. Rational mind-changing remains required behavior.
 
-The protocol must also avoid the opposite failure: over-anchoring. Councillors are not required to defend their previous position when stronger evidence or argument defeats it. Rational mind-changing is required behavior, not a failure of identity.
+### Revised test result
 
-### Revised Gate 0C objective
+A six-phase retest used 20 fresh disposable delegates and demonstrated:
 
-Test whether fresh delegated workers can continue persistent councillor states across multiple debate rounds while satisfying both requirements:
+- successful rehydration of each councillor from stored state;
+- no unexplained recommendation drift when no new information was introduced;
+- persistent behavioral influence from the value matrices;
+- immutable original recommendations alongside evolving current rationale and constraints;
+- preservation of concessions, safeguards, and refinements across fresh worker invocations;
+- evidence-responsive updating after genuinely new evidence was introduced;
+- no arbitrary reversion of prior refinements;
+- no collapse into generic identical reasoning;
+- coherent multi-round reasoning without persistent runtime sessions.
 
-- **continuity:** no unexplained stochastic position drift;
-- **updateability:** genuine new arguments can cause explicit, causally justified revision.
+All four councillors happened to recommend C initially and retained C throughout the test. Their rationales and operating conditions evolved materially, but no recommendation reversal was warranted by the evidence presented.
 
-The test should compare each councillor's state before and after each turn rather than requiring persistent runtime sessions.
+Therefore the recommendation-level causal-bridge transition is **NOT DEMONSTRATED**, not failed. The test never exercised that path.
+
+### Conclusion
+
+Persistent councillor state plus disposable delegated workers is supported as the preferred Work-native architecture for continued testing.
+
+One focused follow-up remains before Gate 0C is fully closed: introduce evidence that materially defeats one or more stored recommendations and verify that a fresh worker can change the recommendation through an explicit causal bridge without losing identity continuity.
+
+See `GATE_0C_RESULT.md` for the detailed result.
 
 ---
 
