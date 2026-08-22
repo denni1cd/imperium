@@ -8,15 +8,9 @@ Validate the minimum native capabilities required to implement the Imperial Coun
 
 **Status: PASS**
 
-### Observed result
-
 ChatGPT Work created four delegated agents/workstreams and supplied each with the same shared decision plus one distinct private fact. The returned analyses were consistent with only the shared question and the private fact supplied to that agent. No initial analysis demonstrated knowledge of another agent's private fact.
 
-Work also reported that the agents were separate delegated workstreams, context was controlled per subagent, and the subagents ran independently before their results were combined.
-
-### Conclusion
-
-The minimum primitive for independent initial counsel has been demonstrated sufficiently to continue Work-native validation.
+Conclusion: the minimum primitive for independent initial counsel is demonstrated.
 
 ---
 
@@ -24,50 +18,32 @@ The minimum primitive for independent initial counsel has been demonstrated suff
 
 **Status: PASS WITH LIMITATION**
 
-### Observed result
+Work demonstrated preserved independent initial proposals, controlled post-independence disclosure, councillor-selected debate issues, specific cross-agent challenge/support/revision/synthesis, coalition behavior, and consequential change in the decision state.
 
-Using four delegated agents A–D, Work successfully demonstrated:
-
-- preserved independent initial proposals;
-- controlled disclosure after the independent phase;
-- delivery of all four complete initial proposals and all four private facts to the councillors;
-- councillor-selected debate issues rather than centrally assigned objections;
-- specific cross-agent challenge, support, reinforcement, concession, revision, and synthesis;
-- coalition behavior in which multiple councillors supported the same argument against another position;
-- consequential change in the decision state rather than four parallel summaries.
-
-The clearest consequential changes were:
+The clearest changes were:
 
 - A changed from internal validation to a conditional limited pilot after engaging B/C's customer-learning case and D's safety constraints;
 - B, C, and D adopted A's architectural-isolation objection as a threshold condition;
 - A strengthened D's safety case by requiring root-cause remediation and a sufficiently large validation corpus;
-- the group converged toward a conditional fork: authorize the pilot only if technical isolation, supervised low-consequence use, standardized onboarding, and protected rework capacity are demonstrated; otherwise fall back to internal validation.
+- the group converged toward a conditional fork rather than four parallel summaries.
 
 ### Limitation discovered
 
 The rebuttal round did not circulate the complete opening Council responses verbatim. Work preserved access to the original proposal packet but compressed the opening discussion before sending it into the rebuttal round.
 
-This does not invalidate the demonstrated debate capability, but it raises a design question: the Council may not need an ever-growing verbatim transcript if it can preserve all material argument state faithfully.
+This does not invalidate the demonstrated debate capability. It raises a design question: the Council may not need an ever-growing verbatim transcript if it can preserve all material argument state faithfully.
 
 ---
 
 ## Gate 0C — Persistent councillor state with disposable workers
 
-**Status: PASS WITH RECOMMENDATION REVERSAL NOT YET DEMONSTRATED**
+**Status: PASS**
 
-### First attempt
+### Architectural decision under test
 
-The first Gate 0C test attempted to keep the same four runtime subagent processes alive across multiple debate rounds.
+The initial attempt to preserve the same four runtime subagent processes across multiple rounds was unreliable and unnecessarily strong.
 
-Work successfully created four independent councillors with distinct value matrices and produced behaviorally distinct Phase 1 proposals. Architect also completed one post-disclosure revision after incorporating Steward's capacity objection.
-
-However, Work did not reliably carry all four same runtime subagent sessions through the full disclosure and multi-round debate sequence.
-
-### Revised architecture
-
-The first attempt showed that equating a councillor with a persistent runtime process was unnecessarily strong and a poor fit for the Work runtime.
-
-The revised hypothesis is:
+The revised architecture is:
 
 > **A councillor is a persistent strategic identity and position state, not a persistent runtime process.**
 
@@ -86,45 +62,67 @@ The councillor preserves:
 
 The delegated worker may be disposable.
 
-### Critical anti-drift rule
+### Anti-drift and updateability rule
 
-A fresh worker must not reinterpret the whole problem from scratch and silently produce a different answer.
+A fresh worker must treat the supplied current councillor state as the starting judgment rather than reinterpret the whole problem from scratch.
 
-It must treat the supplied current councillor state as the starting judgment and evaluate new material against that state.
-
-A change in generated output is not a valid change in Council position unless the councillor can provide a causal bridge identifying:
+A change in generated output is not a valid change in Council position unless the councillor supplies a causal bridge identifying:
 
 1. what new argument, evidence, or synthesis changed the judgment;
 2. which previous assumption or rationale it defeats or modifies;
 3. why the change remains consistent with the councillor's persistent values.
 
-The opposite failure must also be avoided: persistent state must not make councillors artificially stubborn. Rational mind-changing remains required behavior.
+The opposite failure must also be avoided: persistent state must not make councillors artificially stubborn. Rational mind-changing is required behavior.
 
-### Revised test result
+### Continuity retest
 
 A six-phase retest used 20 fresh disposable delegates and demonstrated:
 
-- successful rehydration of each councillor from stored state;
+- successful rehydration from stored councillor state;
 - no unexplained recommendation drift when no new information was introduced;
 - persistent behavioral influence from the value matrices;
 - immutable original recommendations alongside evolving current rationale and constraints;
 - preservation of concessions, safeguards, and refinements across fresh worker invocations;
-- evidence-responsive updating after genuinely new evidence was introduced;
+- evidence-responsive updating;
 - no arbitrary reversion of prior refinements;
 - no collapse into generic identical reasoning;
 - coherent multi-round reasoning without persistent runtime sessions.
 
-All four councillors happened to recommend C initially and retained C throughout the test. Their rationales and operating conditions evolved materially, but no recommendation reversal was warranted by the evidence presented.
+All four councillors happened to recommend C throughout that test, so recommendation reversal was initially **NOT DEMONSTRATED**, not failed.
 
-Therefore the recommendation-level causal-bridge transition is **NOT DEMONSTRATED**, not failed. The test never exercised that path.
+### Recommendation reversal follow-up
+
+A focused follow-up introduced new evidence that materially defeated the prior basis for C:
+
+- pilot customers required live production data;
+- legal/security review prohibited customer data in the existing architecture;
+- the four-month multi-tenant rework became mandatory before any pilot;
+- customer-success support disappeared, placing pilot support on the two product engineers;
+- competitor timing moved from four months to at least twelve months.
+
+All four councillors independently changed from C to B through explicit causal bridges:
+
+- **Architect:** C → B because the pilot now forced the very architectural lock-in/rework it had sought to avoid;
+- **Vanguard:** C → B because the competitive urgency that justified speed materially diminished;
+- **Steward:** C → B because the pilot became operationally unexecutable with two engineers;
+- **Castellan:** C → B because production-data exposure removed the pilot's containment and reversibility.
+
+A second set of entirely fresh workers then rehydrated the updated states with no new evidence. All four preserved B without stochastic reversion.
 
 ### Conclusion
 
-Persistent councillor state plus disposable delegated workers is supported as the preferred Work-native architecture for continued testing.
+Gate 0C is fully demonstrated within the scope tested:
 
-One focused follow-up remains before Gate 0C is fully closed: introduce evidence that materially defeats one or more stored recommendations and verify that a fresh worker can change the recommendation through an explicit causal bridge without losing identity continuity.
+- persistent councillor state resists stochastic drift;
+- disposable workers can preserve accumulated reasoning and concessions;
+- persistent value differences remain behaviorally meaningful;
+- material new evidence can cause genuine recommendation reversal;
+- recommendation changes can be causally justified;
+- subsequent fresh workers preserve the revised judgment.
 
-See `GATE_0C_RESULT.md` for the detailed result.
+Persistent councillor state plus disposable delegated workers is therefore the preferred Work-native architecture.
+
+See `GATE_0C_RESULT.md` and `GATE_0C_REVERSAL_RESULT.md` for the detailed experiment records.
 
 ---
 
