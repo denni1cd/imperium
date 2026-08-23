@@ -292,6 +292,22 @@ A feature is justified by improved deliberation—not architectural elegance.
 
 If ChatGPT Work, a strong Council skill, a small set of persistent member profiles, and a Seneschal can reliably produce the desired behavior, then that is enough.
 
+### Do Not Overfit the Council to Its Tests
+
+Experiments exist to reveal weaknesses, not to accumulate permanent rules for every observed behavior.
+
+Before adding a new protocol rule, role, component, or architectural mechanism in response to a test result, ask three questions:
+
+1. **Observed failure** — did a concrete failure actually occur, rather than merely a result we disliked?
+2. **Cross-domain relevance** — could the same failure plausibly weaken Council deliberation across different strategic domains, rather than only in the particular test case that exposed it?
+3. **Minimal fix** — is the proposed change the smallest general intervention that addresses the failure without creating unnecessary machinery or constraining otherwise useful reasoning?
+
+A change that fails these tests should normally remain an experiment-specific instruction, evaluation note, or open question rather than becoming permanent Council doctrine.
+
+The Council must not be optimized to reproduce preferred answers from prior test cases. Domain-specific lessons should not silently become universal strategic rules.
+
+Repeated evidence across different kinds of decisions is stronger justification for permanent changes than a single isolated failure.
+
 ---
 
 ## ChatGPT Work Is the Initial Operating Environment
