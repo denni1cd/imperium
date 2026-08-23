@@ -60,6 +60,8 @@ Repetition of a known preference is not sufficient reason to continue.
 
 A direct material challenge remains open until the challenged councillor answers it, concedes it, demonstrates that its premise is false, or explains why no additional material answer exists.
 
+Councillors should challenge not only each other's strategies and evidence, but also shared decision criteria or assumptions that emerge during debate when those criteria materially shape the Council's judgment.
+
 Research may continue during debate when a disputed factual claim or live uncertainty warrants verification.
 
 ## 6. Persistent councillor state
