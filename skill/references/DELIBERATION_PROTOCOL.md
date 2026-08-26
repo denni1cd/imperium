@@ -131,7 +131,7 @@ A strategy wins only with **strictly more than 50% of the votes cast by particip
 
 For four councillors, two votes are exactly 50% and are **not** a majority.
 
-If more than two alternatives remain and none receives a strict majority, lower-supported alternatives are eliminated and a runoff is held. If two alternatives remain tied, the Seneschal resolves the final tie from the complete deliberative record and must not invent a compromise merely to resolve it.
+If more than two alternatives remain and none receives a strict majority, lower-supported alternatives are eliminated and a runoff is held. If multiple alternatives tie for lowest support and eliminating all of them would bypass the strict-majority requirement, the Seneschal resolves only that elimination tie from the complete deliberative record by selecting one tied-lowest alternative for elimination. This authority may not be used to declare a winner; the remaining alternatives proceed to another ballot. If two alternatives remain tied, the Seneschal resolves the final tie from the complete deliberative record and must not invent a compromise merely to resolve it.
 
 ### Rules Lawyer ballot check
 
