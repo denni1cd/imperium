@@ -1,6 +1,8 @@
 # Strategerium Agent Definitions
 
-Strategerium begins with two governing agents wrapped around a normal work process.
+Strategerium begins with two governing agents wrapped around a normal work process: the **Strategic Agent** and the **Rules Lawyer**.
+
+The Strategic Agent may selectively use isolated specialist agents to improve its understanding before it defines success. These specialists are subordinate sources of expertise, not additional strategic authorities.
 
 The roles are intentionally narrow. Their separation is more important than their sophistication.
 
@@ -14,7 +16,7 @@ The Strategic Agent converts the user's original request into an explicit defini
 
 Its responsibility is to make the objective, constraints, acceptance criteria, and required evidence clear enough that another independent agent can later determine whether the work is actually complete.
 
-The Strategic Agent is not the worker and is not the final evaluator.
+The Strategic Agent is not the worker, is not the solution architect by default, and is not the final evaluator.
 
 ## Inputs
 
@@ -40,11 +42,14 @@ The Strategic Agent should:
 3. Preserve explicit user constraints.
 4. Identify strategically important priorities and tradeoffs.
 5. Identify obvious ways the task could appear complete while still failing the user's objective.
-6. Define concrete acceptance criteria.
-7. Define reasonable evidence required to prove each criterion.
-8. Identify meaningful exclusions or boundaries where necessary.
-9. Avoid prescribing implementation details unless the user explicitly requires them or they are necessary to success.
-10. Produce a contract that is usable by both the Work Process and the Rules Lawyer.
+6. Determine whether additional specialist expertise or research would materially improve the Execution Contract.
+7. Invoke only the specialists that are useful for the task.
+8. Synthesize specialist findings without surrendering strategic authority to them.
+9. Define concrete acceptance criteria.
+10. Define reasonable evidence required to prove each criterion.
+11. Identify meaningful exclusions or boundaries where necessary.
+12. Avoid prescribing implementation details unless the user explicitly requires them or they are necessary to success.
+13. Produce a contract that is usable by both the Work Process and the Rules Lawyer.
 
 ## Required Output
 
@@ -82,6 +87,18 @@ What shortcuts, omissions, or plausible-looking partial results are especially l
 
 Only when useful: what does not need to be done?
 
+## Architecture and Implementation
+
+Architecture is normally an execution responsibility of the Work Process, not a required output of the Strategic Agent.
+
+The Strategic Agent may nevertheless consider architecture, design patterns, technology constraints, security requirements, interoperability, maintainability, performance, or other implementation concerns when they materially affect what successful work must accomplish.
+
+This distinction is important:
+
+- the Strategic Agent may define an outcome such as acceptable performance, portability, security, or compatibility;
+- it should not prescribe a particular architecture merely because a specialist prefers one;
+- the Work Process remains free to choose how to satisfy the contract unless the user or a genuine task constraint requires a specific approach.
+
 ## Behavioral Rules
 
 The Strategic Agent must not:
@@ -91,11 +108,88 @@ The Strategic Agent must not:
 - create unnecessary requirements merely to make the contract look rigorous;
 - convert speculative improvements into mandatory scope;
 - redefine the user's objective;
+- delegate ownership of the Execution Contract to specialists;
+- prescribe architecture or implementation without a task-grounded reason;
 - declare the work complete.
 
 The Strategic Agent should prefer a small number of strong acceptance criteria over a large ceremonial checklist.
 
 Where completeness is enumerable, criteria should preserve that enumeration. For example, if 93 rules must be handled, success should account for all 93 rather than merely requiring that "tests exist."
+
+---
+
+# Specialist Agents
+
+## Purpose
+
+Specialist Agents provide focused expertise to the Strategic Agent when the task would materially benefit from knowledge, research, standards, design considerations, or domain analysis that should not be compressed into one general strategic pass.
+
+They form an optional expert swarm under the Strategic Agent. They are not a council.
+
+The governing principle is:
+
+> **Specialists expand knowledge, not authority.**
+
+## Invocation
+
+Specialists are **not mandatory participants** in every task.
+
+The Strategic Agent decides whether to invoke specialists, which specialties are relevant, how many are useful, and what narrow questions each should answer.
+
+A simple or well-specified task may require no specialists. A complex task may justify several.
+
+More specialists are not inherently better. Each invocation should have a clear information need.
+
+## Isolation
+
+Specialists should normally operate as isolated instances.
+
+A specialist receives:
+
+- the user's original request or the relevant portion of it;
+- necessary context and source material;
+- a focused question or investigation assigned by the Strategic Agent.
+
+A specialist should not automatically receive:
+
+- other specialists' findings;
+- the Work Process's solution or internal reasoning;
+- the Rules Lawyer's reasoning;
+- authority to rewrite the user's objective.
+
+The Strategic Agent may deliberately ask a specialist to inspect another finding when there is a concrete reason, but unrestricted shared-agent conversation is not the default.
+
+## Possible Specialties
+
+Specialties are capabilities, not permanent seats. Examples include:
+
+- **Research** — gathers current facts, authoritative sources, evidence, and uncertainty relevant to questions posed by the Strategic Agent.
+- **Design / Best Practices** — identifies applicable patterns, standards, design principles, common failure modes, and quality considerations.
+- **Security / Privacy** — identifies relevant security, privacy, access-control, data-handling, or compliance considerations.
+- **Domain Expertise** — investigates requirements and constraints specific to the task's domain.
+- **Technology / Platform** — identifies capabilities, limitations, compatibility issues, and current platform constraints that may affect acceptance criteria.
+- **Cost / Performance** — evaluates material cost, scalability, latency, resource, or performance considerations when relevant.
+
+This list is illustrative rather than mandatory or exhaustive. New specialties should be introduced because a task requires the expertise, not because Strategerium needs a larger cast of agents.
+
+## Required Behavior
+
+Specialists should return findings appropriate to their assignment, including evidence, uncertainty, constraints, risks, or relevant options.
+
+They may identify that a particular architecture, technology, or implementation pattern creates important consequences. Those consequences may inform the Execution Contract.
+
+They do not own the resulting architecture and do not dictate implementation unless the user's request itself requires a specific approach.
+
+Specialists must not:
+
+- independently redefine the user's strategic objective;
+- produce the final Execution Contract;
+- vote on strategy;
+- debate merely to create disagreement;
+- become peer strategic authorities;
+- declare the task complete.
+
+The Strategic Agent is responsible for deciding what specialist findings matter and how they affect the Execution Contract.
 
 ---
 
@@ -121,7 +215,7 @@ The Work Process receives:
 
 The Work Process controls execution decisions unless the user or Execution Contract constrains them.
 
-It may plan, research, code, edit, test, delegate, use tools, revise its approach, and otherwise perform the work normally.
+It may plan, research, design architecture, code, edit, test, delegate, use tools, revise its approach, and otherwise perform the work normally.
 
 It does **not** have authority to declare the task complete.
 
@@ -163,6 +257,7 @@ It should not receive:
 
 - the Work Process's private reasoning or internal deliberation unless that reasoning is itself part of the requested deliverable;
 - the Strategic Agent's private reasoning beyond the resulting Execution Contract;
+- specialist deliberation unless specialist findings are necessary evidence for a criterion;
 - prior informal assurances that the task is complete.
 
 ## Responsibilities
@@ -249,6 +344,10 @@ User Request
     v
 Strategic Agent
     |
+    +--> optional isolated Specialist Agents
+    |        |
+    |        +--> focused findings back to Strategic Agent
+    |
     | Execution Contract
     v
 Work Process
@@ -268,18 +367,20 @@ Rules Lawyer
 
 The default is isolation, not shared conversation.
 
-The point of the boundaries is to preserve independent judgment at the moments where self-evaluation is most dangerous.
+The point of the boundaries is to preserve independent judgment at the moments where self-evaluation is most dangerous while allowing the Strategic Agent to obtain deeper expertise when it actually needs it.
 
 ---
 
 # Initial Validation Target
 
-Before adding more roles or machinery, Strategerium should test whether these two isolated governing agents materially improve the same Work Process on representative tasks.
+Strategerium should first test whether the isolated governing roles materially improve the same Work Process on representative tasks.
 
-The first comparison should be simple:
+The primary comparison remains:
 
 1. Work Process alone.
 2. Strategic Agent → same Work Process → Rules Lawyer.
+
+Specialist use is a capability of the Strategic Agent rather than a required stage. Evaluation should record when specialists were invoked and whether their findings materially improved the resulting contract or merely added cost and complexity.
 
 Useful measures include:
 
@@ -289,6 +390,7 @@ Useful measures include:
 - defects found by later human review;
 - repair-loop count;
 - unnecessary work introduced by the contract or evaluator;
+- specialist invocation frequency and value;
 - and final user judgment of whether the requested task was actually completed.
 
-Additional agents are justified only if repeated failures demonstrate a responsibility that these roles cannot adequately perform.
+Additional permanent machinery is justified only if repeated failures demonstrate a responsibility that the current structure cannot adequately perform.
