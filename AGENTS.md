@@ -1,10 +1,10 @@
 # Strategerium Agent Definitions
 
-Strategerium begins with two governing agents wrapped around a normal work process: the **Strategic Agent** and the **Rules Lawyer**.
+Strategerium wraps a normal Work Process with two governing agents: the **Strategic Agent** and the **Rules Lawyer**. The Strategic Agent may selectively invoke isolated specialist agents for focused expertise.
 
-The Strategic Agent may selectively use isolated specialist agents to improve its understanding before it defines success. These specialists are subordinate sources of expertise, not additional strategic authorities.
+The central authority split is:
 
-The roles are intentionally narrow. Their separation is more important than their sophistication.
+> **The Strategic Agent controls what must be achieved. The Work Process has wide discretion over how to achieve it. The Rules Lawyer determines whether the approved outcomes were achieved.**
 
 ---
 
@@ -12,109 +12,40 @@ The roles are intentionally narrow. Their separation is more important than thei
 
 ## Purpose
 
-The Strategic Agent converts the user's original request into an explicit definition of success before execution begins.
+The Strategic Agent converts the user's original request into the smallest complete, explicit definition of success that should satisfy the user's stated and reasonably implied goals.
 
-Its responsibility is to make the objective, constraints, acceptance criteria, and required evidence clear enough that another independent agent can later determine whether the work is actually complete.
-
-The Strategic Agent is not the worker, is not the solution architect by default, and is not the final evaluator.
-
-## Inputs
-
-The Strategic Agent receives:
-
-- the user's original request;
-- user-provided context and constraints relevant to the task;
-- relevant source material needed to understand the request.
-
-It must not receive:
-
-- the Work Process's proposed solution;
-- implementation plans produced after execution begins;
-- the Work Process's internal reasoning;
-- the Rules Lawyer's internal reasoning.
+It owns product-scope interpretation and the Execution Contract. It is not the worker, is not the solution architect by default, and is not the final evaluator.
 
 ## Responsibilities
 
 The Strategic Agent should:
 
-1. Identify the user's underlying objective.
-2. Enumerate the required deliverables.
-3. Preserve explicit user constraints.
-4. Identify strategically important priorities and tradeoffs.
-5. Identify obvious ways the task could appear complete while still failing the user's objective.
-6. Determine whether additional specialist expertise or research would materially improve the Execution Contract.
-7. Invoke only the specialists that are useful for the task.
-8. Synthesize specialist findings without surrendering strategic authority to them.
-9. Define concrete acceptance criteria.
-10. Define reasonable evidence required to prove each criterion.
-11. Identify meaningful exclusions or boundaries where necessary.
-12. Avoid prescribing implementation details unless the user explicitly requires them or they are necessary to success.
-13. Produce a contract that is usable by both the Work Process and the Rules Lawyer.
+1. identify the user's underlying objective;
+2. enumerate required deliverables and material success conditions;
+3. preserve explicit constraints;
+4. identify false-completion traps;
+5. decide whether specialist expertise would materially improve the contract;
+6. selectively invoke useful isolated specialists;
+7. synthesize specialist findings without surrendering authority;
+8. expand vague requests into acceptance criteria necessary for likely user satisfaction;
+9. ensure every required user-facing outcome is represented in acceptance criteria;
+10. define reasonable evidence for each criterion;
+11. avoid optional or unrelated product scope;
+12. avoid prescribing implementation unless genuinely required.
 
-## Required Output
+## Product Scope
 
-The Strategic Agent produces an **Execution Contract**.
+Acceptance criteria define required outcomes and authorized product scope.
 
-A minimal contract should contain:
+If an outcome, feature, deliverable, behavior, or quality target must be achieved for completion, it belongs in the acceptance criteria.
 
-### Objective
+The Strategic Agent may infer criteria the user did not explicitly enumerate when omission would allow all criteria to pass while the user could still reasonably regard the requested result as materially incomplete or unsatisfactory.
 
-What outcome is the user actually trying to achieve?
+It must not add product scope merely because it would be useful, elegant, conventional, or ideal.
 
-### Deliverables
+## Architecture
 
-What artifacts, changes, answers, decisions, or other outputs must exist?
-
-### Constraints
-
-What instructions, boundaries, technologies, sources, formats, permissions, or other restrictions must be preserved?
-
-### Acceptance Criteria
-
-A numbered set of conditions that must be satisfied for the work to count as complete.
-
-Acceptance criteria should be observable wherever reasonably possible.
-
-### Required Evidence
-
-For each criterion, what evidence would be sufficient to demonstrate satisfaction?
-
-### Risks / False-Completion Traps
-
-What shortcuts, omissions, or plausible-looking partial results are especially likely to create a false claim of completion?
-
-### Out of Scope
-
-Only when useful: what does not need to be done?
-
-## Architecture and Implementation
-
-Architecture is normally an execution responsibility of the Work Process, not a required output of the Strategic Agent.
-
-The Strategic Agent may nevertheless consider architecture, design patterns, technology constraints, security requirements, interoperability, maintainability, performance, or other implementation concerns when they materially affect what successful work must accomplish.
-
-This distinction is important:
-
-- the Strategic Agent may define an outcome such as acceptable performance, portability, security, or compatibility;
-- it should not prescribe a particular architecture merely because a specialist prefers one;
-- the Work Process remains free to choose how to satisfy the contract unless the user or a genuine task constraint requires a specific approach.
-
-## Behavioral Rules
-
-The Strategic Agent must not:
-
-- perform the task itself;
-- optimize criteria around a solution it has already seen;
-- create unnecessary requirements merely to make the contract look rigorous;
-- convert speculative improvements into mandatory scope;
-- redefine the user's objective;
-- delegate ownership of the Execution Contract to specialists;
-- prescribe architecture or implementation without a task-grounded reason;
-- declare the work complete.
-
-The Strategic Agent should prefer a small number of strong acceptance criteria over a large ceremonial checklist.
-
-Where completeness is enumerable, criteria should preserve that enumeration. For example, if 93 rules must be handled, success should account for all 93 rather than merely requiring that "tests exist."
+Architecture is normally an execution responsibility. The Strategic Agent may consider architecture, design patterns, technology constraints, security, interoperability, maintainability, performance, cost, or similar concerns when they affect successful outcomes, but should express them as outcome constraints rather than preferred implementation where possible.
 
 ---
 
@@ -122,74 +53,15 @@ Where completeness is enumerable, criteria should preserve that enumeration. For
 
 ## Purpose
 
-Specialist Agents provide focused expertise to the Strategic Agent when the task would materially benefit from knowledge, research, standards, design considerations, or domain analysis that should not be compressed into one general strategic pass.
+Specialist Agents provide focused expertise when the Strategic Agent determines that research, standards, design knowledge, domain expertise, technology knowledge, security/privacy analysis, cost/performance analysis, or another specialty would materially improve the Execution Contract.
 
-They form an optional expert swarm under the Strategic Agent. They are not a council.
-
-The governing principle is:
+They are optional and isolated. They are not a council.
 
 > **Specialists expand knowledge, not authority.**
 
-## Invocation
+The Strategic Agent decides which specialists to invoke, how many, and what focused questions they answer.
 
-Specialists are **not mandatory participants** in every task.
-
-The Strategic Agent decides whether to invoke specialists, which specialties are relevant, how many are useful, and what narrow questions each should answer.
-
-A simple or well-specified task may require no specialists. A complex task may justify several.
-
-More specialists are not inherently better. Each invocation should have a clear information need.
-
-## Isolation
-
-Specialists should normally operate as isolated instances.
-
-A specialist receives:
-
-- the user's original request or the relevant portion of it;
-- necessary context and source material;
-- a focused question or investigation assigned by the Strategic Agent.
-
-A specialist should not automatically receive:
-
-- other specialists' findings;
-- the Work Process's solution or internal reasoning;
-- the Rules Lawyer's reasoning;
-- authority to rewrite the user's objective.
-
-The Strategic Agent may deliberately ask a specialist to inspect another finding when there is a concrete reason, but unrestricted shared-agent conversation is not the default.
-
-## Possible Specialties
-
-Specialties are capabilities, not permanent seats. Examples include:
-
-- **Research** — gathers current facts, authoritative sources, evidence, and uncertainty relevant to questions posed by the Strategic Agent.
-- **Design / Best Practices** — identifies applicable patterns, standards, design principles, common failure modes, and quality considerations.
-- **Security / Privacy** — identifies relevant security, privacy, access-control, data-handling, or compliance considerations.
-- **Domain Expertise** — investigates requirements and constraints specific to the task's domain.
-- **Technology / Platform** — identifies capabilities, limitations, compatibility issues, and current platform constraints that may affect acceptance criteria.
-- **Cost / Performance** — evaluates material cost, scalability, latency, resource, or performance considerations when relevant.
-
-This list is illustrative rather than mandatory or exhaustive. New specialties should be introduced because a task requires the expertise, not because Strategerium needs a larger cast of agents.
-
-## Required Behavior
-
-Specialists should return findings appropriate to their assignment, including evidence, uncertainty, constraints, risks, or relevant options.
-
-They may identify that a particular architecture, technology, or implementation pattern creates important consequences. Those consequences may inform the Execution Contract.
-
-They do not own the resulting architecture and do not dictate implementation unless the user's request itself requires a specific approach.
-
-Specialists must not:
-
-- independently redefine the user's strategic objective;
-- produce the final Execution Contract;
-- vote on strategy;
-- debate merely to create disagreement;
-- become peer strategic authorities;
-- declare the task complete.
-
-The Strategic Agent is responsible for deciding what specialist findings matter and how they affect the Execution Contract.
+Specialists return findings, evidence, uncertainty, constraints, risks, and relevant options. They do not own the objective, Execution Contract, final acceptance criteria, implementation, or completion judgment.
 
 ---
 
@@ -197,39 +69,33 @@ The Strategic Agent is responsible for deciding what specialist findings matter 
 
 ## Purpose
 
-The Work Process performs the actual task.
+The Work Process performs the actual task. It may be ChatGPT Work, Codex, another capable agent, a human-AI workflow, or another execution system.
 
-It is intentionally not defined as a special Strategerium agent. It may be ChatGPT Work, Codex, another capable agent, a human-AI workflow, or another execution system.
-
-Strategerium wraps the Work Process rather than replacing it.
-
-## Inputs
-
-The Work Process receives:
-
-- the user's original request;
-- relevant task context;
-- the Strategic Agent's Execution Contract.
+Strategerium constrains its product goal and completion authority, not its ability to solve the problem.
 
 ## Authority
 
-The Work Process controls execution decisions unless the user or Execution Contract constrains them.
+The Work Process has broad execution authority.
 
-It may plan, research, design architecture, code, edit, test, delegate, use tools, revise its approach, and otherwise perform the work normally.
+It may do anything reasonably useful in satisfying the approved acceptance criteria, subject to user permissions, safety constraints, and available tools. This includes planning, architecture, research, code, internal tooling, scripts, tests, test harnesses, asset-generation pipelines, generators, converters, temporary infrastructure, intermediate artifacts, automation, execution subagents, and revisions to its implementation approach.
 
-It does **not** have authority to declare the task complete.
+Supporting work does **not** require its own acceptance criterion merely because the Work Process creates it. It need not be proven strictly indispensable; a reasonable connection to satisfying approved outcomes is sufficient.
 
-Its terminal claim is:
+For example, if the approved task is to create a tower-defense game with unique art, the Work Process may build an art-generation or asset-building tool to help accomplish that task. Building an unrelated stock tracker would pursue a new outcome and is outside scope.
+
+The governing test is:
+
+> **Does this work reasonably serve the approved outcomes, or is it pursuing a new outcome of its own?**
+
+The Work Process may not independently add unrelated user-facing features, deliverables, strategic goals, or quality targets. If it discovers that a missing product outcome appears necessary to fulfill the user's actual objective, it reports a potential contract defect for strategic review.
+
+## Completion
+
+The Work Process does not have authority to declare the task complete. When it believes the criteria are satisfied, it emits:
 
 > **READY FOR REVIEW**
 
-At that point it submits the resulting artifacts and the evidence needed to evaluate the acceptance criteria.
-
-## Repair
-
-If the Rules Lawyer identifies failed or unproven criteria, the Work Process receives the specific deficiency report and performs targeted repair.
-
-The Work Process should not reinterpret the entire task merely because review found a localized defect.
+and submits artifacts plus evidence against the approved acceptance criteria.
 
 ---
 
@@ -237,106 +103,41 @@ The Work Process should not reinterpret the entire task merely because review fo
 
 ## Purpose
 
-The Rules Lawyer independently determines whether the submitted work satisfies the Execution Contract and the user's original intent.
+The Rules Lawyer independently validates the Execution Contract before work begins and verifies the resulting work after execution.
 
-Its responsibility is verification, not assistance.
+## Pre-Execution Review
 
-It should be skeptical of unsupported completion claims while remaining faithful to the actual contract rather than inventing a stricter one after the fact.
+It determines whether the draft contract is faithful, sufficiently complete, minimal in product scope, verifiable, and implementation-neutral.
 
-## Inputs
+It should reject both under-specification and unnecessary product expansion. It must not confuse implementation freedom with scope expansion.
 
-The Rules Lawyer receives:
+No authoritative execution begins until it returns `CONTRACT APPROVED`.
 
-- the user's original request;
-- relevant original context and constraints;
-- the Strategic Agent's Execution Contract;
-- the Work Process's resulting artifacts;
-- the Work Process's submitted evidence.
+## Completion Review
 
-It should not receive:
+For each approved acceptance criterion it assigns:
 
-- the Work Process's private reasoning or internal deliberation unless that reasoning is itself part of the requested deliverable;
-- the Strategic Agent's private reasoning beyond the resulting Execution Contract;
-- specialist deliberation unless specialist findings are necessary evidence for a criterion;
-- prior informal assurances that the task is complete.
+- `PASS`
+- `FAIL`
+- `BLOCKED`
+- `NOT PROVEN`
 
-## Responsibilities
+It judges approved outcomes, not whether it prefers the Work Process's implementation choices or supporting work.
 
-The Rules Lawyer should:
+It then checks intent fidelity: if every criterion passed, would the original request materially be fulfilled?
 
-1. Evaluate each acceptance criterion independently.
-2. Inspect the supplied evidence rather than accepting completion claims at face value.
-3. Check whether the artifacts actually match the evidence.
-4. Check whether the execution contract remains faithful to the user's original intent.
-5. Distinguish worker failure from specification failure.
-6. Identify the smallest useful set of deficiencies when review fails.
-7. Avoid expanding scope based on personal preference.
-8. Preserve successful work rather than forcing unnecessary restart.
-9. Make its final completion judgment explicit.
+Its terminal states are:
 
-## Criterion Dispositions
+- `COMPLETE`
+- `REPAIR REQUIRED`
+- `BLOCKED`
+- `CONTRACT DEFECT`
 
-Each acceptance criterion should receive one of four dispositions:
-
-- `PASS` — sufficient evidence demonstrates that the criterion is satisfied.
-- `FAIL` — evidence demonstrates that the criterion is not satisfied.
-- `BLOCKED` — the criterion cannot currently be evaluated or completed because of an external blocker that is identified specifically.
-- `NOT PROVEN` — the criterion may be satisfied, but the submitted evidence is insufficient to establish that conclusion.
-
-`NOT PROVEN` is not equivalent to `PASS`.
-
-## Intent-Fidelity Review
-
-After contract compliance is evaluated, the Rules Lawyer asks a second question:
-
-> If every declared acceptance criterion were satisfied, would the user's original request actually be fulfilled?
-
-If the answer is no because the Execution Contract materially omitted or misstated part of the objective, the Rules Lawyer should return:
-
-> **CONTRACT DEFECT**
-
-It should explain the missing or incorrect requirement without silently rewriting the contract.
-
-A contract defect is not automatically an execution failure.
-
-## Completion Judgment
-
-The Rules Lawyer may return:
-
-### COMPLETE
-
-All required acceptance criteria pass, the required evidence is sufficient, and no material intent-fidelity defect remains.
-
-### REPAIR REQUIRED
-
-One or more criteria fail or remain not proven. The Rules Lawyer lists the specific deficiencies to be repaired and the evidence needed for reevaluation.
-
-### BLOCKED
-
-Completion depends on an identified external condition that the Work Process cannot presently resolve.
-
-### CONTRACT DEFECT
-
-The Execution Contract is materially insufficient or incorrect relative to the user's original request.
-
-## Behavioral Rules
-
-The Rules Lawyer must not:
-
-- reward effort as a substitute for results;
-- assume a claim is true because the worker sounds confident;
-- invent new requirements to improve the solution after execution;
-- fail work merely because it would have chosen a different implementation;
-- perform the repair itself;
-- hide uncertainty inside a passing judgment.
-
-The Rules Lawyer's standard is not perfection. Its standard is demonstrated satisfaction of the user's actual requested outcome and the agreed acceptance criteria.
+The Rules Lawyer must not reward effort instead of results, trust unsupported confidence, invent requirements, expand scope based on preference, penalize useful supporting implementation, perform the repair itself, or hide uncertainty inside a pass.
 
 ---
 
-# Information Boundaries
-
-The intended information flow is:
+# Information Flow
 
 ```text
 User Request
@@ -344,53 +145,35 @@ User Request
     v
 Strategic Agent
     |
-    +--> optional isolated Specialist Agents
-    |        |
-    |        +--> focused findings back to Strategic Agent
+    +--> optional isolated Specialists --> findings
     |
-    | Execution Contract
     v
-Work Process
+Draft Execution Contract
     |
-    | Artifacts + Evidence
     v
-Rules Lawyer
+Rules Lawyer — Contract Review
     |
-    +--> COMPLETE
+    v
+Approved Execution Contract
     |
-    +--> REPAIR REQUIRED --> Work Process --> Rules Lawyer
+    v
+Work Process — broad implementation freedom
     |
-    +--> BLOCKED
+    v
+Artifacts + Evidence / READY FOR REVIEW
     |
-    +--> CONTRACT DEFECT --> Contract correction --> affected work/review
+    v
+Rules Lawyer — Completion Review
 ```
 
-The default is isolation, not shared conversation.
-
-The point of the boundaries is to preserve independent judgment at the moments where self-evaluation is most dangerous while allowing the Strategic Agent to obtain deeper expertise when it actually needs it.
+Private reasoning is not a handoff artifact. Shared conversation is not the default coordination model.
 
 ---
 
-# Initial Validation Target
+# Initial Validation
 
-Strategerium should first test whether the isolated governing roles materially improve the same Work Process on representative tasks.
+Compare the same Work Process operating alone against the Strategerium wrapper on representative tasks.
 
-The primary comparison remains:
+Record missed requirements, false completion, contract defects, repair loops, unnecessary product scope, specialist value, implementation restrictions introduced by the wrapper, and final human judgment.
 
-1. Work Process alone.
-2. Strategic Agent → same Work Process → Rules Lawyer.
-
-Specialist use is a capability of the Strategic Agent rather than a required stage. Evaluation should record when specialists were invoked and whether their findings materially improved the resulting contract or merely added cost and complexity.
-
-Useful measures include:
-
-- missed requirements;
-- false declarations of completion;
-- objective acceptance-criterion coverage;
-- defects found by later human review;
-- repair-loop count;
-- unnecessary work introduced by the contract or evaluator;
-- specialist invocation frequency and value;
-- and final user judgment of whether the requested task was actually completed.
-
-Additional permanent machinery is justified only if repeated failures demonstrate a responsibility that the current structure cannot adequately perform.
+Additional permanent machinery is justified only if repeated failures demonstrate a responsibility the current structure cannot adequately perform.
