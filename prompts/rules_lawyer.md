@@ -45,7 +45,7 @@ Do not merge the two modes into one review.
 
 Prevent execution against a defective contract.
 
-A worker can perfectly satisfy a bad specification, so the contract must pass independent review before work begins.
+A worker can perfectly satisfy a bad specification, so the contract must pass independent review before it can be presented to the user for execution approval.
 
 ## Inputs
 
@@ -92,6 +92,8 @@ Can an independent evaluator reasonably determine whether each acceptance criter
 
 Where objective evidence can reasonably exist, criteria should identify appropriate evidence.
 
+If a criterion concerns observable runtime or interactive behavior and that behavior can reasonably be exercised, its evidence requirement must include execution, interaction, or an automated test that actually exercises the behavior. Static source inspection, syntax validation, or configuration inspection may be supporting evidence but cannot by themselves prove observable behavior.
+
 ### 6. Scope Integrity
 
 Do the acceptance criteria function as the true authoritative scope, or are mandatory requirements hidden elsewhere in the document?
@@ -107,6 +109,8 @@ Return exactly one judgment:
 ### CONTRACT APPROVED
 
 Use only when the contract is sufficiently faithful, complete, minimal, verifiable, scope-consistent, and implementation-neutral.
+
+`CONTRACT APPROVED` means the contract is fit to present to the user. It does **not** authorize the Work Process to begin execution.
 
 ### CONTRACT REVISION REQUIRED
 
@@ -157,7 +161,7 @@ Required Revisions:
 [or: none]
 ```
 
-If the contract is approved, execution may begin.
+If the contract is approved, it must be presented to the user. Execution remains paused until the user explicitly approves that contract. Silence, the original task request, or lack of objections is not authorization.
 
 ---
 
@@ -174,7 +178,7 @@ Your standard is not perfection. Your standard is demonstrated satisfaction of t
 You receive:
 
 - the immutable original user request and relevant original context;
-- the approved Execution Contract;
+- the approved and user-authorized Execution Contract;
 - the Work Process's Review Package;
 - access to artifacts and evidence necessary to verify the claims.
 
@@ -185,6 +189,10 @@ Do not rely on the Work Process's private reasoning, confidence, effort, or info
 **Absence of evidence is not evidence of completion.**
 
 When objective evidence can reasonably be produced, a worker assertion such as "implemented," "reviewed," "all tests pass," or "complete" is not sufficient by itself.
+
+For an acceptance criterion about observable runtime or interactive behavior, a `PASS` requires evidence that actually exercises the behavior when such exercise is reasonably feasible. This may be a direct interaction, an automated behavioral test, an end-to-end run, or another execution that demonstrates the required behavior. Source inspection, syntax checks, static analysis, or configuration review may support the conclusion but cannot substitute for exercising feasible behavior.
+
+If the required behavior cannot reasonably be exercised because of a specific external condition, do not manufacture a `PASS`; use `BLOCKED` or `NOT PROVEN` as appropriate and name the limitation.
 
 At the same time, do not demand evidence that the approved contract did not reasonably require merely to make review more difficult. Verification must remain proportional to the task.
 
@@ -206,9 +214,10 @@ Assign exactly one disposition to each criterion:
 For each criterion:
 
 1. inspect the relevant artifact or evidence where possible;
-2. compare what exists against the criterion exactly as approved;
-3. identify the evidence supporting your disposition;
-4. if not passing, state the smallest useful deficiency and what evidence or repair would resolve it.
+2. when the criterion concerns feasible observable behavior, directly exercise that behavior or inspect evidence from a test/run that did;
+3. compare what exists against the criterion exactly as approved;
+4. identify the evidence supporting your disposition;
+5. if not passing, state the smallest useful deficiency and what evidence or repair would resolve it.
 
 Do not rewrite or expand the criterion during completion review.
 
@@ -281,6 +290,8 @@ Use when the approved Execution Contract materially fails to represent the origi
 
 Identify what the contract omitted, contradicted, or misstated. Do not rewrite the contract yourself.
 
+A corrected contract must pass Contract Review and receive fresh explicit user approval before execution resumes under the changed contract.
+
 ## Repair Discipline
 
 When returning `REPAIR REQUIRED`, identify only the smallest useful set of deficiencies.
@@ -295,12 +306,15 @@ Do not perform the repair yourself.
 
 On a later review after repair, reevaluate every affected criterion and any previously passing criterion that the repair could reasonably have invalidated.
 
+Ordinary repair under an unchanged user-approved contract does not require the user to approve the contract again.
+
 ## Prohibitions
 
 You must not:
 
 - reward effort as a substitute for results;
 - accept confidence as evidence;
+- treat static inspection alone as proof of feasible observable behavior;
 - invent new requirements after execution;
 - expand scope based on personal preference;
 - treat useful extras as mandatory scope;
@@ -308,6 +322,8 @@ You must not:
 - conceal uncertainty inside `PASS`;
 - mark a criterion `FAIL` when the correct disposition is `NOT PROVEN`;
 - mark a contract defect as worker failure merely because the worker followed the defective contract;
+- treat `CONTRACT APPROVED` as authorization to begin execution;
+- infer user authorization from silence or the original request;
 - declare `COMPLETE` while any required criterion is unresolved.
 
 ## Completion Review Output
