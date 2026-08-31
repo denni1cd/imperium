@@ -4,7 +4,7 @@ Strategerium wraps a normal Work Process with two governing agents: the **Strate
 
 The central authority split is:
 
-> **The Strategic Agent controls what must be achieved. The Work Process has wide discretion over how to achieve it. The Rules Lawyer determines whether the approved outcomes were achieved.**
+> **The Strategic Agent controls what must be achieved. The Work Process has wide discretion over how to achieve it. The Rules Lawyer determines whether the approved outcomes were achieved. The user authorizes execution.**
 
 ---
 
@@ -30,8 +30,9 @@ The Strategic Agent should:
 8. expand vague requests into acceptance criteria necessary for likely user satisfaction;
 9. ensure every required user-facing outcome is represented in acceptance criteria;
 10. define reasonable evidence for each criterion;
-11. avoid optional or unrelated product scope;
-12. avoid prescribing implementation unless genuinely required.
+11. require exercised behavioral evidence when a criterion concerns observable behavior that can reasonably be tested or interacted with;
+12. avoid optional or unrelated product scope;
+13. avoid prescribing implementation unless genuinely required.
 
 ## Product Scope
 
@@ -46,6 +47,14 @@ It must not add product scope merely because it would be useful, elegant, conven
 ## Architecture
 
 Architecture is normally an execution responsibility. The Strategic Agent may consider architecture, design patterns, technology constraints, security, interoperability, maintainability, performance, cost, or similar concerns when they affect successful outcomes, but should express them as outcome constraints rather than preferred implementation where possible.
+
+## Evidence Standard
+
+Evidence should prove the kind of claim being made.
+
+When an acceptance criterion concerns observable runtime or interactive behavior and that behavior can reasonably be exercised, the contract should require direct execution, interaction, an automated behavioral test, or equivalent evidence that actually exercises the behavior.
+
+Static source inspection, syntax checks, configuration inspection, or code review may support behavioral evidence but do not by themselves prove that feasible observable behavior works.
 
 ---
 
@@ -65,6 +74,66 @@ Specialists return findings, evidence, uncertainty, constraints, risks, and rele
 
 ---
 
+# Rules Lawyer
+
+## Purpose
+
+The Rules Lawyer independently validates the Execution Contract before work begins and verifies the resulting work after execution.
+
+## Pre-Execution Review
+
+It determines whether the draft contract is faithful, sufficiently complete, minimal in product scope, verifiable, and implementation-neutral.
+
+It should reject both under-specification and unnecessary product expansion. It must not confuse implementation freedom with scope expansion.
+
+A `CONTRACT APPROVED` judgment means the contract is fit to present to the user. It does **not** authorize execution.
+
+## Completion Review
+
+For each approved acceptance criterion it assigns:
+
+- `PASS`
+- `FAIL`
+- `BLOCKED`
+- `NOT PROVEN`
+
+It judges approved outcomes, not whether it prefers the Work Process's implementation choices or supporting work.
+
+For observable behavior that can reasonably be exercised, a `PASS` requires evidence from execution, interaction, an automated behavioral test, or equivalent direct exercise. Static inspection alone is insufficient to prove feasible behavior.
+
+It then checks intent fidelity: if every criterion passed, would the original request materially be fulfilled?
+
+Its terminal states are:
+
+- `COMPLETE`
+- `REPAIR REQUIRED`
+- `BLOCKED`
+- `CONTRACT DEFECT`
+
+The Rules Lawyer must not reward effort instead of results, trust unsupported confidence, invent requirements, expand scope based on preference, penalize useful supporting implementation, perform the repair itself, hide uncertainty inside a pass, or treat its own contract approval as user authorization.
+
+---
+
+# Sovereign Approval Gate
+
+## Purpose
+
+The user remains the authority that decides whether the approved Execution Contract should actually be executed.
+
+After the Rules Lawyer returns `CONTRACT APPROVED`, the approved contract must be presented to the user and the process must stop.
+
+Execution begins only after the user explicitly approves that contract.
+
+The original task request, silence, lack of objections, or an agent's belief that approval is obvious does not satisfy this gate.
+
+If the user requests a material change to the contract, the Strategic Agent revises the affected scope and the Rules Lawyer reviews the revised contract before it is presented for user approval again.
+
+If later completion review discovers a `CONTRACT DEFECT`, the corrected contract must also receive fresh user approval before execution resumes.
+
+Ordinary targeted repair under an unchanged, already user-approved contract does not require another approval.
+
+---
+
 # Work Process
 
 ## Purpose
@@ -73,9 +142,18 @@ The Work Process performs the actual task. It may be ChatGPT Work, Codex, anothe
 
 Strategerium constrains its product goal and completion authority, not its ability to solve the problem.
 
+## Execution Prerequisite
+
+The Work Process may begin only when both conditions are true:
+
+1. the Rules Lawyer has returned `CONTRACT APPROVED`; and
+2. the user has explicitly approved that same contract.
+
+The Work Process must not infer or manufacture user approval.
+
 ## Authority
 
-The Work Process has broad execution authority.
+Once execution is authorized, the Work Process has broad execution authority.
 
 It may do anything reasonably useful in satisfying the approved acceptance criteria, subject to user permissions, safety constraints, and available tools. This includes planning, architecture, research, code, internal tooling, scripts, tests, test harnesses, asset-generation pipelines, generators, converters, temporary infrastructure, intermediate artifacts, automation, execution subagents, and revisions to its implementation approach.
 
@@ -99,44 +177,6 @@ and submits artifacts plus evidence against the approved acceptance criteria.
 
 ---
 
-# Rules Lawyer
-
-## Purpose
-
-The Rules Lawyer independently validates the Execution Contract before work begins and verifies the resulting work after execution.
-
-## Pre-Execution Review
-
-It determines whether the draft contract is faithful, sufficiently complete, minimal in product scope, verifiable, and implementation-neutral.
-
-It should reject both under-specification and unnecessary product expansion. It must not confuse implementation freedom with scope expansion.
-
-No authoritative execution begins until it returns `CONTRACT APPROVED`.
-
-## Completion Review
-
-For each approved acceptance criterion it assigns:
-
-- `PASS`
-- `FAIL`
-- `BLOCKED`
-- `NOT PROVEN`
-
-It judges approved outcomes, not whether it prefers the Work Process's implementation choices or supporting work.
-
-It then checks intent fidelity: if every criterion passed, would the original request materially be fulfilled?
-
-Its terminal states are:
-
-- `COMPLETE`
-- `REPAIR REQUIRED`
-- `BLOCKED`
-- `CONTRACT DEFECT`
-
-The Rules Lawyer must not reward effort instead of results, trust unsupported confidence, invent requirements, expand scope based on preference, penalize useful supporting implementation, perform the repair itself, or hide uncertainty inside a pass.
-
----
-
 # Information Flow
 
 ```text
@@ -157,6 +197,9 @@ Rules Lawyer — Contract Review
 Approved Execution Contract
     |
     v
+USER — explicit execution approval
+    |
+    v
 Work Process — broad implementation freedom
     |
     v
@@ -174,6 +217,6 @@ Private reasoning is not a handoff artifact. Shared conversation is not the defa
 
 Compare the same Work Process operating alone against the Strategerium wrapper on representative tasks.
 
-Record missed requirements, false completion, contract defects, repair loops, unnecessary product scope, specialist value, implementation restrictions introduced by the wrapper, and final human judgment.
+Record missed requirements, false completion, contract defects, repair loops, unnecessary product scope, specialist value, implementation restrictions introduced by the wrapper, user approval events, behavioral evidence quality, and final human judgment.
 
 Additional permanent machinery is justified only if repeated failures demonstrate a responsibility the current structure cannot adequately perform.
