@@ -46,9 +46,7 @@ USER REQUEST
     v
 STRATEGIC AGENT
     |
-    +--> optional isolated Specialist Agents
-    |        |
-    |        +--> findings
+    +--> optional isolated Specialist Agents --> findings
     |
     v
 DRAFT EXECUTION CONTRACT
@@ -56,32 +54,33 @@ DRAFT EXECUTION CONTRACT
     v
 RULES LAWYER — CONTRACT REVIEW
     |
-    +--> CONTRACT APPROVED
-    |          |
-    |          v
-    |      USER APPROVAL GATE
-    |          |
-    |          +--> APPROVED --> WORK PROCESS
-    |          |
-    |          +--> CHANGE REQUEST --> STRATEGIC AGENT
-    |                               |
-    |                               +--> revised contract review
-    |          
-    |                          WORK PROCESS
-    |                              |
-    |                              v
-    |                          READY FOR REVIEW
-    |                          Artifacts + Evidence
-    |                              |
-    |                              v
-    |                          RULES LAWYER — COMPLETION REVIEW
-    |                              |
-    |                              +--> COMPLETE
-    |                              +--> REPAIR REQUIRED --> WORK PROCESS --> READY FOR REVIEW
-    |                              +--> BLOCKED
-    |                              +--> CONTRACT DEFECT --> STRATEGIC AGENT --> CONTRACT REVIEW --> USER APPROVAL
-    |
     +--> CONTRACT REVISION REQUIRED --> STRATEGIC AGENT
+    |
+    v
+CONTRACT APPROVED
+    |
+    v
+USER APPROVAL GATE
+    |
+    +--> CHANGE REQUEST --> STRATEGIC AGENT --> RULES LAWYER — CONTRACT REVIEW
+    |
+    v
+USER APPROVED
+    |
+    v
+WORK PROCESS
+    |
+    v
+READY FOR REVIEW
+Artifacts + Evidence
+    |
+    v
+RULES LAWYER — COMPLETION REVIEW
+    |
+    +--> COMPLETE
+    +--> REPAIR REQUIRED --> WORK PROCESS --> READY FOR REVIEW
+    +--> BLOCKED
+    +--> CONTRACT DEFECT --> STRATEGIC AGENT --> CONTRACT REVIEW --> USER APPROVAL
 ```
 
 No work begins until both of these conditions are satisfied:
