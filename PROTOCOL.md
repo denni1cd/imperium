@@ -30,7 +30,7 @@ For example, a request to create a tower-defense game with unique art may legiti
 
 The distinction is:
 
-> **The Strategic Agent controls what must be achieved. The Work Process has wide discretion over how to achieve it. The Rules Lawyer determines whether the approved outcomes were achieved.**
+> **The Strategic Agent controls what must be achieved. The Work Process has wide discretion over how to achieve it. The Rules Lawyer determines whether the approved outcomes were achieved. The user authorizes execution.**
 
 This does not mean the Strategic Agent should interpret vague requests narrowly. When a request is vague, incomplete, or expressed at a high level, the Strategic Agent must infer and define the acceptance criteria reasonably necessary for the user to regard the result as successful.
 
@@ -59,24 +59,37 @@ RULES LAWYER — CONTRACT REVIEW
     +--> CONTRACT APPROVED
     |          |
     |          v
-    |      WORK PROCESS
+    |      USER APPROVAL GATE
     |          |
-    |          v
-    |      READY FOR REVIEW
-    |      Artifacts + Evidence
+    |          +--> APPROVED --> WORK PROCESS
     |          |
-    |          v
-    |      RULES LAWYER — COMPLETION REVIEW
-    |          |
-    |          +--> COMPLETE
-    |          +--> REPAIR REQUIRED --> WORK PROCESS --> READY FOR REVIEW
-    |          +--> BLOCKED
-    |          +--> CONTRACT DEFECT --> STRATEGIC AGENT
+    |          +--> CHANGE REQUEST --> STRATEGIC AGENT
+    |                               |
+    |                               +--> revised contract review
+    |          
+    |                          WORK PROCESS
+    |                              |
+    |                              v
+    |                          READY FOR REVIEW
+    |                          Artifacts + Evidence
+    |                              |
+    |                              v
+    |                          RULES LAWYER — COMPLETION REVIEW
+    |                              |
+    |                              +--> COMPLETE
+    |                              +--> REPAIR REQUIRED --> WORK PROCESS --> READY FOR REVIEW
+    |                              +--> BLOCKED
+    |                              +--> CONTRACT DEFECT --> STRATEGIC AGENT --> CONTRACT REVIEW --> USER APPROVAL
     |
     +--> CONTRACT REVISION REQUIRED --> STRATEGIC AGENT
 ```
 
-No work begins until the Rules Lawyer approves the Execution Contract.
+No work begins until both of these conditions are satisfied:
+
+1. the Rules Lawyer has returned `CONTRACT APPROVED`; and
+2. the user has explicitly approved that same contract for execution.
+
+Rules Lawyer approval is a quality gate, not execution authority.
 
 ---
 
@@ -117,9 +130,10 @@ The Strategic Agent:
 9. expands vague goals into concrete acceptance criteria where necessary for user satisfaction;
 10. verifies that every deliverable, constraint, and material success condition is represented by one or more acceptance criteria;
 11. defines reasonable evidence required for every criterion;
-12. removes optional product embellishment or speculative scope not necessary to satisfy the user's goals;
-13. records meaningful out-of-scope boundaries where useful;
-14. publishes a Draft Execution Contract for independent contract review.
+12. for criteria concerning observable runtime or interactive behavior, requires evidence that directly exercises that behavior when doing so is reasonably feasible;
+13. removes optional product embellishment or speculative scope not necessary to satisfy the user's goals;
+14. records meaningful out-of-scope boundaries where useful;
+15. publishes a Draft Execution Contract for independent contract review.
 
 ## Specialist Rule
 
@@ -194,7 +208,12 @@ or
 
 Contract Status:
 DRAFT | APPROVED
+
+Execution Authorization:
+PENDING USER APPROVAL | USER APPROVED
 ```
+
+`Contract Status: APPROVED` records Rules Lawyer approval. It does not imply execution authorization.
 
 ---
 
@@ -223,6 +242,18 @@ Acceptance criteria should define outcomes rather than prescribe implementation 
 
 The target is the **smallest complete product contract that captures everything necessary to satisfy the user's stated and reasonably implied goals**, while leaving the Work Process broad freedom to determine the means.
 
+## Behavioral Evidence Rule
+
+Evidence must prove the kind of claim being made.
+
+When an acceptance criterion concerns observable runtime or interactive behavior and that behavior can reasonably be exercised, the required evidence must include direct execution, interaction, an automated behavioral test, an end-to-end run, or another method that actually exercises the behavior.
+
+Source inspection, syntax validation, static analysis, configuration review, or code reading may support behavioral verification, but they do not by themselves prove that feasible observable behavior works.
+
+If direct exercise is not reasonably feasible because of a specific external condition, the evidence requirement should identify that limitation. Completion review must not manufacture a `PASS` from static inspection alone; `BLOCKED` or `NOT PROVEN` should be used when appropriate.
+
+Verification remains proportional. The protocol requires exercised evidence where behavior matters, not ceremony where it does not.
+
 ---
 
 # Phase 2 — Pre-Execution Contract Review
@@ -233,7 +264,7 @@ Rules Lawyer
 
 ## Objective
 
-Determine whether the Draft Execution Contract is complete, faithful, minimal, and sufficiently verifiable before execution begins.
+Determine whether the Draft Execution Contract is complete, faithful, minimal, and sufficiently verifiable before it is presented to the user for execution approval.
 
 ## Review Questions
 
@@ -243,7 +274,7 @@ The Rules Lawyer evaluates:
 2. **Coverage** — Is every required deliverable, explicit constraint, and material implied success condition represented?
 3. **Sufficiency** — If every criterion passed, would the user reasonably regard the request as fulfilled?
 4. **Product minimality** — Does the contract avoid unrelated or unnecessary product scope without restricting useful implementation means?
-5. **Verifiability** — Can an independent evaluator reasonably determine whether each criterion passed?
+5. **Verifiability** — Can an independent evaluator reasonably determine whether each criterion passed, including exercised evidence for feasible observable behavior?
 6. **Scope integrity** — Are mandatory outcomes expressed as acceptance criteria rather than hidden elsewhere?
 7. **Implementation neutrality** — Does the contract leave the Work Process free to choose supporting architecture, tools, code, infrastructure, and methods unless genuinely constrained?
 
@@ -277,7 +308,60 @@ Required Revisions:
 - [specific smallest useful corrections]
 ```
 
-No execution begins until `CONTRACT APPROVED`.
+`CONTRACT APPROVED` means the contract is fit to present to the user. It does not authorize the Work Process to begin.
+
+---
+
+# Phase 2.5 — User Approval Gate
+
+## Actor
+
+User / Sovereign
+
+## Objective
+
+Give the user explicit authority over whether the approved Execution Contract should actually be executed.
+
+## Procedure
+
+After the Rules Lawyer returns `CONTRACT APPROVED`:
+
+1. present the approved Execution Contract to the user;
+2. stop before invoking the Work Process;
+3. ask for explicit approval to execute that contract;
+4. begin execution only if the user approves;
+5. if the user requests a material contract change, return the affected scope to the Strategic Agent and then through Rules Lawyer review before seeking approval again.
+
+The approval gate is hard.
+
+The system must not treat any of the following as approval:
+
+- the user's original request to perform the task;
+- silence;
+- lack of objections;
+- a prior approval of an earlier contract version;
+- the Rules Lawyer's `CONTRACT APPROVED` judgment;
+- an agent's belief that execution is obviously desired.
+
+If completion review later identifies a `CONTRACT DEFECT` and the contract changes, the corrected contract must receive fresh explicit user approval before execution resumes.
+
+Ordinary `REPAIR REQUIRED` work under an unchanged, already user-approved contract does not require another approval.
+
+## Output
+
+Record one of:
+
+```text
+Execution Authorization:
+USER APPROVED
+```
+
+or
+
+```text
+Execution Authorization:
+NOT APPROVED — contract change requested
+```
 
 ---
 
@@ -286,6 +370,10 @@ No execution begins until `CONTRACT APPROVED`.
 ## Actor
 
 Work Process
+
+## Prerequisite
+
+Execution may begin only after the current approved contract has explicit `USER APPROVED` execution authorization.
 
 ## Authority
 
@@ -357,7 +445,7 @@ The Work Process must not rewrite or add acceptance criteria in its submission.
 
 Rules Lawyer
 
-The Rules Lawyer receives the original request/context, approved Execution Contract, Review Package, and access to necessary artifacts/evidence.
+The Rules Lawyer receives the original request/context, approved and user-authorized Execution Contract, Review Package, and access to necessary artifacts/evidence.
 
 For every acceptance criterion it assigns exactly one disposition:
 
@@ -367,6 +455,8 @@ For every acceptance criterion it assigns exactly one disposition:
 - `NOT PROVEN`
 
 It evaluates approved outcomes, not whether it personally approves of the Work Process's implementation choices or supporting work.
+
+For observable runtime or interactive behavior that can reasonably be exercised, `PASS` requires evidence from actual execution, interaction, an automated behavioral test, an end-to-end run, or equivalent direct exercise. Static inspection alone is insufficient proof of feasible behavior.
 
 After criterion review, it again asks:
 
@@ -407,6 +497,8 @@ Allowed only when every approved criterion passes, required evidence is sufficie
 
 Used when criteria fail or remain unproven while the contract remains valid. The Work Process receives targeted deficiencies and retains broad implementation authority in repairing them.
 
+Because the contract is unchanged, ordinary repair does not require another user approval.
+
 ## BLOCKED
 
 Used when completion depends on a specific external condition that cannot currently be resolved.
@@ -414,6 +506,8 @@ Used when completion depends on a specific external condition that cannot curren
 ## CONTRACT DEFECT
 
 Used when the approved contract materially fails to represent the original user request. The issue returns to the Strategic Agent, which revises the affected product scope and resubmits the contract to the Rules Lawyer for approval.
+
+Because the contract changed, the corrected contract must then receive fresh explicit user approval before the Work Process resumes execution.
 
 Ordinary repair does not change the contract. Contract defects and material user-directed scope changes do.
 
@@ -423,7 +517,8 @@ Ordinary repair does not change the contract. Contract defects and material user
 
 - **Strategic Agent:** original request/context, relevant source material, requested specialist findings.
 - **Specialist:** relevant request/context, focused assignment, necessary sources.
-- **Work Process:** original request/context, approved Execution Contract, repair reports when applicable.
+- **User approval gate:** approved Execution Contract only; execution remains paused until explicit approval.
+- **Work Process:** original request/context, approved Execution Contract, recorded user execution authorization, repair reports when applicable.
 - **Rules Lawyer:** original request/context, current contract, and during completion review the Review Package plus necessary artifacts/evidence.
 
 Private reasoning is not a handoff artifact. Shared conversation is not the default coordination model.
@@ -451,14 +546,16 @@ Strategic Agent system/model:
 Specialists invoked:
 Execution Contract version(s):
 Pre-execution contract-review result(s):
+User execution approval event(s):
 Worker READY FOR REVIEW submissions:
 Rules Lawyer system/model:
 Completion verification result(s):
+Behavioral evidence used for behavioral criteria:
 Repair-loop count:
 Contract-defect count:
 Final terminal state:
 Human evaluation:
-Notable missed requirement, false-completion event, unnecessary product scope, or implementation restriction:
+Notable missed requirement, false-completion event, unnecessary product scope, implementation restriction, approval-gate violation, or verification weakness:
 ```
 
 The baseline should use the same original request and same Work Process without the Strategerium wrapper wherever practical.
